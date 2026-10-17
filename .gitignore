@@ -1,0 +1,3 @@
+# las salidas de una corrida se resetean con git clean; la caché nunca se versiona
+.cache/
+exports/

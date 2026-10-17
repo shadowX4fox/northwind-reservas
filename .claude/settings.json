@@ -1,0 +1,63 @@
+{
+  "extraKnownMarketplaces": {
+    "shadowx4fox-solution-architect-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "shadowX4fox/solutions-architect-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "sa-skills@shadowx4fox-solution-architect-marketplace": true,
+    "sa-records@shadowx4fox-solution-architect-marketplace": true,
+    "sa-requirements@shadowx4fox-solution-architect-marketplace": true,
+    "sa-analysis@shadowx4fox-solution-architect-marketplace": true,
+    "sa-delivery@shadowx4fox-solution-architect-marketplace": true,
+    "sa-visualization@shadowx4fox-solution-architect-marketplace": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(bun *)",
+      "Bash(rg *)",
+      "Bash(git clone *)",
+      "Bash(git -C .cache/sa-skills/adr-catalog *)",
+      "Read(~/.claude/plugins/marketplaces/shadowx4fox-solution-architect-marketplace/**)",
+      "Read(~/.claude/plugins/cache/shadowx4fox-solution-architect-marketplace/**)",
+      "Read(**/skills/architecture-dev-handoff/SKILL.md)",
+      "Read(.cache/sa-skills/**)",
+      "Edit(.cache/sa-skills/**)",
+      "Agent(sa-analysis:reviewers:architecture-analysis-agent)",
+      "Agent(sa-skills:reviewers:principle-quality-reviewer)",
+      "Agent(sa-skills:reviewers:worksheet-judge)",
+      "Agent(sa-requirements:generators:acceptance-test-writer)",
+      "Agent(sa-delivery:generators:ekonte-generator)",
+      "Agent(sa-delivery:generators:settei-generator)",
+      "Agent(sa-delivery:generators:seam-generator)",
+      "Agent(sa-skills:generators:segment-runner)",
+      "Agent(sa-records:generators:adr-writer)",
+      "Agent(sa-delivery:generators:cutsheet-generator)",
+      "Agent(sa-delivery:generators:handoff-asset-generator)",
+      "Agent(sa-delivery:generators:docs-export-generator)",
+      "Edit(exports/*)",
+      "Read(exports/*)",
+      "Edit(analysis/*)",
+      "Read(analysis/*)",
+      "Edit(visualizations/*)",
+      "Read(visualizations/*)",
+      "Edit(handoffs/**)",
+      "Read(handoffs/**)",
+      "Edit(handoffs/.manifest.json)",
+      "Read(handoffs/.manifest.json)",
+      "Edit(BIAN_ALIGNMENT.md)",
+      "Read(BIAN_ALIGNMENT.md)",
+      "Edit(CAPABILITY_ALIGNMENT.md)",
+      "Read(CAPABILITY_ALIGNMENT.md)",
+      "WebSearch"
+    ],
+    "defaultMode": "auto"
+  },
+  "env": {
+    "USE_BUILTIN_RIPGREP": "0",
+    "SA_JUDGE": "agent"
+  }
+}

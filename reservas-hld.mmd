@@ -1,0 +1,26 @@
+%% HLD — Reservas de Salas Northwind (proyecto sintético)
+%% Dos contenedores: Portal de Reservas (SPA React 18) y Servicio de Reservas (Spring Boot 3.3, Java 21).
+%% Base de Datos de Reservas: PostgreSQL 16, propiedad del Servicio de Reservas.
+flowchart TB
+  miembro(["Miembro del cowork"])
+  recepcion(["Recepcionista de sede"])
+
+  subgraph canal["Canal web"]
+    portal["Portal de Reservas"]
+  end
+
+  subgraph backend["Servicios de negocio"]
+    servicio["Servicio de Reservas"]
+    bd[("Base de Datos de Reservas")]
+  end
+
+  subgraph externos["Sistemas externos"]
+    idp["Proveedor de Identidad Northwind"]
+  end
+
+  miembro -->|"Usa"| portal
+  recepcion -->|"Usa"| portal
+  portal -->|"Autentica OIDC PKCE"| idp
+  portal -->|"Consulta, reserva y cancela HTTPS/JSON"| servicio
+  servicio -->|"Valida tokens JWKS HTTPS"| idp
+  servicio -->|"Lee y escribe JDBC"| bd
