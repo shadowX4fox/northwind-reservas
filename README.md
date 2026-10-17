@@ -1,6 +1,6 @@
-# sa-pipeline-synthetic
+# Northwind Reservas
 
-Proyecto **sintético** para probar de punta a punta el pipeline de
+Proyecto **de demostración** (sintético) para mostrar de punta a punta el pipeline de
 [solutions-architect-skills](https://github.com/shadowX4fox/solutions-architect-skills) — de la PO Spec al servidor
 MCP de arquitectura y las escalaciones de un equipo RUN. Northwind Cowork, sus sedes, personas y sistemas son
 inventados; nada aquí proviene de un proyecto real.
