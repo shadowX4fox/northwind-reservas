@@ -43,7 +43,7 @@ jobs:
           TAG: ${{ inputs.tag }}
         run: |
           git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null || { echo "no tag $TAG"; exit 1; }
-          paths=$(for p in ARCHITECTURE.md docs adr tdr; do [ -e "$p" ] && echo "$p"; done)
+          paths=$(for p in ARCHITECTURE.md docs adr tdr; do if [ -e "$p" ]; then echo "$p"; fi; done)
           git diff --quiet "$TAG" HEAD -- $paths || { echo "the architecture moved past $TAG on this branch — release it, then regenerate the kit of the new tag"; exit 1; }
       - uses: oven-sh/setup-bun@v2
         with:
