@@ -48,6 +48,7 @@ jobs:
           (cd "$RUNNER_TEMP/sa" && bun install --frozen-lockfile)
           echo "SA_SKILLS_DIR=$RUNNER_TEMP/sa" >> "$GITHUB_ENV"     # every sa-delivery script finds sa-skills here, pinned
       - name: Regenerate the handoff kit
+        id: claude
         uses: anthropics/claude-code-action@v1
         env:
           SA_JUDGE: agent
@@ -63,6 +64,13 @@ jobs:
             under handoffs/. End with the kit gate's receipt.
           claude_args: |
             --allowedTools "Read,Write,Edit,Glob,Grep,Agent,Bash(bun *),Bash(rg *)"
+      - name: Keep Claude's transcript       # the action hides its output; the run's turns, tools and denials are here
+        if: always() && steps.claude.outputs.execution_file != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: handoff-transcript
+          path: ${{ steps.claude.outputs.execution_file }}
+          retention-days: 7
       - name: Open the handoff pull request
         env:
           GH_TOKEN: ${{ github.token }}
@@ -72,6 +80,8 @@ jobs:
           [ -n "$(git status --porcelain -- handoffs)" ] || { echo "the kit did not change"; exit 0; }
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # the action pointed origin at its own token and revoked it when it finished
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git switch -c "handoff/$TAG"
           git add handoffs && git commit -q -m "handoff: kit regenerated for $TAG"
           git push -u origin "handoff/$TAG"
