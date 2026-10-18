@@ -64,7 +64,8 @@ En local, `test the architecture index` publica un draft con `--server http://lo
 | Workflow | Cuándo | Runner | Qué hace |
 |---|---|---|---|
 | `architecture-gates.yml` | PR que toca `ARCHITECTURE.md`, `docs/`, `adr/`, `tdr/` | GitHub | `lifecycle.js check --undecided warn` + comentario con gates y estado |
-| `architecture-release.yml` | merge del PR de release a `main` | GitHub + self-hosted | `lifecycle.js tag` → índice fase 1 (chunks + ledger) → Claude regenera el handoff y abre un PR |
+| `architecture-release.yml` | merge del PR de release a `main` | GitHub + self-hosted | `lifecycle.js tag` → índice fase 1 (chunks + ledger) → dispara `architecture-handoff.yml` |
+| `architecture-handoff.yml` | lo dispara el release, o a mano con un tag | GitHub | Claude regenera el kit y abre el PR `handoff/<tag>` |
 | `architecture-index.yml` | merge del PR del kit (`handoffs/**`) o manual | self-hosted | misma versión con build packs |
 | `claude.yml` | `@claude` en issues y PRs | GitHub | respuestas en las escalaciones (lo instala `/install-github-app`) |
 
