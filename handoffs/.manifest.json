@@ -1,0 +1,70 @@
+{
+  "version": "4",
+  "generator": "sa-skills:architecture-dev-handoff",
+  "generator_version": "10.5.2",
+  "run": {
+    "ekonte_hash": "sha256:2b9fc5302b2d6f2e791d966f42cb5c3f40d575e5935a786b8d97afe92fdabd1b",
+    "ekonte_template_version": "4.3.1",
+    "settei_hash": "sha256:2b9fc5302b2d6f2e791d966f42cb5c3f40d575e5935a786b8d97afe92fdabd1b",
+    "settei_template_version": "4.3.1",
+    "schema_version": "4",
+    "architecture_version": "1.0.0",
+    "generated": "2026-10-18T06:08:06.642Z"
+  },
+  "seams": {
+    "portal-de-reservas→servicio-de-reservas": {
+      "payload_hash": "sha256:30fdd6252ecd3013395c1dd20d50cde092a9823e7745155c6337a668264b9ae0",
+      "template_version": "4.3.1",
+      "schema_version": "4",
+      "seam_file": "interfaces/portal-de-reservas→servicio-de-reservas.md",
+      "related_adrs": [
+        "ADR-103",
+        "ADR-001",
+        "ADR-004",
+        "ADR-102",
+        "ADR-003"
+      ],
+      "generated": "2026-10-18T06:08:06.679Z"
+    }
+  },
+  "cut_sheets": {
+    "portal-de-reservas": {
+      "payload_hash": "sha256:80540ff726d1caf5dd27fe4ffb6613fa493b9d5851826c2d5187b83777986f3b",
+      "template_version": "4.3.1",
+      "schema_version": "4",
+      "architecture_version": "1.0.0",
+      "cut_sheet_file": "components/01-portal-de-reservas.md",
+      "assets": [
+        "c4-descriptor.md"
+      ],
+      "doc_language": "es",
+      "generated": "2026-10-18T06:08:06.710Z"
+    },
+    "servicio-de-reservas": {
+      "payload_hash": "sha256:cf8bdb78c70742d8421e19432142e33af101ccdff0cebae5cff4097ee5877b93",
+      "template_version": "4.3.1",
+      "schema_version": "4",
+      "architecture_version": "1.0.0",
+      "cut_sheet_file": "components/02-servicio-de-reservas.md",
+      "assets": [
+        "openapi.yaml",
+        "c4-descriptor.md"
+      ],
+      "doc_language": "es",
+      "generated": "2026-10-18T06:08:06.747Z"
+    },
+    "base-de-datos-de-reservas": {
+      "payload_hash": "sha256:0d08008e8086b954745614c326b7059ba6fd20eec86cb54b287f677e71ab3a6f",
+      "template_version": "4.3.1",
+      "schema_version": "4",
+      "architecture_version": "1.0.0",
+      "cut_sheet_file": "components/03-base-de-datos-de-reservas.md",
+      "assets": [
+        "ddl.sql",
+        "c4-descriptor.md"
+      ],
+      "doc_language": "es",
+      "generated": "2026-10-18T06:08:06.779Z"
+    }
+  }
+}
