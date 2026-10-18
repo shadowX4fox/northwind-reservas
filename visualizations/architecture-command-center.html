@@ -28,7 +28,8 @@
   .top .btns { margin-left: auto; display: flex; gap: 6px; align-self: center; }
   .top h1 { margin: 0; font-family: var(--font-head); font-weight: 600; font-size: 22px; letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 8ch; }
   .top .meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1000 auto; min-width: 0; }   /* one line whatever the header carries: the meta gives way first, then the title; both keep their full text as the tooltip */
-  .top .btns { flex: 0 6 auto; min-width: 0; } .top .btns > button { flex: none; } .top .btns > .sim-pill { flex: 0 1 auto; min-width: 0; }   /* the simulation pill gives way before the title */
+  .top .meta.ver { flex: none; color: var(--ink-2); }   /* the version never gives way: it is what a screenshot is evidence of */
+  .top .btns { flex: 0 6 auto; min-width: min-content; } .top .btns > button { flex: none; } .top .btns > .sim-pill { flex: 0 1 auto; min-width: 0; }   /* the simulation pill gives way before the title; the buttons never do (min-content: a long title once pushed them off-screen) */
 
   .rail { position: fixed; left: 16px; top: calc(var(--top-h, 52px) + 12px); width: 300px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - var(--top-h, 52px) - 28px); overflow: auto; }
   .card { position: relative; background: var(--panel); border: 1px solid var(--panel-border); padding: 12px 14px; }
@@ -1213,6 +1214,7 @@
 
 <header class="top">
   <h1 id="title"></h1>
+  <span class="meta ver" id="ver"></span>
   <span class="meta" id="meta"></span>
   <div class="btns">
     <button class="info-btn sim-pill" id="sim-pill" hidden aria-haspopup="dialog" aria-controls="alia"></button>
@@ -2734,7 +2736,7 @@
   const info = document.getElementById('info');
   setText('b-info', 'ⓘ ' + T.info); setText('info-h', T.info); setText('info-title', SCENE.project || ''); setText('info-close', T.close); setText('info-hint', T.infoHint);
   function renderInfo() {
-    document.getElementById('info-meta').textContent = document.getElementById('meta').textContent;
+    document.getElementById('info-meta').textContent = [document.getElementById('meta').textContent, document.getElementById('ver').textContent].filter(Boolean).join(' · ');
     const rows = [[T.thesis, SCENE.thesis, 'thesis'], [T.sources, SCENE.sources, 'mono'], [T.derivedFrom, W.id === 'physical' && DEP ? DEP.derivedFrom : null, 'mono'], [T.controls, T.controlsText, '']];
     document.getElementById('info-body').innerHTML = rows.filter(r => r[1]).map(([k, v, c]) => '<dt>' + esc(k) + '</dt><dd class="' + c + '">' + esc(v) + '</dd>').join('');
   }
@@ -6124,7 +6126,8 @@
     const unplaced = id === 'physical' && W.unplaced.size ? [...W.unplaced].filter(cid => byId[cid] && byId[cid].kind !== 'actor').map(cid => byId[cid].name) : [];
     viewDesc.innerHTML = esc(W.hint) + (id === 'physical' && DEP.derivedFrom ? '<br><span class="mono">' + esc(T.derivedFrom) + ': ' + esc(DEP.derivedFrom) + '</span>' : '') +
       (unplaced.length ? '<br><span class="mono">' + esc(T.notPlaced) + ': ' + esc(unplaced.join(', ')) + '</span>' : '');
-    document.getElementById('meta').textContent = [SCENE.architectureType, W.floors.length + ' ' + W.word, SCENE.version ? 'v' + SCENE.version + (SCENE.status ? ' ' + SCENE.status : '') : ''].filter(Boolean).join(' · ');
+    document.getElementById('meta').textContent = [SCENE.architectureType, W.floors.length + ' ' + W.word].filter(Boolean).join(' · ');
+    document.getElementById('ver').textContent = SCENE.version ? 'v' + SCENE.version + (SCENE.status ? ' ' + SCENE.status : '') : '';
     document.getElementById('meta').title = document.getElementById('meta').textContent;
     buildLayerButtons(); buildFilterList(); buildLegend(); buildA11y(); if (camReady) fitStageView(); setFloors(floorMode);
     Object.values(WORLDS).forEach(w => { w.scan.visible = SK.scan && !reduced && w === W; w.projector.visible = !!SK.projector && w === W; });
