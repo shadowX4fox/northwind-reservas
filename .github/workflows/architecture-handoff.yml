@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.5.2
+  SA_PLUGIN_REF: v10.5.3
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -53,6 +53,8 @@ jobs:
           git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" "$SA_PLUGIN_REPO" "$RUNNER_TEMP/sa"
           (cd "$RUNNER_TEMP/sa" && bun install --frozen-lockfile)
           echo "SA_SKILLS_DIR=$RUNNER_TEMP/sa" >> "$GITHUB_ENV"     # every sa-delivery script finds sa-skills here, pinned
+      - name: Let headless Chrome start          # the kit gate renders every Mermaid fence; Ubuntu 24.04's AppArmor blocks Chrome's sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Regenerate the handoff kit
         id: claude
         uses: anthropics/claude-code-action@v1
@@ -70,8 +72,11 @@ jobs:
             when your turn ends, and any sub-agent still running dies with it — dispatch every sub-agent in the
             foreground (never run_in_background) and have every result before you go on. Do not commit; leave the files
             under handoffs/. End with the kit gate's receipt.
+          # Bash unrestricted: the skill composes shell lines (cd …; P=…; for …) that no Bash(<prefix> *) rule matches, and a
+          # denied line in a headless run is a step skipped. The runner is ephemeral, a dispatch needs write access, and the
+          # job's token can write contents and pull requests only.
           claude_args: |
-            --allowedTools "Read,Write,Edit,Glob,Grep,Agent,Bash(bun *),Bash(rg *),Bash(cd *),Bash(ls *),Bash(echo *),Bash(git tag *),Bash(git status *),Bash(git diff *)"
+            --allowedTools "Read,Write,Edit,Glob,Grep,Agent,Bash"
       - name: Keep Claude's transcript       # the action hides its output: turns, tools and denials are here (public on a public repository)
         if: always() && steps.claude.outputs.execution_file != ''
         uses: actions/upload-artifact@v4
