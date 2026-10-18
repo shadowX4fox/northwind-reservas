@@ -1,0 +1,146 @@
+# Architecture release — GitHub Actions. Copy to .github/workflows/architecture-release.yml in the architecture's repository.
+#
+# `release my architecture` (lifecycle.js apply, PR mode) pushes release/architecture-v<version> and tags nothing. When
+# that PR is merged, this workflow runs on the push to main:
+#   1. tag      lifecycle.js tag — the tag on the merge (or squash) commit, pushed
+#   2. index    the release in the architecture MCP server: chunks and ledger (publish-index.sh, phase 1)
+#   3. handoff  Claude regenerates the handoff kit from the released version and opens a pull request with it;
+#               merging that PR publishes the build packs (architecture-index.yml, phase 2)
+# A `--direct` release (the tag pushed by hand) goes through the same jobs: `tag` finds it and does nothing.
+# The jobs are chained here, not split across workflows on `push: tags`: a tag pushed with GITHUB_TOKEN starts no workflow.
+#
+# Repository settings: variables SA_INDEX_SERVER, SA_INDEX_PROJECT_KEY (or a committed .sa-skills/index.json),
+# SA_INDEX_MCP_URL (optional); secrets SA_INDEX_TOKEN (optional) and CLAUDE_CODE_OAUTH_TOKEN (or ANTHROPIC_API_KEY);
+# Actions → General → "Allow GitHub Actions to create and approve pull requests" (the handoff PR).
+# The index job runs on a runner that reaches the server — `runs-on` below names a self-hosted runner labelled
+# sa-index. It runs only on pushes to main and manual dispatches, never on a pull request: on a public repository a
+# self-hosted runner must never run a fork's code.
+name: Architecture release
+
+on:
+  push:
+    branches: [main]
+    paths: ['ARCHITECTURE.md']
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: architecture-release
+  cancel-in-progress: false
+
+env:
+  SA_PLUGIN_REF: v10.5.0
+  SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.tag.outputs.released }}
+      tag: ${{ steps.tag.outputs.tag }}
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" "$SA_PLUGIN_REPO" "$RUNNER_TEMP/sa"
+      - name: Tag the release this push brought
+        id: tag
+        run: |
+          L="$RUNNER_TEMP/sa/skills/architecture-lifecycle/scripts/lifecycle.js"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          state=$(bun "$L" status . --json | jq -r .state)
+          if [ "$state" != untagged ] && [ "$state" != released ]; then
+            echo "state $state — no release in this push"; echo "released=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          out=$(bun "$L" tag . --json); echo "$out"
+          [ "$(jq -r .ok <<<"$out")" = true ] || exit 1
+          tag=$(jq -r .tag_name <<<"$out"); commit=$(git rev-list -n 1 "$tag")
+          # new in this push: the tagged commit was not already on main before it (a later doc fix re-runs nothing)
+          before='${{ github.event.before }}'
+          if [ '${{ github.event_name }}' = workflow_dispatch ] || ! git merge-base --is-ancestor "$commit" "$before" 2>/dev/null; then released=true; else released=false; fi
+          { echo "released=$released"; echo "tag=$tag"; echo "version=${tag#architecture-v}"; } >> "$GITHUB_OUTPUT"
+
+  index:
+    needs: tag
+    if: needs.tag.outputs.released == 'true'
+    runs-on: [self-hosted, sa-index]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.tag.outputs.tag }}   # the released tree: the bundle goes to the released channel only if it equals the tag
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Publish the release — chunks and ledger
+        run: |
+          git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" "$SA_PLUGIN_REPO" "$RUNNER_TEMP/sa"
+          SA_SKILLS_DIR="$RUNNER_TEMP/sa" bash "$RUNNER_TEMP/sa/plugins/sa-delivery/skills/architecture-index-export/ci/publish-index.sh" .
+        env:
+          SA_INDEX_PROJECT_KEY: ${{ vars.SA_INDEX_PROJECT_KEY }}
+          SA_INDEX_SERVER: ${{ vars.SA_INDEX_SERVER }}
+          SA_INDEX_MCP_URL: ${{ vars.SA_INDEX_MCP_URL }}
+          SA_INDEX_TOKEN: ${{ secrets.SA_INDEX_TOKEN }}
+
+  handoff:
+    needs: tag
+    if: needs.tag.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.tag.outputs.tag }}
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Plugin, pinned, with its contract validators
+        run: |
+          git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" "$SA_PLUGIN_REPO" "$RUNNER_TEMP/sa"
+          (cd "$RUNNER_TEMP/sa" && bun install --frozen-lockfile)
+          echo "SA_SKILLS_DIR=$RUNNER_TEMP/sa" >> "$GITHUB_ENV"     # every sa-delivery script finds sa-skills here, pinned
+      - name: Regenerate the handoff kit
+        uses: anthropics/claude-code-action@v1
+        env:
+          SA_JUDGE: agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          plugin_marketplaces: ${{ env.SA_PLUGIN_REPO }}
+          plugins: |
+            sa-skills@shadowx4fox-solution-architect-marketplace
+            sa-delivery@shadowx4fox-solution-architect-marketplace
+          prompt: |
+            generate dev handoff — the architecture was released as ${{ needs.tag.outputs.tag }}. Regenerate the whole kit
+            (--force) for every container, unattended: take every default, ask nothing. Do not commit; leave the files
+            under handoffs/. End with the kit gate's receipt.
+          claude_args: |
+            --allowedTools "Read,Write,Edit,Glob,Grep,Agent,Bash(bun *),Bash(rg *)"
+      - name: Open the handoff pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.tag.outputs.tag }}
+        run: |
+          bun "$SA_SKILLS_DIR/plugins/sa-delivery/skills/architecture-dev-handoff/scripts/kit-check.js" handoffs --no-render
+          [ -n "$(git status --porcelain -- handoffs)" ] || { echo "the kit did not change"; exit 0; }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "handoff/$TAG"
+          git add handoffs && git commit -q -m "handoff: kit regenerated for $TAG"
+          git push -u origin "handoff/$TAG"
+          gh pr create --base main --head "handoff/$TAG" --title "Handoff kit for $TAG" \
+            --body "Regenerated by the Architecture release workflow from \`$TAG\`. Merging it publishes the build packs (architecture-index.yml)."

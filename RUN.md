@@ -42,16 +42,48 @@ Cada etapa en una **sesión nueva** (`claude --permission-mode auto`).
 | # | Prompt | Resultado esperado |
 |---|---|---|
 | 1 | `genera mi arquitectura y usa las respuestas en RUN.md` | `ARCHITECTURE.md`, `docs/`, ADRs de proyecto (101+), todos los gates en verde |
-| 2 | `release my architecture` | tag `architecture-v1.0.0` (PR por defecto; `--direct` en `main`) — habilita Tier 0 |
-| 3 | `generate dev handoff` | `handoffs/` — kit de 4 partes; `openapi.yaml` del Servicio de Reservas, `ddl.sql` PostgreSQL, `security.md` |
-| 4 | commit del kit | `kit-check.js` pasa sobre la versión 1.0.0 |
+| 2 | `release my architecture` | PR `release/architecture-v1.0.0`; al hacer merge la CI crea el tag `architecture-v1.0.0` — habilita Tier 0 |
+| 3 | (CI) PR `handoff/architecture-v1.0.0` | `handoffs/` — kit de 4 partes; `openapi.yaml` del Servicio de Reservas, `ddl.sql` PostgreSQL, `security.md` |
+| 4 | merge del PR del kit | la CI publica los build packs de la versión 1.0.0 |
 | 5 | `test the architecture index` | `publish-index.js . --up`: bundle draft con build packs en el servidor local |
 | 6 | IDE + MCP | preguntar a Alia; construir el Portal de Reservas o el Servicio de Reservas desde su build pack |
 | 7 | escalación | una petición que cruza un trigger (p. ej. «agrega notificaciones por correo», fuera de alcance en el PO Spec) → `escalations/ESC-001-….md` → issue en este repo (`escalate.js issue … --create`, tras el sí) |
 
-**Servidor de prueba**: el servidor `sa-architecture-index` de :8080 de esta máquina tiene otros datos; usa otro
-proyecto compose y puerto: `SA_INDEX_PORT=18080` con `--server http://localhost:18080`, y al terminar
-`docker compose -p sa-index-test down -v`.
+**Servidor de la demo**: el de :8080 de esta máquina tiene otros datos. La demo usa su propio stack en :18080:
+
+```bash
+cd "$(bun ~/.claude/plugins/marketplaces/shadowx4fox-solution-architect-marketplace/scripts/plugin-root.ts --quiet)/plugins/sa-delivery/skills/architecture-index-export/local"
+COMPOSE_PROJECT_NAME=sa-index-northwind SA_INDEX_PORT=18080 docker compose -f compose.yaml up -d     # levantar
+COMPOSE_PROJECT_NAME=sa-index-northwind docker compose -f compose.yaml down -v                      # reset total
+```
+
+En local, `test the architecture index` publica un draft con `--server http://localhost:18080`.
+
+## CI/CD (GitHub Actions)
+
+| Workflow | Cuándo | Runner | Qué hace |
+|---|---|---|---|
+| `architecture-gates.yml` | PR que toca `ARCHITECTURE.md`, `docs/`, `adr/`, `tdr/` | GitHub | `lifecycle.js check --undecided warn` + comentario con gates y estado |
+| `architecture-release.yml` | merge del PR de release a `main` | GitHub + self-hosted | `lifecycle.js tag` → índice fase 1 (chunks + ledger) → Claude regenera el handoff y abre un PR |
+| `architecture-index.yml` | merge del PR del kit (`handoffs/**`) o manual | self-hosted | misma versión con build packs |
+| `claude.yml` | `@claude` en issues y PRs | GitHub | respuestas en las escalaciones (lo instala `/install-github-app`) |
+
+Configuración del repo (ya aplicada):
+
+- Variables: `SA_INDEX_SERVER=http://localhost:18080`, `SA_INDEX_PROJECT_KEY=northwind-reservas`, `SA_INDEX_MCP_URL=http://localhost:18080/mcp`.
+- Secreto `CLAUDE_CODE_OAUTH_TOKEN`: lo crea `/install-github-app` sobre este repo.
+- Actions puede crear PRs (el PR del kit); PRs de forks requieren aprobación (`all_external_contributors`).
+- Runner self-hosted con etiqueta `sa-index` en `~/actions-runner/northwind-reservas` — solo lo usan jobs de push a `main` y manuales, nunca un PR.
+
+El runner corre en segundo plano y no sobrevive un reinicio:
+
+```bash
+cd ~/actions-runner/northwind-reservas && setsid nohup ./run.sh > runner.log 2>&1 < /dev/null &   # arrancar
+pkill -f 'actions-runner/northwind-reservas/bin/Runner.Listener'                                  # parar
+```
+
+Flujo de la demo: Workflow 1 en local → PR con la arquitectura (gates comentan) → merge → `release my architecture` →
+merge del PR de release → la CI crea el tag, publica el índice y abre el PR del kit → merge → build packs en Alia.
 
 ## Respuestas de la etapa 1, en el orden en que llegan
 

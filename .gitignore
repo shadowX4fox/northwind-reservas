@@ -1,3 +1,8 @@
 # las salidas de una corrida se resetean con git clean; la caché nunca se versiona
 .cache/
 exports/
+
+# sa-skills
+.cache/sa-skills/
+CLAUDE.md
+.claude/settings.json

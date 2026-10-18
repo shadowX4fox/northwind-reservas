@@ -1,0 +1,51 @@
+# Architecture gates — GitHub Actions. Copy to .github/workflows/architecture-gates.yml in the architecture's repository.
+# Every pull request that touches the architecture runs every release gate once (`lifecycle.js check`) and gets one
+# comment: the gates, the change list since the last release with its recommended bump, and the downstream artifacts
+# now stale. No model runs: a finding that stands only because no judge answered it is a warning (`--undecided warn`);
+# answer the worksheet in a session before the release. GitHub-hosted runner only — a pull request from a fork runs here.
+name: Architecture gates
+
+on:
+  pull_request:
+    paths: ['ARCHITECTURE.md', 'docs/**', 'adr/**', 'tdr/**']
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    env:
+      SA_PLUGIN_REF: v10.5.0          # the plugin tag the gates are held to — move it on purpose, never track main
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0             # the last release tag is the baseline of the change list
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Plugin, pinned
+        run: |
+          git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" https://github.com/shadowx4fox/solutions-architect-skills.git "$RUNNER_TEMP/sa"
+          (cd "$RUNNER_TEMP/sa" && bun install --frozen-lockfile)
+      - name: Gates and status
+        id: gates
+        run: |
+          L="$RUNNER_TEMP/sa/skills/architecture-lifecycle/scripts/lifecycle.js"
+          set +e
+          bun "$L" check . --undecided warn --no-render > "$RUNNER_TEMP/gates.txt"; echo "code=$?" >> "$GITHUB_OUTPUT"
+          bun "$L" status . > "$RUNNER_TEMP/status.txt"
+          set -e
+          { echo '### Architecture gates'; echo; echo '```'; cat "$RUNNER_TEMP/gates.txt"; echo '```'; echo
+            echo '### Status'; echo; echo '```'; cat "$RUNNER_TEMP/status.txt"; echo '```'
+            echo; echo "<sub>sa-skills ${SA_PLUGIN_REF} · lifecycle.js check --undecided warn</sub>"; } > "$RUNNER_TEMP/comment.md"
+          cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Comment on the pull request
+        if: github.event.pull_request.head.repo.full_name == github.repository   # a fork's token cannot comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr comment "${{ github.event.pull_request.number }}" --body-file "$RUNNER_TEMP/comment.md" --edit-last --create-if-none
+      - name: Block on a failing gate
+        if: steps.gates.outputs.code != '0'
+        run: exit 1

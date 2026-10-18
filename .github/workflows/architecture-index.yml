@@ -1,0 +1,44 @@
+# Architecture index — GitHub Actions. Copy to .github/workflows/architecture-index.yml in the architecture's repository.
+# Repository variables: SA_INDEX_PROJECT_KEY, SA_INDEX_SERVER, SA_INDEX_MCP_URL (optional). Secret: SA_INDEX_TOKEN.
+# Phase 1 (the release tag) is architecture-release.yml's `index` job; this workflow is phase 2 — the handoff kit merged
+# on main publishes the same version with its build packs — and the manual draft publish.
+name: Architecture index
+
+on:
+  push:
+    branches: [main]
+    paths: ['handoffs/**']           # phase 2: the regenerated kit committed — the same version with its build packs
+  workflow_dispatch:
+    inputs:
+      draft:
+        description: Publish a draft (the architecture differs from its release tag)
+        type: boolean
+        default: false
+
+jobs:
+  index:
+    runs-on: [self-hosted, sa-index]   # reaches the index server; push and dispatch only, never a pull request
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0             # the release tag and its tree: a bundle is released only if the architecture equals the tag's
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Export, check and publish the index bundle
+        run: |
+          git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" https://github.com/shadowx4fox/solutions-architect-skills.git "$RUNNER_TEMP/sa-ci"
+          SA_SKILLS_DIR="$RUNNER_TEMP/sa-ci" bash "$RUNNER_TEMP/sa-ci/plugins/sa-delivery/skills/architecture-index-export/ci/publish-index.sh" .
+        env:
+          SA_PLUGIN_REF: v10.5.0
+          SA_INDEX_PROJECT_KEY: ${{ vars.SA_INDEX_PROJECT_KEY }}
+          SA_INDEX_SERVER: ${{ vars.SA_INDEX_SERVER }}
+          SA_INDEX_MCP_URL: ${{ vars.SA_INDEX_MCP_URL }}
+          SA_INDEX_TOKEN: ${{ secrets.SA_INDEX_TOKEN }}
+          SA_INDEX_ALLOW_DRAFT: ${{ inputs.draft || 'false' }}
+          SA_INDEX_ARTIFACT: ${{ runner.temp }}/out/architecture-index.tgz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: architecture-index
+          path: ${{ runner.temp }}/out/architecture-index.tgz
+          if-no-files-found: ignore   # a draft that was not published leaves no bundle
