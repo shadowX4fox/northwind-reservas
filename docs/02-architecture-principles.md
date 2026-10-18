@@ -161,4 +161,4 @@ Se prefieren protocolos abiertos —REST, OpenAPI, OIDC, OpenTelemetry— sobre 
 - Un cambio incompatible publica `/v2` y mantiene `/v1` al menos 90 días: dos versiones en mantenimiento ([ADR-001](../adr/ADR-001-rest-openapi-apis.md)).
 - Sin agente APM propietario, los paneles de diagnóstico se construyen sobre OpenTelemetry: trabajo propio del equipo.
 
-<!-- PRINCIPLE_REVIEW: PASS 2026-10-18 sha256:c835c50a80f7 -->
+<!-- PRINCIPLE_REVIEW: PASS 2026-10-18 sha256:d13050fdf1f0 -->
