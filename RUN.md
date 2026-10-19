@@ -53,7 +53,9 @@ Cada etapa en una **sesión nueva** (`claude --permission-mode auto`).
 
 ```bash
 cd "$(bun ~/.claude/plugins/marketplaces/shadowx4fox-solution-architect-marketplace/scripts/plugin-root.ts --quiet)/plugins/sa-delivery/skills/architecture-index-export/local"
-COMPOSE_PROJECT_NAME=sa-index-northwind SA_INDEX_PORT=18080 docker compose -f compose.yaml up -d     # levantar
+COMPOSE_PROJECT_NAME=sa-index-northwind SA_INDEX_PORT=18080 \
+  SA_INDEX_ESCALATION_PROJECT=northwind-reservas SA_INDEX_ESCALATION_REPOSITORY=shadowX4fox/northwind-reservas \
+  docker compose -f compose.yaml -f compose.escalation.yaml up -d                                    # levantar (las escalaciones van a este repo)
 COMPOSE_PROJECT_NAME=sa-index-northwind docker compose -f compose.yaml down -v                      # reset total
 ```
 
