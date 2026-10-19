@@ -7,7 +7,7 @@
 | Componente | 5.1 Portal de Reservas |
 | Tipo | Web Application · C4 L2 |
 | Tecnología | React 18, TypeScript |
-| Versiones | arquitectura v1.0.0 · componente v1.0.0 |
+| Versiones | arquitectura v1.0.0 · componente v1.0.1 |
 | Responsable | [NO DOCUMENTADO — agregar `**Owner:**` a docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md] |
 | Se ejecuta en | Archivos estáticos |
 | Capacidad | [NO DOCUMENTADO — docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md § Capacity <!-- LABEL: Capacity -->] |

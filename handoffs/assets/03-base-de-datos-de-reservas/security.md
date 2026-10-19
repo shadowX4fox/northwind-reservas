@@ -8,7 +8,7 @@
 
 | Integration | Caller | Protocol | Authentication | Source |
 |---|---|---|---|---|
-| I-04 | Servicio de Reservas | JDBC/SQL [Data] | [NOT DOCUMENTED — authentication of I-04: state it in docs/07-security-architecture.md] — falla cerrada hasta que se declare | docs/05 |
+| I-04 | Servicio de Reservas | JDBC/SQL [Data] | Usuario PostgreSQL propio con credenciales del gestor de secretos del clúster; JDBC con TLS | STRIDE TB-04 |
 
 Cualquier otro llamador se rechaza.
 
@@ -47,7 +47,15 @@ _docs/02-architecture-principles.md:64_
 
 ## Amenazas (STRIDE) <!-- SECTION: Threats -->
 
-[NOT DOCUMENTED — analysis/STRIDE-*.md — run /sa-analysis:architecture-analysis stride]
+| # | Boundary | Threat | Category | Severity | Status | Mitigation |
+|---|---|---|---|---|---|---|
+| T8-T | TB-04 | Alteración de datos en reposo o en respaldos | T — Manipulación | Medium | ⚠️ Finding | TLS en JDBC; cifrado en reposo de la Base de Datos de Reservas y de sus respaldos no documentado (docs/07 § 9.3) |
+| T9-R | TB-04 | Cambio directo en la base sin rastro (acceso administrativo) | R — Repudio | Low | ⚠️ Finding | Auditoría de cancelaciones en la misma transacción (ADR-106); auditoría de acceso administrativo a PostgreSQL 16 no documentada |
+| T10-I | TB-04 | Divulgación de datos personales desde almacenamiento o respaldos | I — Divulgación de información | Medium | ⚠️ Finding | Cifrado en reposo no documentado; respaldos conservan datos purgados 30 días en una ubicación no documentada (docs/07 § 9.4; docs/09 § 11.3) |
+| T11-D | TB-04 | Agotamiento de conexiones JDBC | D — Denegación de servicio | Low | ⚠️ Finding | Falla de conexión responde error de servicio; tamaño del pool y límite de conexiones no documentados (docs/05 § 7, I-04) |
+| T12-E | TB-04 | Inyección que ejecuta DDL con el usuario del servicio | E — Elevación de privilegios | Medium | ⚠️ Finding | Privilegios del usuario PostgreSQL (DML frente a DDL de migraciones) no documentados; las migraciones viven en el repositorio del servicio (docs/09 § 11.1) |
+
+_analysis/STRIDE-2026-10-18.md_
 
 ## Datos que maneja <!-- SECTION: Data -->
 
@@ -55,4 +63,10 @@ _docs/02-architecture-principles.md:64_
 
 ## Pruebas que la construcción debe pasar <!-- SECTION: Security Tests -->
 
-- [ ] I-04 rechaza toda llamada hasta que su autenticación esté documentada.
+- [ ] Una llamada a I-04 sin credenciales se rechaza.
+- [ ] Una llamada a I-04 desde un llamador que no figura en Entrada se rechaza.
+- [ ] T8-T — Alteración de datos en reposo o en respaldos: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
+- [ ] T9-R — Cambio directo en la base sin rastro (acceso administrativo): la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
+- [ ] T10-I — Divulgación de datos personales desde almacenamiento o respaldos: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
+- [ ] T11-D — Agotamiento de conexiones JDBC: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
+- [ ] T12-E — Inyección que ejecuta DDL con el usuario del servicio: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.

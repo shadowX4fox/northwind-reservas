@@ -20,7 +20,7 @@ related_adrs: ADR-003, ADR-102
 **Communicates via:** TCP
 **Description:** Base de Datos de Reservas guarda salas y reservas e impide dos reservas confirmadas superpuestas de una sala.
 
-**Component Version:** 1.0.0
+**Component Version:** 1.0.1
 **Architecture Version:** 1.0.0
 **Last Updated:** 2026-10-18
 
@@ -41,9 +41,20 @@ Fuente de verdad de salas y reservas. PostgreSQL 16 gestionado por Plataforma No
 - **Carga inicial**: las 42 salas se cargan una vez desde la hoja de cálculo de recepción antes del piloto (PO Spec, Supuestos).
 - **Consistencia**: fuerte; la integridad ante superposición la garantiza el motor, no la aplicación.
 
-## Dependencias <!-- LABEL: Dependencies -->
+## Patrones de Comunicación <!-- LABEL: Communication Patterns -->
 
-**Consumido por**: [Servicio de Reservas](02-servicio-de-reservas.md), por JDBC.
+**Entrante:**
+
+| Integración | Contraparte | Protocolo | Uso |
+|---|---|---|---|
+| I-04 | [Servicio de Reservas](02-servicio-de-reservas.md) | JDBC con TLS | Única lectura y escritura de sus tablas |
+
+**Saliente:** ninguna.
+
+## Propiedad de datos <!-- LABEL: Data Ownership -->
+
+- **Guarda**: salas, reservas, registro de auditoría de cancelaciones y claves de idempotencia; su dueño es el Servicio de Reservas (ADR-003).
+- **Garantiza**: la restricción de exclusión que rechaza dos reservas confirmadas superpuestas de una sala ([ADR-102](../../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
 
 ## Capacidad <!-- LABEL: Capacity -->
 
