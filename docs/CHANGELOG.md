@@ -6,6 +6,15 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-19
+
+### Added
+- TDR: TDR-001 — La consulta de disponibilidad se sirve de una caché de 5 minutos (Open)
+
+### Changed
+- Contenedor: Servicio de Reservas — nombra su deuda técnica (TDR-001)
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — fila de TDR-001 en 13.2 Deuda Técnica
+
 ## [1.1.1] - 2026-10-18
 
 ### Changed

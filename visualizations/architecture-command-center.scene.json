@@ -609,6 +609,29 @@
     ]
    }
   },
+  "tdrs": {
+   "TDR-001": {
+    "id": "TDR-001",
+    "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
+    "file": "tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md",
+    "status": "Open",
+    "date": "2026-10-19",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "tags": [
+     "disponibilidad",
+     "cache",
+     "CU1"
+    ],
+    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en memoria de 5 minutos por sede y fecha, para cumplir el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas.",
+    "impact": "Una sala recién reservada puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
+    "owner": "---"
+   }
+  },
   "components": {
    "portal-de-reservas": {
     "name": "Portal de Reservas",
@@ -2581,7 +2604,7 @@
       "anchor": "Conventions"
      }
     ],
-    "bytes": 2350
+    "bytes": 2553
    },
    {
     "id": "11-references",
