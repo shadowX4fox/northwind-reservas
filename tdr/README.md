@@ -1,0 +1,9 @@
+# Technical Debt Records
+
+Registros de deuda técnica (TDR), formato breve según https://www.workingsoftware.dev/technical-debt-records/. Los ADR capturan *por qué se tomó una decisión*; los TDR capturan *qué se difirió o aceptó como subóptimo y cuánto costará después*.
+
+## Index
+
+| ID      | Title                                                             | Status | Driver       | Owner                          |
+|---------|-------------------------------------------------------------------|--------|--------------|--------------------------------|
+| TDR-001 | La consulta de disponibilidad se sirve de una caché de 5 minutos | Open   | Architecture | Equipo del Servicio de Reservas |
