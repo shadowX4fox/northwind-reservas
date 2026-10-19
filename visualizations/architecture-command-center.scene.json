@@ -833,7 +833,7 @@
          ],
          [
           "AvailabilityResponse",
-          "rooms: lista de RoomAvailability; suggestedSlots: hasta 3 franjas {start, end} cuando no hay salas libres (CU1, alternativa 1)"
+          "rooms: lista de RoomAvailability; suggestedSlots: hasta 3 franjas {start, end} cuando no hay salas libres: misma duración, día y sede, las más próximas en el tiempo a la pedida, antes o después y nunca en el pasado; ante igual distancia, la posterior (CU1, alternativa 1)"
          ],
          [
           "RoomAvailability",
@@ -849,7 +849,7 @@
          ],
          [
           "CancellationRequest",
-          "reason (120 caracteres o menos; obligatorio para el rol recepcion, ADR-105)"
+          "reason (de 10 a 120 caracteres; obligatorio para el rol recepcion, ADR-105)"
          ]
         ]
        },
@@ -874,7 +874,7 @@
          [
           "VALIDATION_FAILED",
           "400",
-          "Franja fuera de múltiplos de 30 minutos, de más de 8 horas o en el pasado; asunto de más de 80 caracteres; motivo de más de 120 caracteres o ausente para recepcion"
+          "Franja fuera de múltiplos de 30 minutos, de más de 8 horas o en el pasado; asunto de más de 80 caracteres; motivo de menos de 10 o más de 120 caracteres, o ausente para recepcion"
          ],
          [
           "BOOKING_NOT_FOUND",
@@ -1033,8 +1033,8 @@
     "deploysAs": "Docker container",
     "communicatesVia": "HTTPS",
     "description": "Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.",
-    "componentVersion": "1.1.0",
-    "lastUpdated": "2026-10-18"
+    "componentVersion": "1.1.1",
+    "lastUpdated": "2026-10-19"
    },
    "base-de-datos-de-reservas": {
     "name": "Base de Datos de Reservas",
@@ -2177,7 +2177,7 @@
       "title": "Secuencias Extremo a Extremo"
      }
     ],
-    "bytes": 15663
+    "bytes": 15729
    },
    {
     "id": "05-integration-points",
@@ -2397,7 +2397,7 @@
       "anchor": "Security Monitoring"
      }
     ],
-    "bytes": 6269
+    "bytes": 6555
    },
    {
     "id": "08-scalability-and-performance",
