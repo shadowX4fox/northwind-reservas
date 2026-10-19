@@ -1,6 +1,6 @@
 {
  "project": "Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión",
- "version": "1.0.0",
+ "version": "1.1.0",
  "status": "Released",
  "architectureType": "MICROSERVICES",
  "language": "es",
@@ -51,7 +51,8 @@
    "adrs": [
     "ADR-001",
     "ADR-002",
-    "ADR-004"
+    "ADR-004",
+    "ADR-104"
    ],
    "note": "Interfaz de autoservicio de reservas, responsiva para navegador y teléfono. Sustituye la solicitud por correo a recepción."
   },
@@ -68,7 +69,10 @@
     "ADR-003",
     "ADR-004",
     "ADR-005",
-    "ADR-102"
+    "ADR-102",
+    "ADR-103",
+    "ADR-105",
+    "ADR-106"
    ],
    "note": "Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única puerta a sus datos (ADR-003)."
   },
@@ -513,6 +517,95 @@
     "related": [
      "ADR-001",
      "ADR-003"
+    ]
+   },
+   "ADR-103": {
+    "id": "ADR-103",
+    "title": "Idempotencia de la creación de reservas con clave",
+    "file": "adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md",
+    "status": "Proposed",
+    "date": "2026-10-18",
+    "scope": "User",
+    "summary": "El Portal de Reservas genera en el navegador una clave por cada confirmación y la envía en Idempotency-Key. El Servicio de Reservas busca la clave antes de insertar y guarda clave y respuesta 24 horas en la Base de Datos de Reservas.",
+    "consequences": {
+     "positive": [
+      "Sin duplicados — el miembro recibe el mismo código de reserva ante un reintento.",
+      "Sin componente nuevo — la clave vive en la base existente."
+     ],
+     "negative": [
+      "Búsqueda previa en cada creación — afecta al Servicio de Reservas. Severity: Low. Mitigation: Not documented.",
+      "Almacenamiento de claves y respuestas — afecta a la Base de Datos de Reservas. Severity: Low. Mitigation: expiración a 24 horas."
+     ]
+    },
+    "related": [
+     "ADR-001",
+     "ADR-003"
+    ]
+   },
+   "ADR-104": {
+    "id": "ADR-104",
+    "title": "Tokens OIDC solo en memoria en la SPA",
+    "file": "adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md",
+    "status": "Proposed",
+    "date": "2026-10-18",
+    "scope": "User",
+    "summary": "Los tokens OIDC viven solo en la memoria del Portal de Reservas. Nunca se guardan en localStorage ni en sessionStorage. El token de acceso dura 5 minutos y se renueva en silencio.",
+    "consequences": {
+     "positive": [
+      "Menor superficie de robo de token — miembros y recepción; los tokens no persisten en el almacenamiento del navegador.",
+      "Exposición acotada — un token robado sirve como máximo 5 minutos."
+     ],
+     "negative": [
+      "Sesión perdida al recargar la página — miembros y recepción. Severity: Low. Mitigation: Not documented.",
+      "Dependencia de la renovación silenciosa — usuarios del portal. Severity: Medium. Mitigation: Not documented."
+     ]
+    },
+    "related": [
+     "ADR-002"
+    ]
+   },
+   "ADR-105": {
+    "id": "ADR-105",
+    "title": "Autorización por rol recepcion y atributo sede",
+    "file": "adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md",
+    "status": "Proposed",
+    "date": "2026-10-18",
+    "scope": "User",
+    "summary": "El Servicio de Reservas autoriza la cancelación al dueño de la reserva. También la autoriza a un token con rol recepcion cuyo atributo sede coincide con la sede de la sala. En cualquier otro caso responde \"no autorizado\" y la reserva sigue \"Confirmada\".",
+    "consequences": {
+     "positive": [
+      "Reservas ajenas protegidas — solo el dueño o recepción de la sede las cancela.",
+      "Sin dependencia extra — la decisión usa claims del token ya validado."
+     ],
+     "negative": [
+      "Dependencia de claims correctos — un sede mal emitido amplía el acceso de recepción. Severity: Medium. Mitigation: Not documented."
+     ]
+    },
+    "related": [
+     "ADR-002",
+     "ADR-003"
+    ]
+   },
+   "ADR-106": {
+    "id": "ADR-106",
+    "title": "Retención de 24 meses, purga y auditoría",
+    "file": "adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md",
+    "status": "Proposed",
+    "date": "2026-10-18",
+    "scope": "User",
+    "summary": "Las reservas y el registro de auditoría de cancelaciones se conservan 24 meses en la Base de Datos de Reservas. Una purga programada los elimina. El Servicio de Reservas escribe la auditoría en la misma transacción de la cancelación.",
+    "consequences": {
+     "positive": [
+      "Cumplimiento — los datos personales no superan el plazo de 24 meses.",
+      "Trazabilidad — cada cancelación deja un registro confiable."
+     ],
+     "negative": [
+      "Respaldos con datos purgados — los respaldos diarios conservan hasta 30 días datos ya purgados. Severity: Low. Mitigation: Not documented."
+     ]
+    },
+    "related": [
+     "ADR-003",
+     "ADR-005"
     ]
    }
   },
