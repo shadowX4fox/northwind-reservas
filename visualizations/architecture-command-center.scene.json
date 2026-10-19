@@ -610,6 +610,36 @@
    }
   },
   "tdrs": {
+   "TDR-002": {
+    "id": "TDR-002",
+    "title": "Las claves de idempotencia vencidas nunca se purgan",
+    "file": "tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md",
+    "status": "Open",
+    "date": "2026-10-19",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     },
+     {
+      "slug": "Base de Datos de Reservas",
+      "node": "base-de-datos-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-103",
+     "ADR-106"
+    ],
+    "tags": [
+     "idempotencia",
+     "purga",
+     "almacenamiento",
+     "retencion"
+    ],
+    "summary": "El Servicio de Reservas guarda cada Idempotency-Key con su respuesta en la tabla clave_idempotencia de la Base de Datos de Reservas (ADR-103), pero ninguna purga elimina las claves de más de 24 horas. La búsqueda las ignora al vencer, así que la idempotencia funciona; las filas se quedan para siempre.",
+    "impact": "La tabla crece sin límite, una fila por cada creación de reserva, y con ella el almacenamiento y los respaldos de la Base de Datos de Reservas. Cada fila guarda la respuesta de la creación (el sub del miembro y el asunto de la reserva), que permanece más allá de las 24 horas de ADR-103 y del plazo de 24 meses de ADR-106.",
+    "owner": "---"
+   },
    "TDR-001": {
     "id": "TDR-001",
     "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
@@ -2604,7 +2634,7 @@
       "anchor": "Conventions"
      }
     ],
-    "bytes": 2553
+    "bytes": 2733
    },
    {
     "id": "11-references",

@@ -6,6 +6,18 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-19
+
+### Added
+- TDR: TDR-002 — Las claves de idempotencia vencidas nunca se purgan (Open)
+
+### Changed
+- Contenedor: Servicio de Reservas — nombra su deuda técnica TDR-002
+- Contenedor: Base de Datos de Reservas — nombra su deuda técnica TDR-002
+- ADR: ADR-103 — enlaza la deuda técnica TDR-002
+- ADR: ADR-106 — enlaza la deuda técnica TDR-002
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — fila de TDR-002 en 13.2 Deuda Técnica
+
 ## [1.2.0] - 2026-10-19
 
 ### Added
