@@ -146,8 +146,6 @@ Propiedad exclusiva. No existe propiedad mutable compartida en el sistema.
 
 Dueño lógico: Servicio de Reservas ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
 
-Deuda técnica registrada: las claves de idempotencia vencidas nunca se purgan ([TDR-002](../../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md)).
-
 **Lee (vía contrato, sin ser dueño):**
 
 Sin lecturas externas.
@@ -171,6 +169,14 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 **Prohibidas:**
 
 Sin prohibiciones explícitas.
+
+### Deuda técnica <!-- LABEL: Technical Debt -->
+
+Registrada en este componente. El código mantiene cada atajo hasta que su registro pase a `Resolved`.
+
+| TDR | Title | Status |
+|---|---|---|
+| [TDR-002](../../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md) | Las claves de idempotencia vencidas nunca se purgan | Open |
 
 ---
 
