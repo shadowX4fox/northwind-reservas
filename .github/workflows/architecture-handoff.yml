@@ -27,7 +27,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.8.1
+  SA_PLUGIN_REF: v10.8.2
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -74,8 +74,9 @@ jobs:
             sa-skills@shadowx4fox-solution-architect-marketplace
             sa-delivery@shadowx4fox-solution-architect-marketplace
           prompt: |
-            generate dev handoff — the architecture was released as ${{ inputs.tag }}. Regenerate the whole kit
-            (--force) for every container, unattended: take every default, ask nothing. This is a headless run: it ends
+            generate dev handoff — the architecture was released as ${{ inputs.tag }}. Every container, without
+            --force: a part whose payload did not change is kept and only its version row moves (handoff-prepare.js),
+            so the kit's diff is the release's. Unattended: take every default, ask nothing. This is a headless run: it ends
             when your turn ends, and any sub-agent still running dies with it — dispatch every sub-agent in the
             foreground (never run_in_background) and have every result before you go on. Do not commit; leave the files
             under handoffs/. End with the kit gate's receipt.
