@@ -1,7 +1,7 @@
 ---
 id: ESC-001
 status: Resolved
-date: 2026-10-19
+date: 2026-10-18
 architecture: architecture-v1.0.0
 route: tier-1
 triggers: [security-iam, low-confidence]
