@@ -9,4 +9,8 @@
 
 -- TODO: [NOT DOCUMENTED — columnas de la tabla de reservas (estado, incluidas cancelaciones): agregar a docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md]
 
+-- TODO: [NOT DOCUMENTED — columnas de la tabla del registro de auditoría de cancelaciones: agregar a docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md]
+
+-- TODO: [NOT DOCUMENTED — columnas de la tabla de claves de idempotencia: agregar a docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md]
+
 -- TODO: [NOT DOCUMENTED — restricción de exclusión contra reservas confirmadas superpuestas de la misma sala (ADR-102): columnas y tipo de rango: agregar a docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md]

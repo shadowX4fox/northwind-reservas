@@ -11,7 +11,7 @@
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
 | Versión de la arquitectura | 1.0.0 |
-| Versión del componente | 1.0.0 |
+| Versión del componente | 1.0.1 |
 | Generado | 2026-10-18 |
 | Documento fuente del componente | [../../docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md](../../docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md) |
 
@@ -25,7 +25,7 @@
 
 El orden de lectura de los cuatro documentos del kit está en `../README.md`.
 
-Este documento es el **panel para este equipo**. Especifica solo intención y restricción. La estructura interna, la elección de persistencia dentro de los límites propios, el idioma de código, la disposición de módulos y la estrategia de pruebas quedan deliberadamente sin especificar: las decide el equipo.
+Este documento es el **panel de este equipo**. Especifica solo intención y restricción. La estructura interna, la elección de persistencia dentro de los límites propios, el idioma de código, la disposición de módulos y la estrategia de pruebas quedan deliberadamente sin especificar: son del equipo.
 
 Se lee junto con [`../SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md) (historia del sistema completo), [`../CROSS_CUTTING_STANDARDS.md`](../CROSS_CUTTING_STANDARDS.md) (reglas globales) y cada Interface Contract enlazado (continuidad con los servicios adyacentes).
 
@@ -33,29 +33,28 @@ Se lee junto con [`../SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md) (histo
 
 ## 1. Responsabilidad <!-- SECTION: Responsibility -->
 
-Portal de Reservas es la SPA (React 18, TypeScript, servida como archivos estáticos) con la que miembros y recepcionistas consultan la disponibilidad de salas, reservan y cancelan. Autentica al usuario con el Proveedor de Identidad Northwind y llama al Servicio de Reservas. [NOT DOCUMENTED — add a not-accountable clause to docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md]
+Portal de Reservas es la SPA (React 18, TypeScript, archivos estáticos) donde miembros y recepcionistas consultan disponibilidad de salas, reservan y cancelan; autentica al usuario con el Proveedor de Identidad Northwind mediante código de autorización con PKCE. [NOT DOCUMENTED — add a not-accountable clause to docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md]
 
 ---
 
 ## 2. Posición <!-- SECTION: Position -->
 
-**Aparece en los flujos:** F-01 fase 1 (Inicio de sesión), F-01 fase 2 (Validación del token), F-02 fase 2 (Validación del token), F-03 fase 2 (Validación del token)
+**Aparece en los flujos:** F-01 phase 1 (Inicio de sesión), F-01 phase 2 (Validación del token), F-02 phase 2 (Validación del token), F-03 phase 2 (Validación del token)
 
-**Interfaces ascendentes** (entrantes):
+**Interfaces entrantes** (upstream):
 
 No hay interfaces entrantes documentadas.
 
-**Interfaces descendentes** (salientes):
+**Interfaces salientes** (downstream):
 
+- [portal-de-reservas→proveedor-de-identidad-northwind](../interfaces/portal-de-reservas→proveedor-de-identidad-northwind.md) — I-01
 - [portal-de-reservas→servicio-de-reservas](../interfaces/portal-de-reservas→servicio-de-reservas.md) — I-02
 
 **Interfaces sin Interface Contract**:
 
-- I-01 — saliente hacia Proveedor de Identidad Northwind · HTTPS/JSON [Auth] — sin Interface Contract; pendiente, falla cerrado
+Ninguna.
 
-**Panel** — este componente y sus vecinos en el diagrama de contenedores, recortado de `docs/03` (generado, nunca se edita a mano):
-
-Recorte de `docs/03-architecture-layers.md` § Diagram: C4 Level 2 — Container — Portal de Reservas y sus vecinos (generado, nunca se edita a mano):
+**Panel** — recorte de `docs/03-architecture-layers.md` § Diagram: C4 Level 2 — Container — Portal de Reservas y sus vecinos (generado, nunca se edita a mano):
 
 ```mermaid
 %%{
@@ -114,30 +113,31 @@ Contratos que este componente publica. Los esquemas viven en los activos enlazad
 
 Condiciones que se cumplen en todo momento, sin importar la implementación. Cada invariante es verificable: QA cubre cada una con una prueba.
 
-- **INV-01** El portal muestra la disponibilidad de salas por sede, fecha y franja, con capacidad y equipamiento.
-- **INV-02** El portal envía la reserva de una sala libre y muestra la confirmación con el código de reserva.
-- **INV-03** El portal lista las reservas futuras del miembro y permite cancelarlas.
+- **INV-01** El portal muestra la disponibilidad de salas por sede, fecha y franja, con capacidad y equipamiento, leída del Servicio de Reservas.
+- **INV-02** Al reservar una sala libre, el portal muestra la confirmación con el código de reserva.
+- **INV-03** El portal lista las reservas futuras del miembro autenticado y permite cancelarlas.
 - **INV-04** El portal permite al recepcionista cancelar cualquier reserva de su sede.
-- **INV-05** El portal autentica al usuario con el Proveedor de Identidad Northwind mediante código de autorización con PKCE — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md).
-- **INV-06** Los tokens viven solo en memoria; nunca se guardan en `localStorage` ni `sessionStorage` — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md).
-- **INV-07** Cada llamada al Servicio de Reservas propaga W3C Trace Context (`traceparent`) — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
-- **INV-08** Los logs del portal son JSON estructurado y nunca incluyen tokens ni datos personales completos — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
+- **INV-05** El portal autentica al usuario con el Proveedor de Identidad Northwind mediante código de autorización con PKCE ([ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)).
+- **INV-06** Los tokens OIDC viven solo en la memoria del navegador; el portal nunca los escribe en `localStorage` ni en `sessionStorage` ([ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md)).
+- **INV-07** El portal propaga W3C Trace Context (`traceparent`) en cada llamada al Servicio de Reservas ([ADR-004](../../adr/ADR-004-opentelemetry-observability.md)).
+- **INV-08** El portal no persiste ningún dato propio.
+- **INV-09** Los logs del portal son JSON estructurado y nunca incluyen tokens ni datos personales completos — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
 
 ---
 
 ## 5. Presupuestos (de la descomposición) <!-- SECTION: Budgets -->
 
-Tomados textualmente de las filas de [`../SYSTEM_RUNTIME_VIEW.md § Budget Decomposition`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) que referencian este componente. No se repite el SLO global: solo la asignación de este componente.
+Tomados textualmente de [`../SYSTEM_RUNTIME_VIEW.md § Budget Decomposition`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition), filas que referencian este componente. No se repite el SLO global: solo la asignación de este componente.
 
 | Aspect | Allocation | Source |
 |--------|-----------:|--------|
-| Latencia p99 | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — hop Portal de Reservas → Servicio de Reservas sin presupuesto] |
-| Error budget | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — sin fuente] |
-| Throughput (pico) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — sin fuente] |
-| Throughput (sostenido) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — sin fuente] |
-| Techo de costo | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — sin fuente] |
+| Latencia p99 | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [`SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) — Portal de Reservas → Servicio de Reservas |
+| Error budget | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [`SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
+| Throughput (pico) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [`SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
+| Throughput (sostenido) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [`SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
+| Techo de costo | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [`SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
 
-Meta de experiencia documentada (no es una asignación de presupuesto): tiempo desde "Confirmar" hasta ver el código de reserva, p95 ≤ 2 s (PO Spec §8).
+Métrica de experiencia documentada: tiempo desde "Confirmar" hasta ver el código de reserva, meta p95 ≤ 2 s (PO Spec §8).
 
 ---
 
@@ -147,11 +147,11 @@ Propiedad exclusiva. No existe propiedad mutable compartida en el sistema.
 
 **Es dueño de (fuente autoritativa):**
 
-- [NOT DOCUMENTED — the descriptor has no data-ownership section — add one, or leave the Component Specification § 6 to state it]
+- Ningún dato persistente; los tokens viven solo en memoria del navegador ([ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md)).
 
-**Lee (vía contrato, sin ser dueño):**
+**Lee (vía contrato, no es dueño):**
 
-- Disponibilidad y reservas, vía [portal-de-reservas→servicio-de-reservas](../interfaces/portal-de-reservas→servicio-de-reservas.md) (I-02).
+- Disponibilidad y reservas del Servicio de Reservas vía [portal-de-reservas→servicio-de-reservas](../interfaces/portal-de-reservas→servicio-de-reservas.md) — I-02.
 
 **No debe acceder a:**
 
@@ -165,21 +165,23 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 
 **Obligatorias:**
 
-- React 18 y TypeScript, desplegado como archivos estáticos — per [documento del componente](../../docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md).
-- API síncrona hacia el Servicio de Reservas: REST sobre HTTPS con cuerpos JSON y contrato OpenAPI 3.1 — per [ADR-001](../../adr/ADR-001-rest-openapi-apis.md).
-- Inicio de sesión con OIDC, código de autorización con PKCE, contra el Proveedor de Identidad Northwind — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md).
-- Trazas, métricas y logs con OpenTelemetry hacia el colector de Plataforma Northwind — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
+- React 18 y TypeScript — per `docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md` § Technology
+- Despliegue como archivos estáticos — per `docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md`
+- API síncrona hacia el Servicio de Reservas: REST sobre HTTPS con JSON — per [ADR-001](../../adr/ADR-001-rest-openapi-apis.md)
+- Autenticación con código de autorización y PKCE contra el Proveedor de Identidad Northwind — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)
+- Trazas, métricas y logs con OpenTelemetry hacia el colector de Plataforma Northwind, con `traceparent` en cada llamada HTTP — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md)
+- Tokens OIDC solo en memoria — per [ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md) · INV-06
 
 **Prohibidas:**
 
-- Guardar tokens en `localStorage` o `sessionStorage` — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md).
-- Incluir tokens o datos personales completos en los logs — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
+- Guardar tokens en `localStorage` o `sessionStorage` — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md), [ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md) · INV-06
+- Incluir tokens o datos personales completos en logs — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md) · INV-09
 
 ---
 
 ## 8. Deliberadamente sin especificar <!-- SECTION: Deliberately Unspecified -->
 
-El equipo decide lo siguiente:
+El equipo es dueño de las siguientes decisiones:
 
 - Estructura interna (disposición de módulos, límites de paquetes)
 - Elección de persistencia dentro del límite propio
@@ -187,7 +189,7 @@ El equipo decide lo siguiente:
 - Estrategia de pruebas (reparto unitarias/integración, herramientas)
 - Caché local, pooling en proceso
 
-Sobre-especificar aquí sustituiría el criterio por la prescripción. Si te encuentras especificando alguno de los puntos anteriores, escala: pertenece a Cross-Cutting Standards (si aplica a toda la institución) o a un ADR (si aplica a todo el proyecto), no a una Especificación de Componente.
+Sobre-especificar aquí reemplazaría el criterio por la prescripción. Si te encuentras especificando alguna de estas decisiones, escala: pertenece a Cross-Cutting Standards (si es de toda la institución) o a un ADR (si es de todo el proyecto), no a una Especificación de Componente.
 
 ---
 
@@ -195,19 +197,19 @@ Sobre-especificar aquí sustituiría el criterio por la prescripción. Si te enc
 
 - [ ] Los contratos del § 3 están publicados y verificados por los consumidores
 - [ ] Los presupuestos del § 5 se demuestran bajo carga
-- [ ] Los invariantes del § 4 están cubiertos por pruebas
-- [ ] La semántica de fallo de las interfaces se ejercita (inyección de fallos según el Interface Contract)
+- [ ] Las invariantes del § 4 están cubiertas por pruebas
+- [ ] La semántica de fallo de las interfaces se ejerce (inyección de fallos según el Interface Contract)
 - [ ] Se verificó la conformidad con Cross-Cutting Standards; toda desviación se registra según [`../CROSS_CUTTING_STANDARDS.md § Deviations`](../CROSS_CUTTING_STANDARDS.md#deviations)
 
 ---
 
 ## 10. Activos <!-- SECTION: Assets -->
 
-Activos entregables generados junto con esta Especificación de Componente.
+Activos entregables generados junto a esta Especificación de Componente.
 
 | Asset | File | Description |
 |-------|------|-------------|
-| C4 Component Descriptor | [c4-descriptor.md](assets/01-portal-de-reservas/c4-descriptor.md) | Ficha operativa para SRE/infraestructura |
+| Descriptor C4 del componente | [c4-descriptor.md](assets/01-portal-de-reservas/c4-descriptor.md) | Resumen operativo para SRE/infraestructura |
 
 Los activos viven en `handoffs/assets/01-portal-de-reservas/`.
 
@@ -215,28 +217,19 @@ Los activos viven en `handoffs/assets/01-portal-de-reservas/`.
 
 ## 11. Preguntas abiertas <!-- SECTION: Open Questions -->
 
-Brechas detectadas al generar la Especificación de Componente: valores ausentes en la documentación de arquitectura o en los artefactos de origen (Runtime View, Cross-Cutting Standards, Interface Contracts).
+Vacíos detectados al generar la Especificación de Componente: valores ausentes en la documentación de arquitectura o en los artefactos previos (Runtime View, Cross-Cutting Standards, Interface Contracts).
 
 | Section | What is missing | Where to fix it | What it blocks |
 |---------|-----------------|-----------------|----------------|
-| Metadata | Equipo propietario del componente | `docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md`, campo **Owner:** | Asignar responsabilidad del equipo |
-| Responsibility | Cláusula de lo que el componente no es responsable | `docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md`, sección Responsabilidades | Acotar el alcance del componente |
-| Position | ID del diagrama del panel | Registro de diagramas de `docs/03-architecture-layers.md` | Referenciar el diagrama de forma estable |
-| Budgets | Latencia p99 del hop Portal de Reservas → Servicio de Reservas | `/sa-analysis:architecture-analysis latency-budget` | Demostrar el presupuesto bajo carga |
-| Budgets | Error budget | `/sa-analysis:architecture-analysis latency-budget` | Definir criterios de aceptación de errores |
-| Budgets | Throughput (pico) | `/sa-analysis:architecture-analysis latency-budget` | Dimensionar réplicas |
-| Budgets | Throughput (sostenido) | `/sa-analysis:architecture-analysis latency-budget` | Dimensionar réplicas |
-| Budgets | Techo de costo | `/sa-analysis:architecture-analysis latency-budget` | Validar el costo operativo |
-| Data Ownership | Entidades de las que el componente es dueño | `docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md`, nueva sección de propiedad de datos | Declarar la propiedad de datos del § 6 |
+| § Responsibility | Cláusula de lo que el componente NO es responsable | `docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md` (agregar límites fuera de alcance) | Delimitar el alcance del equipo |
+| § Position | ID del diagrama C4 L2 | Registro de diagramas (`docs/03-architecture-layers.md`) | Trazabilidad del panel |
+| § Budgets | Latencia p99, error budget, throughput y techo de costo | `/sa-analysis:architecture-analysis latency-budget` | Pruebas de carga y aceptación del § 5 |
 | Assets — c4-descriptor.md | Responsable | agregar `**Owner:**` a docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md | escalamiento y propiedad en la CMDB |
 | Assets — c4-descriptor.md | Capacidad | docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md § Capacity <!-- LABEL: Capacity --> | dimensionamiento y planificación de capacidad |
 | Assets — c4-descriptor.md | Host · IP · SO · Dominio | docs/09-operational-considerations.md | registro en la CMDB y reglas de red |
-| Assets — security.md | Authentication I-01 | authentication of I-01: state it in docs/07-security-architecture.md | la interfaz falla cerrada: no se abre sin su autenticación |
-| Assets — security.md | Authentication I-02 | authentication of I-02: state it in docs/07-security-architecture.md | la interfaz falla cerrada: no se abre sin su autenticación |
-| Assets — security.md | STRIDE | analysis/STRIDE-*.md — run /sa-analysis:architecture-analysis stride | se desconocen las amenazas que la construcción debe mitigar |
 | Assets — security.md | Data Sensitivity | analysis/DATA-SENSITIVITY-*.md — run /sa-analysis:architecture-analysis data-sensitivity | se desconoce la clasificación de los datos que maneja el componente |
 
 ---
 
-*Generated by `sa-skills:architecture-dev-handoff` on 2026-10-18*
-*Source: /home/runner/work/northwind-reservas/northwind-reservas/ARCHITECTURE.md*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-18*
+*Fuente: /home/shadowx4fox/Project/Personal/northwind-reservas/ARCHITECTURE.md*

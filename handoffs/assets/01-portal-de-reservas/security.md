@@ -12,8 +12,8 @@ Ningún llamador documentado: toda llamada entrante se rechaza.
 
 | Integration | Target | Protocol | Authentication | Source |
 |---|---|---|---|---|
-| I-01 | Proveedor de Identidad Northwind | HTTPS/JSON [Auth] | [NOT DOCUMENTED — authentication of I-01: state it in docs/07-security-architecture.md] | docs/05 |
-| I-02 | Servicio de Reservas | HTTPS/JSON [Query] | [NOT DOCUMENTED — authentication of I-02: state it in docs/07-security-architecture.md] | docs/05 |
+| I-01 | Proveedor de Identidad Northwind | HTTPS/JSON [Auth] | Código de autorización OIDC con PKCE | STRIDE TB-02 |
+| I-02 | Servicio de Reservas | HTTPS/JSON [Query] | JWT RS256 en Authorization: Bearer, validado con JWKS en cada solicitud | STRIDE TB-01 |
 
 ## Decisiones vigentes <!-- SECTION: Decisions in Force -->
 
@@ -46,7 +46,13 @@ _docs/02-architecture-principles.md:64_
 
 ## Amenazas (STRIDE) <!-- SECTION: Threats -->
 
-[NOT DOCUMENTED — analysis/STRIDE-*.md — run /sa-analysis:architecture-analysis stride]
+| # | Boundary | Threat | Category | Severity | Status | Mitigation |
+|---|---|---|---|---|---|---|
+| T4-R | TB-02 | Inicio de sesión sin rastro verificable | R — Repudio | Low | ⚠️ Finding | Registro de eventos de inicio de sesión en Keycloak 25 no documentado (docs/07 § 9.5) |
+| T5-D | TB-02 | Fuerza bruta o inundación del endpoint de inicio de sesión | D — Denegación de servicio | Medium | ⚠️ Finding | Protección contra fuerza bruta y límite de tasa de Keycloak no documentados; sin sesión no hay operación (docs/07 § 9.3; docs/04 Catálogo de Fases) |
+| T6-E | TB-02 | Asignación indebida del rol recepcion o del atributo sede | E — Elevación de privilegios | Medium | ⚠️ Finding | La autorización confía en los claims del token (ADR-105); el proceso de alta y revisión de roles en Keycloak no está documentado |
+
+_analysis/STRIDE-2026-10-18.md_
 
 ## Datos que maneja <!-- SECTION: Data -->
 
@@ -54,4 +60,6 @@ _docs/02-architecture-principles.md:64_
 
 ## Pruebas que la construcción debe pasar <!-- SECTION: Security Tests -->
 
-Nada documentado.
+- [ ] T4-R — Inicio de sesión sin rastro verificable: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
+- [ ] T5-D — Fuerza bruta o inundación del endpoint de inicio de sesión: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
+- [ ] T6-E — Asignación indebida del rol recepcion o del atributo sede: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.

@@ -8,7 +8,7 @@ technologies: Java 21, Spring Boot 3.3
 component_self: servicio-de-reservas
 component_type: api-service
 scope: API REST de disponibilidad, reserva y cancelación de salas; no cubre la autenticación ni la interfaz
-related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR-105
+related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR-105, ADR-106
 -->
 
 > Servicio de Reservas es el único microservicio del sistema: expone la API REST de disponibilidad, reserva y cancelación, valida los tokens y es dueño de la Base de Datos de Reservas.
@@ -64,6 +64,17 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 | `Booking` | `code` (`RS-` seguido de 8 caracteres alfanuméricos), `roomId`, `site`, `date`, `start`, `end`, `subject`, `memberId`, `status` (`confirmed` · `cancelled`), `cancelledBy`, `cancelledAt`, `cancellationReason` |
 | `CancellationRequest` | `reason` (120 caracteres o menos; obligatorio para el rol `recepcion`, ADR-105) |
 
+**Tipos y obligatoriedad**
+
+- `roomId`, `memberId`, `cancelledBy`: string opaco; `memberId` y `cancelledBy` son el `sub` del JWT del Proveedor de Identidad Northwind (ADR-002).
+- `capacity`: entero. `date`: fecha ISO 8601. `start`, `end` y las franjas de `suggestedSlots`: `HH:mm`. `cancelledAt`: fecha y hora ISO 8601.
+- `name`, `subject`, `cancellationReason`, `reason`: texto con los límites de la tabla de esquemas.
+- `Idempotency-Key`: UUID v4 generado en el navegador por cada confirmación ([ADR-103](../../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)); obligatorio en la creación.
+- `BookingRequest`: obligatorios `roomId`, `date`, `start`, `end` y `subject`.
+- `Booking`: siempre `code`, `roomId`, `site`, `date`, `start`, `end`, `subject`, `memberId` y `status`; `cancelledBy`, `cancelledAt` y `cancellationReason` solo con `status: cancelled`.
+- `CancellationRequest`: cuerpo opcional para el dueño; `reason` obligatorio para el rol `recepcion` (ADR-105).
+- `operationId`: `getAvailability`, `createBooking`, `listBookings`, `cancelBooking`.
+
 **Errores**: RFC 9457 (`application/problem+json`) con el campo `code` (ADR-001).
 
 | `code` | HTTP | Cuándo |
@@ -82,14 +93,25 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 - **Acceso**: JDBC; ningún otro servicio lee ni escribe sus tablas (ADR-003).
 - **Consistencia**: fuerte; la superposición la rechaza la base de datos ([ADR-102](../../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
 
-## Dependencias <!-- LABEL: Dependencies -->
+## Patrones de Comunicación <!-- LABEL: Communication Patterns -->
 
-| Dependencia | Protocolo | Uso |
-|---|---|---|
-| [Base de Datos de Reservas](03-base-de-datos-de-reservas.md) | JDBC | Lee y escribe salas y reservas |
-| [Proveedor de Identidad Northwind](../proveedor-de-identidad-northwind.md) | HTTPS (JWKS) | Claves para validar tokens |
+**Entrante:**
 
-**Consumido por**: [Portal de Reservas](01-portal-de-reservas.md).
+| Integración | Contraparte | Protocolo | Uso |
+|---|---|---|---|
+| I-02 | [Portal de Reservas](01-portal-de-reservas.md) | HTTPS/JSON con JWT | Consulta, reserva, listado y cancelación |
+
+**Saliente:**
+
+| Integración | Contraparte | Protocolo | Uso |
+|---|---|---|---|
+| I-03 | [Proveedor de Identidad Northwind](../proveedor-de-identidad-northwind.md) | HTTPS (JWKS) | Claves públicas para validar tokens |
+| I-04 | [Base de Datos de Reservas](03-base-de-datos-de-reservas.md) | JDBC con TLS | Lee y escribe salas, reservas, auditoría y claves de idempotencia |
+
+## Propiedad de datos <!-- LABEL: Data Ownership -->
+
+- **Dueño de**: salas, reservas (con su cancelación y motivo) y registro de auditoría de cancelaciones ([ADR-106](../../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)). También de las claves de idempotencia con su respuesta durante 24 horas (ADR-103). Todo se guarda en la Base de Datos de Reservas (ADR-003).
+- **Solo lectura**: claves públicas JWKS del Proveedor de Identidad Northwind (I-03); `sub`, rol `recepcion` y atributo `sede` del JWT validado (ADR-002, ADR-105).
 
 ## Despliegue <!-- LABEL: Deployment -->
 

@@ -9,7 +9,7 @@
 | Versión de la arquitectura | 1.0.0 |
 | Generado | 2026-10-18 |
 
-### Índice rápido por rol <!-- SECTION: Role Quick Index -->
+### Índice de lectura por rol <!-- SECTION: Role Quick Index -->
 
 | Audience | Read first in this document |
 |----------|-----------------------------|
@@ -18,33 +18,31 @@
 | **QA** | Idempotencia · Convenciones de observabilidad · Datos |
 | **Ops / SRE** | Convenciones de observabilidad · Valores de resiliencia por defecto · Datos |
 
-El orden de lectura de los cuatro documentos de la entrega está en `handoffs/README.md`.
+El orden de lectura de los cuatro documentos de traspaso está en `handoffs/README.md`.
 
-Reglas globales que aplican a todo servicio. Cada Especificación de Componente las **referencia**; ninguna las repite. Repetirlas genera deriva.
+Reglas globales que aplican a cada servicio. Cada Especificación de Componente las **referencia**; ninguna las repite. Repetir una regla genera deriva.
 
-Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR institucional (por ejemplo `ADR-001`). Las reglas sin cita se marcan `[NOT DOCUMENTED]` y no son exigibles.
+Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR institucional (por ejemplo `ADR-002`). Las reglas sin cita se marcan `[NOT DOCUMENTED]` y no son exigibles.
 
 ---
 
-## Semántica de errores <!-- SECTION: Error semantics -->
+## 1. Semántica de errores <!-- SECTION: Error semantics -->
 
 - **MUST** Los errores siguen RFC 9457 (`application/problem+json`) con un campo `code` estable.
   → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
 
 ---
 
-## Versionado <!-- SECTION: Versioning -->
+## 2. Versionado <!-- SECTION: Versioning -->
 
 - **MUST** Cada API se describe con un contrato OpenAPI 3.1 versionado en el repositorio del servicio; el contrato se escribe antes que el código.
   → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
-- **MUST** La versión mayor va en la ruta (`/v1/…`).
-  → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
-- **MUST** Un cambio incompatible publica `/v2` y mantiene `/v1` al menos 90 días.
+- **MUST** La versión mayor va en la ruta (`/v1/…`); un cambio incompatible publica `/v2` y mantiene `/v1` al menos 90 días.
   → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
 
 ---
 
-## Identidad y autorización <!-- SECTION: Identity and authorisation -->
+## 3. Identidad y autorización <!-- SECTION: Identity and authorisation -->
 
 - **MUST** El Proveedor de Identidad Northwind (Keycloak 25) es la única fuente de autenticación de miembros, empleados y servicios.
   → per [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)
@@ -52,32 +50,32 @@ Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR insti
   → per [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)
 - **MUST** Un servicio valida el token de acceso (JWT, RS256) con las llaves públicas del endpoint JWKS del proveedor, en cada solicitud, y autoriza por roles y atributos del token.
   → per [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)
-- **MUST** El token de acceso vive 5 minutos; la renovación es silenciosa con el token de refresco.
+- **MUST** La vida del token de acceso es de 5 minutos; la renovación es silenciosa con el token de refresco.
   → per [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)
 
 ---
 
-## Idempotencia <!-- SECTION: Idempotency -->
+## 4. Idempotencia <!-- SECTION: Idempotency -->
 
 - **MUST** Toda operación que crea un recurso acepta la cabecera `Idempotency-Key`; la misma clave en 24 horas devuelve el mismo resultado.
   → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
 
 ---
 
-## Convenciones de observabilidad <!-- SECTION: Observability conventions -->
+## 5. Convenciones de observabilidad <!-- SECTION: Observability conventions -->
 
 - **MUST** Todo servicio y aplicación web emite trazas, métricas y logs con OpenTelemetry hacia el colector de Plataforma Northwind.
   → per [ADR-004](../adr/ADR-004-opentelemetry-observability.md)
 - **MUST** La propagación de contexto usa W3C Trace Context (`traceparent`) en cada llamada HTTP, desde el navegador hasta la base de datos.
   → per [ADR-004](../adr/ADR-004-opentelemetry-observability.md)
-- **MUST** Los logs son JSON estructurado con `trace_id`, `span_id`, `service.name` y nivel.
+- **MUST** Los logs son JSON estructurado con `trace_id`, `span_id`, `service.name` y nivel; nunca incluyen tokens ni datos personales completos.
   → per [ADR-004](../adr/ADR-004-opentelemetry-observability.md)
 - **MUST** Cada servicio publica las métricas RED (tasa, errores, duración) por operación.
   → per [ADR-004](../adr/ADR-004-opentelemetry-observability.md)
 
 ---
 
-## Datos <!-- SECTION: Data -->
+## 6. Datos <!-- SECTION: Data -->
 
 - **MUST** PostgreSQL 16, gestionado por Plataforma Northwind, es el motor relacional institucional.
   → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
@@ -89,50 +87,46 @@ Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR insti
   → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
 - **MUST** Respaldo diario con retención de 30 días y recuperación a un punto en el tiempo de 7 días.
   → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
-- **MUST** Los logs nunca incluyen tokens ni datos personales completos.
-  → per [ADR-004](../adr/ADR-004-opentelemetry-observability.md)
 - **MUST** Los secretos (credenciales de base de datos) se inyectan desde el gestor de secretos del clúster; nunca en la imagen ni en el repositorio.
   → per [ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)
 - **MUST** El tráfico externo entra por el ingress del clúster con TLS 1.2 o superior.
   → per [ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)
 
+[NOT DOCUMENTED — no institutional ADR covers data classification tiers]
+
 ---
 
-## Valores de resiliencia por defecto <!-- SECTION: Resilience defaults -->
+## 7. Valores de resiliencia por defecto <!-- SECTION: Resilience defaults -->
 
 - **MUST** Todo servicio backend se despliega como contenedor en el clúster Kubernetes de Plataforma Northwind, con al menos 2 réplicas en zonas distintas.
   → per [ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)
 - **MUST** Cada servicio declara solicitudes y límites de CPU y memoria, sondas de vida y de disponibilidad, y un escalado horizontal por CPU.
   → per [ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)
 
-[NOT DOCUMENTED — no institutional ADR covers it] Timeouts, reintentos, backoff, circuit breaker y bulkhead.
+[NOT DOCUMENTED — no institutional ADR covers timeouts, retries, backoff or circuit breakers]
 
 ---
 
-## Desviaciones <!-- SECTION: Deviations -->
+## 8. Desviaciones <!-- SECTION: Deviations -->
 
-Un servicio MAY desviarse solo mediante una excepción registrada, fechada y con vencimiento.
-Nunca una desviación local silenciosa.
+Un servicio puede desviarse solo mediante una excepción registrada, fechada y con vencimiento. Nunca mediante una salida local silenciosa.
 
 | Service | Rule | Deviation | Rationale | Expiry | Record |
 |---------|------|-----------|-----------|-------:|--------|
 | — | — | No deviations recorded. | — | — | — |
 
 <!--
-Row template:
-| [component-slug] | [rule reference e.g. ADR-018] | [what the service does differently] | [why the exception is necessary] | [YYYY-MM-DD] | [link to ADR or ticket] |
-
 Deviations without an expiry date are treated as expired on next audit.
 -->
 
 ---
 
-## Ruta de Retorno <!-- SECTION: Return Path -->
+## 9. Ruta de retorno <!-- SECTION: Return Path -->
 
-Proceso de impugnación de reglas — ver [`SYSTEM_RUNTIME_VIEW.md § Return Path`](SYSTEM_RUNTIME_VIEW.md#return-path).
-Este documento se modifica solo mediante un nuevo ADR institucional que reemplace la regla anterior; la modificación dispara la regeneración de este archivo en la siguiente ejecución de `architecture-dev-handoff`.
+Proceso de impugnación de reglas: ver [`SYSTEM_RUNTIME_VIEW.md § Return Path`](SYSTEM_RUNTIME_VIEW.md#return-path).
+Este documento solo se enmienda con un nuevo ADR institucional que reemplace la regla anterior; la enmienda dispara la regeneración de este archivo en la siguiente ejecución de `architecture-dev-handoff`.
 
 ---
 
 *Generado por `sa-skills:architecture-dev-handoff` el 2026-10-18*
-*Fuentes: ADRs institucionales 001–100*
+*Fuentes: ADR institucionales 001–100*

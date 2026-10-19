@@ -8,7 +8,7 @@ technologies: React 18, TypeScript
 component_self: portal-de-reservas
 component_type: web-application
 scope: SPA de consulta, reserva y cancelación de salas; no contiene reglas de negocio ni datos persistentes
-related_adrs: ADR-001, ADR-002, ADR-004
+related_adrs: ADR-001, ADR-002, ADR-004, ADR-104
 -->
 
 > Portal de Reservas es la aplicación web por la que miembros y recepcionistas consultan, reservan y cancelan salas. Autentica con el Proveedor de Identidad Northwind y llama al Servicio de Reservas.
@@ -20,7 +20,7 @@ related_adrs: ADR-001, ADR-002, ADR-004
 **Communicates via:** HTTPS
 **Description:** Portal de Reservas es la SPA donde miembros y recepción consultan disponibilidad, reservan y cancelan salas.
 
-**Component Version:** 1.0.0
+**Component Version:** 1.0.1
 **Architecture Version:** 1.0.0
 **Last Updated:** 2026-10-18
 
@@ -45,6 +45,11 @@ Interfaz de autoservicio de reservas, responsiva para navegador y teléfono. Sus
 | Saliente | [Servicio de Reservas](02-servicio-de-reservas.md) | HTTPS/JSON (REST, ADR-001) | Consulta, reserva y cancela |
 | Saliente | [Proveedor de Identidad Northwind](../proveedor-de-identidad-northwind.md) | OIDC, código de autorización con PKCE (ADR-002) | Inicio de sesión |
 | Entrante | Miembro del cowork, Recepcionista de sede | HTTPS (navegador) | Uso del portal |
+
+## Propiedad de datos <!-- LABEL: Data Ownership -->
+
+- **Dueño de**: ningún dato persistente; los tokens viven solo en memoria del navegador ([ADR-104](../../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md)).
+- **Solo lectura**: disponibilidad y reservas del Servicio de Reservas (I-02).
 
 ## Seguridad <!-- LABEL: Security -->
 
