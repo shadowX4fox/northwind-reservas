@@ -1,6 +1,6 @@
 ---
 id: ESC-001
-status: Open
+status: Resolved
 date: 2026-10-19
 architecture: architecture-v1.0.0
 route: tier-1
@@ -11,8 +11,8 @@ adrs: [ADR-001, ADR-002, ADR-005, ADR-102, ADR-103, ADR-105]
 tdrs: []
 requested_by: shadowX4fox (equipo de desarrollo del Servicio de Reservas)
 issue: https://github.com/shadowX4fox/northwind-reservas/issues/5
-resolution:
-closed:
+resolution: architecture-v1.1.0
+closed: 2026-10-18
 ---
 # ESC-001 — Servicio de Reservas: contrato de API vacío y autenticación de I-02/I-03/I-04 sin documentar bloquean la construcción
 
@@ -59,4 +59,4 @@ sí, adelante
 
 ## Resolution
 
-- Pending.
+- Resolved 2026-10-18 by architecture-v1.1.0.
