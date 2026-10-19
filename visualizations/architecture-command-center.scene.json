@@ -1,6 +1,6 @@
 {
  "project": "Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión",
- "version": "1.1.0",
+ "version": "1.1.1",
  "status": "Released",
  "architectureType": "MICROSERVICES",
  "language": "es",
@@ -225,7 +225,7 @@
     2,
     3
    ],
-   "desc": "solo lectura; con ninguna sala libre, el portal muestra las 3 franjas de 30 minutos más cercanas con una sala libre.",
+   "desc": "solo lectura; con ninguna sala libre, el portal muestra las 3 franjas de 30 minutos más cercanas con una sala libre, antes o después de la pedida; ante igual distancia, la posterior.",
    "adrs": [
     "ADR-001",
     "ADR-002"
