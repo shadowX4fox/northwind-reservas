@@ -34,7 +34,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.7.2
+  SA_PLUGIN_REF: v10.7.3
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -106,9 +106,11 @@ jobs:
             - tdr-workaround: the TDR with the technical-debt-records skill — id and file from the payload, status Open,
               Description, Impact, Possible Solutions, Driver (fields.driver, else Architecture) and Owner from the fields,
               affected-components the request's components, related-adrs fields.adrs; its first History note names the
-              evidence and the issue URL; then the tdr/README.md index.
+              evidence and the issue URL; then the tdr/README.md index and the record's summary row in the Risks and
+              Technical Debt section (Section 13, the docs/ file anchored `SECTION: Risks and Technical Debt`).
             - tdr-status: the move from → fields.to with the technical-debt-records skill (tdr-check.js --move first), a
-              dated History note with fields.note, the evidence and the issue URL; target-date when Planned; the index.
+              dated History note with fields.note, the evidence and the issue URL; target-date when Planned; the index and the
+              record's row in the Risks and Technical Debt section.
             - adr-proposed: the ADR with the architecture-definition-record skill — id and file from the payload, status
               Proposed, Context / Decision / Consequences / Alternatives from the fields; then adr/README.md (adr-index.js --write).
             The documents are in the architecture's language (DOC_LANGUAGE in ARCHITECTURE.md). Write nothing else; do not
@@ -151,6 +153,8 @@ jobs:
           [ -n "$ID" ] && gh issue edit "$N" --title "[$ID] $title"
           if [ "$AUTOMERGE" = "true" ] && [ "$gates" -eq 0 ]; then
             gh pr merge "$url" --squash --delete-branch
+            # a merge by GITHUB_TOKEN does not run the PR's closing keywords: the issue is closed here
+            gh issue close "$N" --reason completed --comment "Written as ${ID:-a $KIND} in $url."
           else
             why=$([ "$gates" -ne 0 ] && echo 'a release gate blocks' || echo 'SA_TIER0_AUTOMERGE is not true')
             gh pr comment "$url" --body "Not merged automatically: $why. A member of the team merges it."
