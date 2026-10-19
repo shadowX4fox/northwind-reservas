@@ -27,7 +27,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.6.1
+  SA_PLUGIN_REF: v10.6.3
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -66,7 +66,8 @@ jobs:
           SA_JUDGE: agent
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # architecture-release.yml dispatches this run with GITHUB_TOKEN, so the actor is github-actions[bot]
+          # architecture-release.yml dispatches this run with GITHUB_TOKEN: the actor is github-actions[bot], which the
+          # action refuses unless named. Only that bot — never '*': the workflow starts on workflow_dispatch alone
           allowed_bots: "github-actions[bot]"
           plugin_marketplaces: ${{ env.SA_PLUGIN_REPO }}
           plugins: |
