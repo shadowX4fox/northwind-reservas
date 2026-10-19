@@ -121,7 +121,7 @@ sequenceDiagram
 **Purpose**: Pasar una reserva futura a "Cancelada" si quien cancela es su dueño o recepción de la sede.
 **Hops**: Servicio de Reservas → Base de Datos de Reservas.
 **Latency budget (p95)**: Not documented <!-- TODO: Add source reference -->; el flujo completo, ≤ 2 s.
-**Side effects**: estado "Cancelada" con autor, hora y, para recepción, motivo de hasta 120 caracteres (PO Spec CU3). Autorización por rol `recepcion` y atributo `sede` ([ADR-105](../adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md)).
+**Side effects**: estado "Cancelada" con autor, hora y, para recepción, motivo de 10 a 120 caracteres (PO Spec CU3). Autorización por rol `recepcion` y atributo `sede` ([ADR-105](../adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md)).
 
 ```mermaid
 sequenceDiagram
@@ -153,7 +153,7 @@ sequenceDiagram
 
 **Use case**: CU1.
 **Phases**: 1 → 2 → 3 (síncrono).
-**Delta**: solo lectura; con ninguna sala libre, el portal muestra las 3 franjas de 30 minutos más cercanas con una sala libre.
+**Delta**: solo lectura; con ninguna sala libre, el portal muestra las 3 franjas de 30 minutos más cercanas con una sala libre, antes o después de la pedida; ante igual distancia, la posterior.
 **Governed by**: [ADR-001](../adr/ADR-001-rest-openapi-apis.md), [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md).
 
 → Secuencia completa: [Secuencias Extremo a Extremo](#secuencias-extremo-a-extremo).

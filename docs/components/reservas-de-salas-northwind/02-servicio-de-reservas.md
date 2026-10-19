@@ -20,9 +20,9 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR
 **Communicates via:** HTTPS
 **Description:** Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.
 
-**Component Version:** 1.1.0
+**Component Version:** 1.1.1
 **Architecture Version:** 1.1.0
-**Last Updated:** 2026-10-18
+**Last Updated:** 2026-10-19
 
 **Bounded Context**: Reservas de salas — disponibilidad, creación y cancelación.
 **Team Owner**: Not documented <!-- TODO: Add source reference -->
@@ -58,11 +58,11 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 | Esquema | Campos |
 |---|---|
 | Parámetros de CU1 | `site`: `centro` · `norte` · `puerto`; `date`: fecha ISO 8601; `start`, `end`: `HH:mm` en múltiplos de 30 minutos, duración de 8 horas o menos |
-| `AvailabilityResponse` | `rooms`: lista de `RoomAvailability`; `suggestedSlots`: hasta 3 franjas `{start, end}` cuando no hay salas libres (CU1, alternativa 1) |
+| `AvailabilityResponse` | `rooms`: lista de `RoomAvailability`; `suggestedSlots`: hasta 3 franjas `{start, end}` cuando no hay salas libres: misma duración, día y sede, las más próximas en el tiempo a la pedida, antes o después y nunca en el pasado; ante igual distancia, la posterior (CU1, alternativa 1) |
 | `RoomAvailability` | `roomId`, `name`, `capacity`, `equipment` (`screen` · `videoconference` · `whiteboard`), `status` (`free` · `occupied`) |
 | `BookingRequest` | `roomId`, `date`, `start`, `end`, `subject` (80 caracteres o menos) |
 | `Booking` | `code` (`RS-` seguido de 8 caracteres alfanuméricos), `roomId`, `site`, `date`, `start`, `end`, `subject`, `memberId`, `status` (`confirmed` · `cancelled`), `cancelledBy`, `cancelledAt`, `cancellationReason` |
-| `CancellationRequest` | `reason` (120 caracteres o menos; obligatorio para el rol `recepcion`, ADR-105) |
+| `CancellationRequest` | `reason` (de 10 a 120 caracteres; obligatorio para el rol `recepcion`, ADR-105) |
 
 **Tipos y obligatoriedad**
 
@@ -81,7 +81,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 |---|---|---|
 | `UNAUTHENTICATED` | 401 | Token ausente, inválido o expirado (ADR-002) |
 | `FORBIDDEN` | 403 | "no autorizado": reserva ajena sin rol `recepcion` de la misma `sede` (ADR-105) |
-| `VALIDATION_FAILED` | 400 | Franja fuera de múltiplos de 30 minutos, de más de 8 horas o en el pasado; asunto de más de 80 caracteres; motivo de más de 120 caracteres o ausente para `recepcion` |
+| `VALIDATION_FAILED` | 400 | Franja fuera de múltiplos de 30 minutos, de más de 8 horas o en el pasado; asunto de más de 80 caracteres; motivo de menos de 10 o más de 120 caracteres, o ausente para `recepcion` |
 | `BOOKING_NOT_FOUND` | 404 | Código de reserva inexistente |
 | `ROOM_OCCUPIED` | 409 | "sala ocupada" (CU2, [ADR-102](../../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)) |
 | `DAILY_LIMIT_REACHED` | 409 | "límite diario": 3 reservas futuras ese día (CU2) |
