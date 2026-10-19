@@ -18,6 +18,8 @@
 # The record reaches the MCP server with the next release. Requests run one at a time, so two never take the same number.
 #
 # Repository settings: secret CLAUDE_CODE_OAUTH_TOKEN; variable SA_TIER0_AUTOMERGE (`true` merges without a reviewer);
+# variable SA_TIER0_AGENTS — the automation accounts (unattended build agents, machine users), comma- or space-separated,
+# that may file a request but never put the label (a GitHub App's bot is refused by its type);
 # labels architecture-tier0, tier0-refused and tier0:tdr-workaround · tier0:tdr-status · tier0:adr-proposed · tier0:doc-fix
 # (`gh issue create --label` fails outright on a label the repository lacks — the IDE's request would not be filed); Actions may create pull requests; the default branch accepts a merge by
 # GITHUB_TOKEN (no required review on it). A pull request opened with GITHUB_TOKEN starts no workflow, so the gates run
@@ -35,7 +37,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.9.3
+  SA_PLUGIN_REF: v10.10.0
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -55,7 +57,13 @@ jobs:
       - name: The label is the key
         env:
           SENDER: ${{ github.event.sender.login }}
+          SENDER_TYPE: ${{ github.event.sender.type }}
+          AGENTS: ${{ vars.SA_TIER0_AGENTS }}
         run: |
+          # a person's key: never an automation account — a bot, or a machine user listed in SA_TIER0_AGENTS — even with
+          # write access; an unattended build agent files its request without the label, and a person puts it (10.10.0)
+          if [ "$SENDER_TYPE" = "Bot" ] || printf '%s\n' $AGENTS | tr ',' '\n' | grep -qixF -- "$SENDER"; then
+            echo "::error::$SENDER is an automation account: a person applies architecture-tier0"; exit 1; fi
           role=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$SENDER/permission" --jq .role_name 2>/dev/null || echo none)
           case "$role" in admin|maintain|write|triage) echo "labelled by $SENDER ($role)";;
             *) echo "::error::$SENDER ($role) cannot start a Tier 0 write"; exit 1;; esac
