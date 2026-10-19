@@ -10,7 +10,7 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.2.0 |
+| Versión de la arquitectura | 1.3.0 |
 | Versión del componente | 1.0.1 |
 | Generado | 2026-10-19 |
 | Documento fuente del componente | [../docs/components/03-base-de-datos-de-reservas.md](../docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md) |
@@ -145,6 +145,8 @@ Propiedad exclusiva. No existe propiedad mutable compartida en el sistema.
 - Claves de idempotencia
 
 Dueño lógico: Servicio de Reservas ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
+
+Deuda técnica registrada: las claves de idempotencia vencidas nunca se purgan ([TDR-002](../../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md)).
 
 **Lee (vía contrato, sin ser dueño):**
 
