@@ -1,11 +1,11 @@
-<!-- ARCHITECTURE_SYNC: 1.1.0 (2026-10-19) -->
+<!-- ARCHITECTURE_SYNC: 1.1.1 (2026-10-19) -->
 # Reservas de Salas Northwind - Product Owner Specification
 
 > Portal web donde los miembros de Northwind Cowork consultan la disponibilidad de salas de reunión, las reservan y cancelan sus reservas sin pasar por recepción.
 
 **Product Owner**: Gerencia de Producto Digital — Northwind Cowork *(empresa ficticia)*
 **Date**: 2026-10-19
-**Version**: 1.1
+**Version**: 1.2
 
 ---
 
@@ -427,6 +427,7 @@ para liberar la sala.
 | Date | Spec version | Architecture version | Applied | Declined |
 |---|---|---|---|---|
 | 2026-10-19 | 1.1 | 1.1.0 | 1, 2 · objetivos del § 3 en una frase · franjas sugeridas (CU1) · motivo de 10 a 120 caracteres (CU3) · motivo auditado solo en cancelaciones de recepción (§ 7) · membresía vigente definida (CU1, CU2) | — |
+| 2026-10-19 | 1.2 | 1.1.1 | — (los cambios de la 1.1.1 salen de la 1.1 de este documento) | — |
 
 ---
 
