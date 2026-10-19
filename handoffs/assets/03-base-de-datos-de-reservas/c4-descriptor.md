@@ -7,7 +7,7 @@
 | Componente | 5.3 Base de Datos de Reservas |
 | Tipo | Database · C4 L2 |
 | Tecnología | PostgreSQL 16 |
-| Versiones | arquitectura v1.1.0 · componente v1.0.1 |
+| Versiones | arquitectura v1.1.1 · componente v1.0.1 |
 | Responsable | [NO DOCUMENTADO — agregar `**Owner:**` a docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md] |
 | Se ejecuta en | managed service |
 | Capacidad | [NO DOCUMENTADO — docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md § Capacity <!-- LABEL: Capacity -->] |
