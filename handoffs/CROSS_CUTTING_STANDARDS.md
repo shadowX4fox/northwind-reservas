@@ -5,11 +5,11 @@
 | Field | Value |
 |-------|-------|
 | Versión | 4.3.1 |
-| Aplica a | Todos los servicios en el alcance de Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión |
-| Versión de la arquitectura | 1.1.1 |
+| Aplica a | Todos los servicios dentro del alcance de Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión |
+| Versión de la arquitectura | 1.2.0 |
 | Generado | 2026-10-19 |
 
-### Índice Rápido por Rol <!-- SECTION: Role Quick Index -->
+### Índice rápido por rol <!-- SECTION: Role Quick Index -->
 
 | Audience | Read first in this document |
 |----------|-----------------------------|
@@ -20,9 +20,9 @@
 
 El orden de lectura de los cuatro documentos de entrega está en `handoffs/README.md`.
 
-Reglas globales que aplican a todo servicio. Cada Component Specification las **referencia**, nunca las repite. Repetirlas genera deriva; la deriva genera incoherencia.
+Reglas globales que aplican a todo servicio. Cada Component Specification las **referencia**; ninguna las repite. Repetir causa deriva; la deriva causa incoherencia.
 
-Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR institucional (por ejemplo `ADR-001`). Las reglas sin cita se marcan `[NOT DOCUMENTED]` y no se pueden exigir.
+Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR institucional (por ejemplo `ADR-001`). Las reglas sin cita se marcan `[NOT DOCUMENTED]` y no son exigibles.
 
 ---
 
@@ -37,10 +37,10 @@ Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR insti
 
 - **MUST** Cada API se describe con un contrato OpenAPI 3.1 versionado en el repositorio del servicio; el contrato se escribe antes que el código.
   → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
-- **MUST** La versión mayor va en la ruta (`/v1/…`).
+- **MUST** La versión mayor va en la ruta (`/v1/…`); un cambio incompatible publica `/v2` y mantiene `/v1` al menos 90 días.
   → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
-- **MUST** Un cambio incompatible publica `/v2` y mantiene `/v1` al menos 90 días.
-  → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
+- **MUST** El esquema se versiona con migraciones en el repositorio del servicio (Flyway en Java).
+  → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
 
 ---
 
@@ -52,7 +52,7 @@ Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR insti
   → per [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)
 - **MUST** Un servicio valida el token de acceso (JWT, RS256) con las llaves públicas del endpoint JWKS del proveedor, en cada solicitud, y autoriza por roles y atributos del token.
   → per [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)
-- **MUST** La vida del token de acceso es de 5 minutos, con renovación silenciosa mediante el token de refresco.
+- **MUST** La vida del token de acceso es de 5 minutos; la renovación es silenciosa con el token de refresco.
   → per [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)
 
 ---
@@ -83,8 +83,6 @@ Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR insti
   → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
 - **MUST** Cada servicio es dueño de su esquema; ningún otro servicio lee ni escribe sus tablas directamente.
   → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
-- **MUST** El esquema se versiona con migraciones en el repositorio del servicio (Flyway en Java).
-  → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
 - **MUST** Las restricciones de integridad que el negocio exige (unicidad, no superposición) se declaran en la base, no solo en el código.
   → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
 - **MUST** Respaldo diario con retención de 30 días y recuperación a un punto en el tiempo de 7 días.
@@ -107,18 +105,25 @@ Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR insti
 
 ## Desviaciones <!-- SECTION: Deviations -->
 
-Un servicio puede desviarse solo mediante una excepción registrada, fechada y con vencimiento. Nunca una salida local silenciosa.
+Un servicio PUEDE desviarse solo mediante una excepción registrada, fechada y con vencimiento. Nunca una salida local silenciosa.
 
 | Service | Rule | Deviation | Rationale | Expiry | Record |
 |---------|------|-----------|-----------|-------:|--------|
-| — | — | No hay desviaciones registradas. | — | — | — |
+| — | — | Sin desviaciones registradas. | — | — | — |
+
+<!--
+Row template:
+| [component-slug] | [rule reference e.g. ADR-018] | [what the service does differently] | [why the exception is necessary] | [YYYY-MM-DD] | [link to ADR or ticket] |
+
+Deviations without an expiry date are treated as expired on next audit.
+-->
 
 ---
 
-## Ruta de Retorno <!-- SECTION: Return Path -->
+## Ruta de retorno <!-- SECTION: Return Path -->
 
-Proceso de impugnación de reglas: ver [`SYSTEM_RUNTIME_VIEW.md § Return Path`](SYSTEM_RUNTIME_VIEW.md#return-path).
-Este documento se modifica solo mediante un nuevo ADR institucional que reemplace la regla anterior; la enmienda dispara la regeneración de este archivo en la siguiente ejecución de `architecture-dev-handoff`.
+Proceso para cuestionar reglas: ver [`SYSTEM_RUNTIME_VIEW.md § Return Path`](SYSTEM_RUNTIME_VIEW.md#return-path).
+Este documento solo se modifica mediante un nuevo ADR institucional que reemplace la regla anterior; la modificación dispara la regeneración de este archivo en la siguiente ejecución de `architecture-dev-handoff`.
 
 ---
 

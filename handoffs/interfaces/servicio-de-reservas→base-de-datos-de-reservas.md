@@ -10,7 +10,7 @@
 | Decisión | [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md) |
 | Generado | 2026-10-19 |
 
-### Índice rápido por rol <!-- SECTION: Role Quick Index -->
+### Índice Rápido por Rol <!-- SECTION: Role Quick Index -->
 
 | Audience | Read first in this document |
 |----------|-----------------------------|
@@ -18,7 +18,7 @@
 | **QA** | Semántica de fallos → Estado de entrada → Estado de salida → Supuestos mutuos |
 | **Ops / SRE** | Semántica de fallos → Observabilidad en la interfaz → Registro de cambios |
 
-El orden de lectura de los cuatro documentos del handoff está en `../README.md`.
+El orden de lectura de los cuatro documentos del kit está en `../README.md`.
 
 Contrato de continuidad entre dos servicios adyacentes. Aquí se originan la mayoría de los defectos de integración: cada supuesto mutuo es vinculante. Cambiar uno es un cambio de interfaz, no un cambio local.
 
@@ -29,11 +29,11 @@ Contrato de continuidad entre dos servicios adyacentes. Aquí se originan la may
 | Aspect | Value |
 |--------|-------|
 | Estilo | sync (request-response) |
-| Transporte | JDBC/SQL [Data] (JDBC con TLS) |
+| Transporte | JDBC/SQL [Data] |
 | Contrato | [NOT DOCUMENTED — add contract reference to docs/05-integration-points.md] |
-| Compatibilidad | El esquema se versiona con migraciones Flyway en el repositorio del servicio ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)); ver [CROSS_CUTTING_STANDARDS § Versioning](../CROSS_CUTTING_STANDARDS.md#versioning) |
+| Compatibilidad | ver [CROSS_CUTTING_STANDARDS § Versioning](../CROSS_CUTTING_STANDARDS.md#versioning) |
 
-**Panel** — el par en el diagrama de contenedores, extraído de `docs/03` (generado, nunca editado a mano):
+**Panel** — el par en el diagrama de contenedores, recortado de `docs/03` (generado, nunca editado a mano):
 
 Cut of `docs/03-architecture-layers.md` § Diagram: C4 Level 2 — Container — Servicio de Reservas → Base de Datos de Reservas (generated, never hand-edited):
 
@@ -77,10 +77,9 @@ flowchart TB
 
 Lo que la Base de Datos de Reservas puede asumir como cierto cuando recibe una llamada:
 
-- El Servicio de Reservas es el único cliente: lee y escribe sus tablas por JDBC con TLS (I-04).
-- Las credenciales de base de datos se inyectan desde el gestor de secretos de Plataforma Northwind ([ADR-005](../../adr/ADR-005-kubernetes-container-runtime.md)).
-- El Servicio de Reservas busca la clave de idempotencia antes de insertar una reserva ([ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)).
-- Propagación de contexto: `traceparent` según [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
+- El Servicio de Reservas es el único llamador: nadie más lee ni escribe sus tablas (I-04, [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
+- La conexión JDBC usa TLS (I-04).
+- El Servicio de Reservas lee y escribe salas, reservas, auditoría y claves de idempotencia.
 
 ---
 
@@ -88,42 +87,41 @@ Lo que la Base de Datos de Reservas puede asumir como cierto cuando recibe una l
 
 Lo que la Base de Datos de Reservas garantiza al responder:
 
-- Rechaza toda reserva confirmada superpuesta para la misma sala mediante una restricción de exclusión de PostgreSQL 16 ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
-- Guarda salas, reservas (con su cancelación y motivo), registro de auditoría de cancelaciones y claves de idempotencia con su respuesta durante 24 horas.
-- La auditoría de una cancelación se escribe en la misma transacción que la cancelación ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)).
-- Reservas y auditoría se conservan 24 meses; una purga programada las elimina ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)).
+- Rechaza toda reserva confirmada superpuesta para la misma sala mediante la restricción de exclusión ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
+- Guarda salas, reservas, registro de auditoría de cancelaciones y claves de idempotencia con su respuesta durante 24 horas ([ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)).
+- Conserva las reservas y la auditoría 24 meses; una purga programada las elimina ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)).
+- Persiste la auditoría en la misma transacción de la cancelación ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)).
 
 ---
 
 ## Supuestos mutuos (vinculantes) <!-- SECTION: Mutual assumptions -->
 
-Los supuestos listados aquí son vinculantes. Cambiar uno es un cambio de interfaz, no un cambio local.
+Los supuestos de esta sección son vinculantes. Cambiar uno es un cambio de interfaz, no un cambio local.
 
-**Upstream assume:**
+**Upstream asume:**
 
-- La Base de Datos de Reservas garantiza la integridad de no superposición; el Servicio de Reservas no la coordina ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
-- Ningún otro componente accede a las tablas; el Servicio de Reservas es su única lectura y escritura.
-- Una falla de conexión se traduce en una respuesta de error de servicio al llamador.
+- La Base de Datos de Reservas garantiza la integridad de no superposición con la restricción de exclusión; el Servicio de Reservas no la coordina ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
+- La Base de Datos de Reservas guarda la clave de idempotencia y su respuesta durante 24 horas ([ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)).
 
 **Downstream asume:**
 
-- El Servicio de Reservas es el dueño del esquema y de los datos; ningún otro servicio lee ni escribe sus tablas directamente ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
-- El Servicio de Reservas se conecta por JDBC con TLS.
-- El Servicio de Reservas versiona el esquema con migraciones Flyway en su repositorio ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
+- El Servicio de Reservas es el único que lee y escribe sus tablas (I-04).
+- El Servicio de Reservas se conecta por JDBC con TLS (I-04).
+- El Servicio de Reservas escribe la auditoría en la misma transacción de la cancelación ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)).
 
 ---
 
 ## Semántica de fallos <!-- SECTION: Failure semantics -->
 
-Responsabilidades fila por fila ante cada condición de fallo. Las celdas del upstream y del downstream definen juntas el contrato de recuperación.
+Responsabilidades fila por fila ante cada condición de fallo. Las celdas de upstream y downstream definen juntas el contrato de recuperación.
 
 | Condition | Upstream behaviour | Downstream behaviour |
 |-----------|--------------------|----------------------|
 | timeout | [NOT DOCUMENTED] | [NOT DOCUMENTED] |
-| downstream no disponible | La solicitud responde error de servicio (I-04); circuit breaker [NOT DOCUMENTED] | — |
+| downstream no disponible | Falla de conexión: la solicitud responde error de servicio (I-04) | — |
 | poison message | — | [NOT DOCUMENTED] |
-| fallo parcial | La auditoría de cancelación se escribe en la misma transacción que la cancelación ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)); compensación [NOT DOCUMENTED] | Una reserva superpuesta se rechaza por la restricción de exclusión ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)) |
-| versiones incompatibles | [NOT DOCUMENTED] | [NOT DOCUMENTED] |
+| fallo parcial | La auditoría de cancelación se escribe en la misma transacción que la cancelación ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)) | [NOT DOCUMENTED] |
+| versiones incompatibles | [NOT DOCUMENTED] | El esquema se versiona con migraciones Flyway en el repositorio del servicio ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)) |
 
 Clasificación de cascada (de `analysis/BLAST_RADIUS-*.md`): [NOT DOCUMENTED — run /sa-analysis:architecture-analysis blast-radius]
 
@@ -131,19 +129,19 @@ Clasificación de cascada (de `analysis/BLAST_RADIUS-*.md`): [NOT DOCUMENTED —
 
 ## Propiedad <!-- SECTION: Ownership -->
 
-Datos del Servicio de Reservas guardados en la Base de Datos de Reservas. Sin propiedad mutable compartida en el sistema.
+Datos que pertenecen a un solo lado y que el otro accede solo a través del contrato. No existe propiedad mutable compartida en el sistema.
 
 | Direction | Fields / entities |
 |-----------|-------------------|
-| Propiedad del upstream | Salas; reservas (con su cancelación y motivo); registro de auditoría de cancelaciones; claves de idempotencia con su respuesta (24 horas) |
-| Propiedad del downstream | Almacenamiento de salas, reservas, registro de auditoría y claves de idempotencia; restricción de exclusión contra reservas superpuestas |
-| Solo lectura (vía esta interfaz) | [NOT DOCUMENTED] — el Servicio de Reservas lee y escribe sus propias tablas por esta interfaz |
+| Propiedad del upstream | Salas, reservas (con su cancelación y motivo), registro de auditoría de cancelaciones y claves de idempotencia con su respuesta durante 24 horas; todo se guarda en la Base de Datos de Reservas |
+| Propiedad del downstream | Restricción de exclusión que rechaza dos reservas confirmadas superpuestas de una sala; almacena salas, reservas, auditoría y claves de idempotencia cuyo dueño es el Servicio de Reservas |
+| Solo lectura (vía esta interfaz) | [NOT DOCUMENTED] |
 
 ---
 
 ## Observabilidad en la interfaz <!-- SECTION: Observability at the interface -->
 
-La interfaz debe poder depurarse desde cualquiera de los dos extremos sin unir logs entre equipos.
+La interfaz debe poder depurarse desde cualquiera de sus extremos sin cruzar logs entre equipos.
 
 | Signal | Requirement |
 |--------|-------------|
@@ -155,7 +153,7 @@ La interfaz debe poder depurarse desde cualquiera de los dos extremos sin unir l
 
 ## Registro de cambios <!-- SECTION: Change log -->
 
-Los cambios de interfaz requieren un ADR nuevo — ver [Return Path](../SYSTEM_RUNTIME_VIEW.md#return-path).
+Los cambios de interfaz requieren un nuevo ADR — ver [Return Path](../SYSTEM_RUNTIME_VIEW.md#return-path).
 
 | Date | Change | ADR |
 |------|--------|----:|
@@ -163,5 +161,5 @@ Los cambios de interfaz requieren un ADR nuevo — ver [Return Path](../SYSTEM_R
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-19*
-*Fuentes: `docs/05-integration-points.md`, `analysis/BLAST_RADIUS-*.md`, `adr/`*
+*Generated by `sa-skills:architecture-dev-handoff` on 2026-10-19*
+*Sources: `docs/05-integration-points.md`, `analysis/BLAST_RADIUS-*.md`, `adr/`*

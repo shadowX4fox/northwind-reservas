@@ -6,33 +6,36 @@ info:
   description: |
     Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.
     Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única puerta a sus datos (ADR-003).
-    Contrato versionado en la ruta (`/v1`, ADR-001).
+    Contrato OpenAPI 3.1 gobernado por ADR-001. La versión mayor va en la ruta, `/v1`.
   contact:
     name: "Equipo de Arquitectura Northwind"
-  # TODO: Add license if required by your organization
 
-servers:
-  - url: "/"
-    description: "Las rutas incluyen la versión mayor `/v1`, detrás del ingress del clúster de Plataforma Northwind (ADR-005)"
-    # TODO: [NOT DOCUMENTED — host del servicio: add to docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md]
+# TODO: [NOT DOCUMENTED — host del servidor: add to docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md]
+# La URL base documentada es `/v1`, detrás del ingress del clúster de Plataforma Northwind (ADR-005); las rutas de `paths` ya la incluyen.
+servers: []
 
 security:
   - bearerAuth: []
+
+tags:
+  - name: "Servicio de Reservas"
 
 paths:
   /v1/availability:
     get:
       summary: "Consultar disponibilidad (CU1)"
+      description: "Calcula la disponibilidad de salas por sede, fecha y franja."
       operationId: "getAvailability"
       tags:
         - "Servicio de Reservas"
+      # TODO: [NOT DOCUMENTED — obligatoriedad de site, date, start y end: add to docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md]
       parameters:
-        # TODO: [NOT DOCUMENTED — obligatoriedad de site, date, start y end: add to docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md]
         - name: site
           in: query
           description: "Sede."
           schema:
-            $ref: '#/components/schemas/Site'
+            type: string
+            enum: ["centro", "norte", "puerto"]
         - name: date
           in: query
           description: "Fecha ISO 8601."
@@ -41,12 +44,12 @@ paths:
             format: date
         - name: start
           in: query
-          description: "Hora de inicio `HH:mm`, en múltiplos de 30 minutos; duración de 8 horas o menos."
+          description: "Inicio de la franja, `HH:mm` en múltiplos de 30 minutos; duración de 8 horas o menos."
           schema:
             type: string
         - name: end
           in: query
-          description: "Hora de fin `HH:mm`, en múltiplos de 30 minutos; duración de 8 horas o menos."
+          description: "Fin de la franja, `HH:mm` en múltiplos de 30 minutos; duración de 8 horas o menos."
           schema:
             type: string
       responses:
@@ -60,9 +63,11 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+
   /v1/bookings:
     post:
       summary: "Crear reserva (CU2)"
+      description: "Crea una reserva confirmada sin superposición para la misma sala. La misma clave `Idempotency-Key` en 24 horas devuelve la respuesta guardada (ADR-103)."
       operationId: "createBooking"
       tags:
         - "Servicio de Reservas"
@@ -70,7 +75,7 @@ paths:
         - name: Idempotency-Key
           in: header
           required: true
-          description: "UUID v4 generado en el navegador por cada confirmación (ADR-103). La misma clave en 24 horas devuelve la respuesta guardada."
+          description: "UUID v4 generado en el navegador por cada confirmación (ADR-103)."
           schema:
             type: string
             format: uuid
@@ -82,7 +87,7 @@ paths:
               $ref: '#/components/schemas/BookingRequest'
       responses:
         '201':
-          description: "Reserva creada."
+          description: "Reserva creada; la misma clave en 24 horas devuelve la respuesta guardada."
           content:
             application/json:
               schema:
@@ -98,18 +103,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
     get:
-      summary: "Listar reservas (CU3): las propias, o con `scope=site` las de la sede del token con rol `recepcion` (ADR-105)"
+      summary: "Listar reservas (CU3)"
+      description: "Lista las reservas futuras propias, o las de la `sede` del token con rol `recepcion` con `scope=site` (ADR-105). Sirve las páginas \"Mis reservas\" y \"Reservas de la sede\"."
       operationId: "listBookings"
       tags:
         - "Servicio de Reservas"
       parameters:
         - name: scope
           in: query
-          description: "`site` lista las reservas de la `sede` del token con rol `recepcion`."
+          description: "`site` lista las reservas de la sede del token con rol `recepcion`; sin el parámetro, las propias."
           schema:
             type: string
-            enum:
-              - site
+            enum: ["site"]
       responses:
         '200':
           description: "Lista de `Booking` futuras."
@@ -121,9 +126,13 @@ paths:
                   $ref: '#/components/schemas/Booking'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /v1/bookings/{code}/cancel:
     post:
       summary: "Cancelar reserva (CU3)"
+      description: "Cancela una reserva: las propias del miembro, o cualquiera de su sede para el rol `recepcion` (ADR-105)."
       operationId: "cancelBooking"
       tags:
         - "Servicio de Reservas"
@@ -131,7 +140,7 @@ paths:
         - name: code
           in: path
           required: true
-          description: "Código de la reserva."
+          description: "Código de la reserva: `RS-` seguido de 8 caracteres alfanuméricos."
           schema:
             type: string
       requestBody:
@@ -153,11 +162,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          description: "`FORBIDDEN`: \"no autorizado\", reserva ajena sin rol `recepcion` de la misma `sede` (ADR-105)."
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
+          $ref: '#/components/responses/Forbidden'
         '404':
           description: "`BOOKING_NOT_FOUND`: código de reserva inexistente."
           content:
@@ -165,7 +170,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '409':
-          description: "`BOOKING_IN_PROGRESS`: \"reserva en curso\" (CU3, ADR-105)."
+          description: "`BOOKING_IN_PROGRESS`: reserva en curso (CU3, ADR-105)."
           content:
             application/problem+json:
               schema:
@@ -180,14 +185,20 @@ components:
       description: "JWT del Proveedor de Identidad Northwind en `Authorization: Bearer` (ADR-002)."
 
   responses:
+    ValidationFailed:
+      description: "`VALIDATION_FAILED`: franja fuera de múltiplos de 30 minutos, de más de 8 horas o en el pasado; asunto de más de 80 caracteres; motivo de menos de 10 o más de 120 caracteres, o ausente para `recepcion`."
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
     Unauthenticated:
       description: "`UNAUTHENTICATED`: token ausente, inválido o expirado (ADR-002)."
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
-    ValidationFailed:
-      description: "`VALIDATION_FAILED`: franja fuera de múltiplos de 30 minutos, de más de 8 horas o en el pasado; asunto de más de 80 caracteres; motivo de menos de 10 o más de 120 caracteres, o ausente para `recepcion`."
+    Forbidden:
+      description: "`FORBIDDEN`: \"no autorizado\", reserva ajena sin rol `recepcion` de la misma `sede` (ADR-105)."
       content:
         application/problem+json:
           schema:
@@ -197,10 +208,12 @@ components:
     Problem:
       type: object
       description: "Error RFC 9457 (`application/problem+json`) con el campo `code` (ADR-001)."
-      # TODO: [NOT DOCUMENTED — campos RFC 9457 adicionales a `code` y su obligatoriedad: add to docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md]
+      required:
+        - code
       properties:
         code:
           type: string
+          description: "Código estable del error."
           enum:
             - UNAUTHENTICATED
             - FORBIDDEN
@@ -209,21 +222,7 @@ components:
             - ROOM_OCCUPIED
             - DAILY_LIMIT_REACHED
             - BOOKING_IN_PROGRESS
-    Site:
-      type: string
-      enum:
-        - centro
-        - norte
-        - puerto
-    Slot:
-      type: object
-      properties:
-        start:
-          type: string
-          description: "`HH:mm`."
-        end:
-          type: string
-          description: "`HH:mm`."
+
     AvailabilityResponse:
       type: object
       properties:
@@ -236,32 +235,35 @@ components:
           maxItems: 3
           description: "Hasta 3 franjas cuando no hay salas libres: misma duración, día y sede, las más próximas en el tiempo a la pedida, antes o después y nunca en el pasado; ante igual distancia, la posterior (CU1, alternativa 1)."
           items:
-            $ref: '#/components/schemas/Slot'
-      # TODO: [NOT DOCUMENTED — obligatoriedad de rooms y suggestedSlots: add to docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md]
+            type: object
+            properties:
+              start:
+                type: string
+                description: "`HH:mm`."
+              end:
+                type: string
+                description: "`HH:mm`."
+
     RoomAvailability:
       type: object
       properties:
         roomId:
           type: string
-          description: "String opaco."
+          description: "Identificador opaco de la sala."
         name:
           type: string
         capacity:
           type: integer
         equipment:
+          # TODO: [NOT DOCUMENTED — estructura de equipment (lista o valor único): add to docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md]
           type: array
           items:
             type: string
-            enum:
-              - screen
-              - videoconference
-              - whiteboard
+            enum: ["screen", "videoconference", "whiteboard"]
         status:
           type: string
-          enum:
-            - free
-            - occupied
-      # TODO: [NOT DOCUMENTED — obligatoriedad de los campos de RoomAvailability: add to docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md]
+          enum: ["free", "occupied"]
+
     BookingRequest:
       type: object
       required:
@@ -273,10 +275,11 @@ components:
       properties:
         roomId:
           type: string
-          description: "String opaco."
+          description: "Identificador opaco de la sala."
         date:
           type: string
           format: date
+          description: "Fecha ISO 8601."
         start:
           type: string
           description: "`HH:mm`."
@@ -286,6 +289,7 @@ components:
         subject:
           type: string
           maxLength: 80
+
     Booking:
       type: object
       required:
@@ -301,16 +305,18 @@ components:
       properties:
         code:
           type: string
-          description: "`RS-` seguido de 8 caracteres alfanuméricos."
           pattern: '^RS-[A-Za-z0-9]{8}$'
+          description: "`RS-` seguido de 8 caracteres alfanuméricos."
         roomId:
           type: string
-          description: "String opaco."
+          description: "Identificador opaco de la sala."
         site:
-          $ref: '#/components/schemas/Site'
+          # TODO: [NOT DOCUMENTED — type of site en Booking: add to docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md]
+          description: "Sede de la sala."
         date:
           type: string
           format: date
+          description: "Fecha ISO 8601."
         start:
           type: string
           description: "`HH:mm`."
@@ -322,24 +328,21 @@ components:
           maxLength: 80
         memberId:
           type: string
-          description: "String opaco; `sub` del JWT del Proveedor de Identidad Northwind (ADR-002)."
+          description: "`sub` del JWT del Proveedor de Identidad Northwind (ADR-002)."
         status:
           type: string
-          enum:
-            - confirmed
-            - cancelled
+          enum: ["confirmed", "cancelled"]
         cancelledBy:
           type: string
-          description: "String opaco; `sub` del JWT. Solo con `status: cancelled`."
+          description: "`sub` del JWT del Proveedor de Identidad Northwind (ADR-002); solo con `status: cancelled`."
         cancelledAt:
           type: string
           format: date-time
-          description: "Solo con `status: cancelled`."
+          description: "Fecha y hora ISO 8601; solo con `status: cancelled`."
         cancellationReason:
           type: string
-          minLength: 10
-          maxLength: 120
           description: "Solo con `status: cancelled`."
+
     CancellationRequest:
       type: object
       properties:
