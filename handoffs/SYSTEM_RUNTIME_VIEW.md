@@ -7,25 +7,25 @@
 | Versión | 4.3.1 |
 | Responsable | Equipo de Arquitectura Northwind |
 | Estado | draft |
-| Versión de la arquitectura | 1.1.1 |
+| Versión de la arquitectura | 1.2.0 |
 | Generado | 2026-10-19 |
 | Proyecto | Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión |
 
-### Índice Rápido por Rol <!-- SECTION: Role Quick Index -->
+### Índice por Rol <!-- SECTION: Role Quick Index -->
 
 | Audience | Read first in this document |
 |----------|-----------------------------|
-| **Arquitecto** | Alcance → Flujos → Descomposición del Presupuesto → Justificación de Conexiones → Ruta de Retorno |
-| **Dev** | Flujos (los flujos donde aparece tu componente) → Justificación de Conexiones (conexiones que tocan tu componente) |
-| **Ops / SRE** | Descomposición del Presupuesto → Postura de Fallo de un Vistazo → Ruta de Retorno |
+| **Arquitecto** | Alcance → Flujos → Descomposición de Presupuesto → Justificación de Conexiones → Ruta de Retorno |
+| **Dev** | Flujos (los flujos donde aparece su componente) → Justificación de Conexiones (conexiones que tocan su componente) |
+| **Ops / SRE** | Descomposición de Presupuesto → Postura de Fallo → Ruta de Retorno |
 
 El orden de lectura de los cuatro documentos del kit está en `handoffs/README.md`.
 
-La Vista de Ejecución del Sistema es el **guion de todo el sistema**: la vista compartida que cada equipo recibe junto a su Especificación de Componente. Nombra cada conexión, su justificación y el ADR que la decidió, y obliga a descomponer el presupuesto por salto para que ningún equipo asuma el SLO extremo a extremo completo.
+La Vista de Ejecución del Sistema es el **guion gráfico del sistema completo**: la vista compartida que cada equipo de servicio recibe junto con su Especificación de Componente. Nombra cada conexión, su justificación y el ADR que la decidió. Obliga a descomponer el presupuesto por salto, de modo que ningún equipo asuma que posee el SLO extremo a extremo.
 
 ---
 
-## 1. Alcance <!-- SECTION: Scope -->
+## Alcance <!-- SECTION: Scope -->
 
 **En alcance**
 
@@ -33,25 +33,25 @@ La Vista de Ejecución del Sistema es el **guion de todo el sistema**: la vista 
 - Servicio de Reservas
 - Base de Datos de Reservas
 
-**Fuera de alcance** (nombrado explícitamente para que la ausencia no sea ambigua)
+**Fuera de alcance** (se nombra explícitamente para que la ausencia no sea ambigua)
 
 No hay componentes fuera de alcance documentados.
 
 ---
 
-## 2. Flujos <!-- SECTION: Flows -->
+## Flujos <!-- SECTION: Flows -->
 
-Cada flujo extremo a extremo: disparador, ruta, secuencia, presupuesto global y postura de fallo.
+Cada flujo extremo a extremo significativo: disparador, ruta, enlace al diagrama de secuencia, presupuesto global y postura de fallo. Los componentes de la ruta usan el nombre canónico.
 
 ### F-01 — Consultar disponibilidad
 
-- **Trigger:** El miembro abre "Salas" o cambia sede, fecha o franja
-- **Path:** Portal de Reservas → Proveedor de Identidad Northwind → Portal de Reservas → Servicio de Reservas → Proveedor de Identidad Northwind → Servicio de Reservas → Base de Datos de Reservas
-- **Phases:** 1 (Inicio de sesión) → 2 (Validación del token) → 3 (Consulta de disponibilidad)
-- **Sequence:** [../docs/04-data-flow-patterns.md#flujo-1--consultar-disponibilidad](../docs/04-data-flow-patterns.md#flujo-1--consultar-disponibilidad)
-- **Global budget:** ≤ 1 s p95
-- **Governed by:** ADR-001, ADR-002
-- **Failure posture:** fase 1: Proveedor no disponible: sin sesión no hay operación · fase 2: Token ausente, inválido o vencido: 401 · fase 3: Base no disponible: error 5xx
+- **Disparador:** El miembro abre "Salas" o cambia sede, fecha o franja
+- **Ruta:** Portal de Reservas → Proveedor de Identidad Northwind → Portal de Reservas → Servicio de Reservas → Proveedor de Identidad Northwind → Servicio de Reservas → Base de Datos de Reservas
+- **Fases:** 1 (Inicio de sesión) → 2 (Validación del token) → 3 (Consulta de disponibilidad)
+- **Secuencia:** [docs/04-data-flow-patterns.md#flujo-1--consultar-disponibilidad](../docs/04-data-flow-patterns.md#flujo-1--consultar-disponibilidad)
+- **Presupuesto global:** ≤ 1 s p95
+- **Gobernado por:** ADR-001, ADR-002
+- **Postura de fallo:** fase 1: Proveedor no disponible: sin sesión no hay operación · fase 2: Token ausente, inválido o vencido: 401 · fase 3: Base no disponible: error 5xx
 - **Delta:** solo lectura; con ninguna sala libre, el portal muestra las 3 franjas de 30 minutos más cercanas con una sala libre, antes o después de la pedida; ante igual distancia, la posterior.
 
 ```mermaid
@@ -84,13 +84,13 @@ sequenceDiagram
 
 ### F-02 — Reservar una sala
 
-- **Trigger:** El miembro pulsa "Reservar" y confirma
-- **Path:** Portal de Reservas → Servicio de Reservas → Proveedor de Identidad Northwind → Servicio de Reservas → Base de Datos de Reservas
-- **Phases:** 2 (Validación del token) → 4 (Creación de reserva)
-- **Sequence:** [../docs/04-data-flow-patterns.md#flujo-2--reservar-una-sala](../docs/04-data-flow-patterns.md#flujo-2--reservar-una-sala)
-- **Global budget:** ≤ 2 s p95
-- **Governed by:** ADR-001, ADR-003
-- **Failure posture:** fase 2: Token ausente, inválido o vencido: 401 · fase 4: Superposición o límite diario: rechazo de negocio
+- **Disparador:** El miembro pulsa "Reservar" y confirma
+- **Ruta:** Portal de Reservas → Servicio de Reservas → Proveedor de Identidad Northwind → Servicio de Reservas → Base de Datos de Reservas
+- **Fases:** 2 (Validación del token) → 4 (Creación de reserva)
+- **Secuencia:** [docs/04-data-flow-patterns.md#flujo-2--reservar-una-sala](../docs/04-data-flow-patterns.md#flujo-2--reservar-una-sala)
+- **Presupuesto global:** ≤ 2 s p95
+- **Gobernado por:** ADR-001, ADR-003
+- **Postura de fallo:** fase 2: Token ausente, inválido o vencido: 401 · fase 4: Superposición o límite diario: rechazo de negocio
 - **Delta:** única escritura con clave de idempotencia; la superposición la rechaza la Base de Datos de Reservas, no el código.
 
 ```mermaid
@@ -121,13 +121,13 @@ sequenceDiagram
 
 ### F-03 — Cancelar una reserva
 
-- **Trigger:** El miembro o el recepcionista pulsa "Cancelar" y confirma
-- **Path:** Portal de Reservas → Servicio de Reservas → Proveedor de Identidad Northwind → Servicio de Reservas → Base de Datos de Reservas
-- **Phases:** 2 (Validación del token) → 5 (Cancelación de reserva)
-- **Sequence:** [../docs/04-data-flow-patterns.md#flujo-3--cancelar-una-reserva](../docs/04-data-flow-patterns.md#flujo-3--cancelar-una-reserva)
-- **Global budget:** ≤ 2 s p95
-- **Governed by:** ADR-002
-- **Failure posture:** fase 2: Token ausente, inválido o vencido: 401 · fase 5: No autorizado o reserva en curso: rechazo de negocio
+- **Disparador:** El miembro o el recepcionista pulsa "Cancelar" y confirma
+- **Ruta:** Portal de Reservas → Servicio de Reservas → Proveedor de Identidad Northwind → Servicio de Reservas → Base de Datos de Reservas
+- **Fases:** 2 (Validación del token) → 5 (Cancelación de reserva)
+- **Secuencia:** [docs/04-data-flow-patterns.md#flujo-3--cancelar-una-reserva](../docs/04-data-flow-patterns.md#flujo-3--cancelar-una-reserva)
+- **Presupuesto global:** ≤ 2 s p95
+- **Gobernado por:** ADR-002
+- **Postura de fallo:** fase 2: Token ausente, inválido o vencido: 401 · fase 5: No autorizado o reserva en curso: rechazo de negocio
 - **Delta:** la autorización depende del dueño o del rol recepcion con el atributo sede del token.
 
 ```mermaid
@@ -158,9 +158,9 @@ sequenceDiagram
 
 ---
 
-## 3. Catálogo de Fases <!-- SECTION: Phase Catalog -->
+## Catálogo de Fases <!-- SECTION: Phase Catalog -->
 
-Cada fase que ejecutan los flujos anteriores, dibujada una sola vez. El paso `4.2` de cualquier imagen principal es el paso 2 de la Fase 4 aquí.
+Cada fase que ejecutan los flujos anteriores, dibujada una vez. El paso `4.2` de cualquier imagen principal es el paso 2 de la Fase 4 de este catálogo.
 `Used by` es el índice inverso: los flujos que alcanza un cambio en esa fase.
 
 ### Phase 1 — Inicio de sesión
@@ -252,47 +252,35 @@ sequenceDiagram
 
 ---
 
-## 4. Descomposición del Presupuesto <!-- SECTION: Budget Decomposition -->
+## Descomposición de Presupuesto <!-- SECTION: Budget Decomposition -->
 
-Cada número global se asigna a números por salto. Las asignaciones deben sumar dentro de la restricción global de cada flujo. El margen sin asignar se declara explícitamente.
+Todo número global se asigna a números por salto. Las asignaciones deben sumar dentro de la restricción global de cada flujo. El margen sin asignar se declara explícitamente.
 
-`[NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget]` No existe `analysis/LATENCY_BUDGET-*.md`. Las filas siguientes son objetivos declarados en `docs/04-data-flow-patterns.md` § Presupuesto de latencia, no un análisis de latencia. La tabla de origen no asocia saltos a flujos; cada flujo muestra los mismos saltos y su propio total.
+El `docs/04-data-flow-patterns.md` § Presupuesto de latencia declara una tabla de saltos sin nombrar casos de uso por flujo. No hay análisis de presupuesto de latencia; ningún flujo queda cubierto por esa tabla.
 
 ### F-01 — Consultar disponibilidad
 
 | Hop | Component | p99 allocation | Error budget | Notes |
 |----:|-----------|---------------:|-------------:|-------|
-| 1 | CDN → navegador (primera carga) | ≤ 2,5 s LCP p75 en 4G (PO Spec §8) | — | objetivo documentado — sin análisis de latency-budget |
-| 2 | Portal de Reservas → Servicio de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | — | objetivo documentado — sin análisis de latency-budget |
-| 3 | Servicio de Reservas → Base de Datos de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | — | objetivo documentado — sin análisis de latency-budget |
-| 4 | Servicio de Reservas → Proveedor de Identidad Northwind (JWKS) | Fuera del camino crítico salvo carga de claves | — | objetivo documentado — sin análisis de latency-budget |
-|   | **Sum** | **≤ 1 s p95 (consulta)** | — | total documentado en PO Spec §8 |
+| 1 | Portal de Reservas → Servicio de Reservas → Base de Datos de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | Global documentado: ≤ 1 s p95 |
 
 ### F-02 — Reservar una sala
 
 | Hop | Component | p99 allocation | Error budget | Notes |
 |----:|-----------|---------------:|-------------:|-------|
-| 1 | CDN → navegador (primera carga) | ≤ 2,5 s LCP p75 en 4G (PO Spec §8) | — | objetivo documentado — sin análisis de latency-budget |
-| 2 | Portal de Reservas → Servicio de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | — | objetivo documentado — sin análisis de latency-budget |
-| 3 | Servicio de Reservas → Base de Datos de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | — | objetivo documentado — sin análisis de latency-budget |
-| 4 | Servicio de Reservas → Proveedor de Identidad Northwind (JWKS) | Fuera del camino crítico salvo carga de claves | — | objetivo documentado — sin análisis de latency-budget |
-|   | **Sum** | **≤ 2 s p95 (reserva)** | — | total documentado en PO Spec §8 |
+| 1 | Portal de Reservas → Servicio de Reservas → Base de Datos de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | Global documentado: ≤ 2 s p95 |
 
 ### F-03 — Cancelar una reserva
 
 | Hop | Component | p99 allocation | Error budget | Notes |
 |----:|-----------|---------------:|-------------:|-------|
-| 1 | CDN → navegador (primera carga) | ≤ 2,5 s LCP p75 en 4G (PO Spec §8) | — | objetivo documentado — sin análisis de latency-budget |
-| 2 | Portal de Reservas → Servicio de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | — | objetivo documentado — sin análisis de latency-budget |
-| 3 | Servicio de Reservas → Base de Datos de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | — | objetivo documentado — sin análisis de latency-budget |
-| 4 | Servicio de Reservas → Proveedor de Identidad Northwind (JWKS) | Fuera del camino crítico salvo carga de claves | — | objetivo documentado — sin análisis de latency-budget |
-|   | **Sum** | **≤ 2 s p95 (cancelación)** | — | total documentado en PO Spec §8 |
+| 1 | Portal de Reservas → Servicio de Reservas → Base de Datos de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | Global documentado: ≤ 2 s p95 |
 
 ---
 
-## 5. Justificación de Conexiones <!-- SECTION: Edge Rationale -->
+## Justificación de Conexiones <!-- SECTION: Edge Rationale -->
 
-Cada conexión del diagrama lleva una línea y un enlace al ADR. Sin conexiones sin explicar.
+Cada conexión del diagrama lleva una línea y un enlace a su ADR. Sin conexiones sin explicar: si una conexión carece de justificación, el diseño no está listo para entregarse.
 
 | Edge | Style | Rationale (one line) | Decision |
 |------|-------|----------------------|---------:|
@@ -303,21 +291,21 @@ Cada conexión del diagrama lleva una línea y un enlace al ADR. Sin conexiones 
 
 ---
 
-## 6. Postura de Fallo de un Vistazo <!-- SECTION: Failure Posture at a Glance -->
+## Postura de Fallo de un Vistazo <!-- SECTION: Failure Posture at a Glance -->
 
-Resumen entre flujos del comportamiento en cascada y de los mamparos. Se alimenta de `analysis/BLAST_RADIUS-*.md`.
+Resumen entre flujos del comportamiento en cascada y de los compartimentos estancos. Se alimenta de `analysis/BLAST_RADIUS-*.md`.
 
-No se encontró análisis de Blast Radius — ejecuta /sa-analysis:architecture-analysis blast-radius para poblar esta sección.
+No se encontró análisis de Blast Radius — ejecute /sa-analysis:architecture-analysis blast-radius para poblar esta sección.
 
 ---
 
-## 7. Ruta de Retorno <!-- SECTION: Return Path -->
+## Ruta de Retorno <!-- SECTION: Return Path -->
 
-La analogía del guion es de un solo sentido; el software no. El equipo más cercano a la ejecución suele ver lo que el arquitecto no vio. Esta sección nombra cómo cuestionar la vista de ejecución después de entregada.
+La analogía del guion gráfico es de un solo sentido; el software no. El equipo más cercano a la ejecución suele ver lo que el arquitecto no vio. Esta sección nombra cómo cuestionar la vista de ejecución después de entregarla.
 
-- **Interface Challenge** — un supuesto de un Contrato de Interfaz es incorrecto o inimplementable. Se plantea antes de implementar. La resolución actualiza el Contrato de Interfaz y, si cambia el estilo de interacción, produce un ADR nuevo.
-- **Budget Challenge** — una asignación no es alcanzable. La resolución vuelve a descomponer el flujo; la restricción global solo se renegocia con su responsable.
-- **Standards Exception** — una regla global no encaja. Se registra como desviación con fecha y vencimiento en [`CROSS_CUTTING_STANDARDS.md § Deviations`](CROSS_CUTTING_STANDARDS.md#deviations). Nunca una desviación local silenciosa.
+- **Interface Challenge** — un supuesto de un Contrato de Interfaz es erróneo o inimplementable. Se plantea antes de implementar. La resolución actualiza el Contrato de Interfaz y, si cambia el estilo de interacción, produce un ADR nuevo.
+- **Budget Challenge** — una asignación no es alcanzable. La resolución redescompone el flujo; la restricción global se renegocia solo con su responsable.
+- **Standards Exception** — una regla global no encaja. Se registra como desviación con fecha y vencimiento en [`CROSS_CUTTING_STANDARDS.md § Deviations`](CROSS_CUTTING_STANDARDS.md#deviations). Nunca como una desviación local silenciosa.
 - **Finding** — cualquier otro hallazgo durante la construcción que invalide la vista de ejecución. Se registra contra el flujo y se prioriza en la siguiente revisión de arquitectura.
 
 Todo lo anterior tiene un responsable nombrado y un registro de decisión. Los hilos de chat no son una ruta de retorno.

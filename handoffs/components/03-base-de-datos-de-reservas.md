@@ -10,10 +10,10 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.1.1 |
+| Versión de la arquitectura | 1.2.0 |
 | Versión del componente | 1.0.1 |
 | Generado | 2026-10-19 |
-| Documento fuente del componente | [docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md](../../docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md) |
+| Documento fuente del componente | [../docs/components/03-base-de-datos-de-reservas.md](../docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md) |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->
 
@@ -25,7 +25,7 @@
 
 El orden de lectura de los cuatro documentos del kit está en `../README.md`.
 
-Este documento es el **panel para este equipo**. Especifica solo intención y restricción. La estructura interna, la elección de persistencia dentro de los límites propios, el idioma de programación, la organización de módulos y la estrategia de pruebas quedan deliberadamente sin especificar: son decisión del equipo.
+Este es el **panel para este equipo**. Especifica solo intención y restricción. La estructura interna, la elección de persistencia dentro de los límites propios, el idioma del lenguaje, la organización de módulos y la estrategia de pruebas quedan deliberadamente sin especificar: son decisiones del equipo.
 
 Léase junto con [`../SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md) (historia del sistema completo), [`../CROSS_CUTTING_STANDARDS.md`](../CROSS_CUTTING_STANDARDS.md) (reglas globales) y cada Interface Contract enlazado (continuidad con los servicios adyacentes).
 
@@ -33,27 +33,27 @@ Léase junto con [`../SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md) (histo
 
 ## 1. Responsabilidad <!-- SECTION: Responsibility -->
 
-Base de Datos de Reservas es la fuente de verdad de las 42 salas de las 3 sedes y de las reservas, incluidas sus cancelaciones, el registro de auditoría de cancelaciones y las claves de idempotencia. Rechaza por construcción, con una restricción de exclusión de PostgreSQL 16, dos reservas confirmadas superpuestas de la misma sala ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)). NO es responsable de coordinar la integridad desde la aplicación (la garantiza el motor, no el Servicio de Reservas), ni de dar acceso a otros servicios: su único dueño y único cliente es el Servicio de Reservas.
+Base de Datos de Reservas es la fuente de verdad de las 42 salas de las 3 sedes (con capacidad y equipamiento) y de las reservas con su estado, incluidas las cancelaciones. Rechaza por construcción toda reserva confirmada superpuesta con otra de la misma sala mediante una restricción de exclusión ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)). NO es responsable de coordinar la integridad ante superposición desde la aplicación: la garantiza el motor, no el Servicio de Reservas. NO es responsable de dar acceso a otros servicios: solo el Servicio de Reservas lee y escribe sus tablas ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
 
 ---
 
 ## 2. Posición <!-- SECTION: Position -->
 
-**Aparece en los flujos:** F-01 hop 3 (Consulta de disponibilidad), F-02 hop 4 (Creación de reserva), F-03 hop 5 (Cancelación de reserva)
+**Aparece en los flujos:** F-01 phase 3 (Consulta de disponibilidad), F-02 phase 4 (Creación de reserva), F-03 phase 5 (Cancelación de reserva)
 
-**Interfaces ascendentes** (entrantes):
+**Interfaces entrantes**:
 
 - [servicio-de-reservas→base-de-datos-de-reservas](../interfaces/servicio-de-reservas→base-de-datos-de-reservas.md) — I-04
 
-**Interfaces descendentes** (salientes):
+**Interfaces salientes**:
 
-No hay interfaces salientes documentadas.
+Sin interfaces salientes documentadas.
 
 **Interfaces sin Interface Contract**:
 
 Ninguna.
 
-**Panel** — este componente y sus vecinos en el diagrama de contenedores, extraído de `docs/03` (generado, nunca se edita a mano):
+**Panel** — este componente y sus vecinos en el diagrama de contenedores, recortado de `docs/03` (generado, nunca se edita a mano):
 
 Cut of `docs/03-architecture-layers.md` § Diagram: C4 Level 2 — Container — Base de Datos de Reservas and its neighbours (generated, never hand-edited):
 
@@ -95,40 +95,41 @@ flowchart TB
 
 ## 3. Contratos propios <!-- SECTION: Contracts Owned -->
 
-Contratos que este componente publica. Los esquemas viven en los archivos de activos enlazados; esta tabla lista solo títulos, versiones y consumidores.
+Contratos que este componente publica. Los esquemas viven en los activos enlazados: esta tabla lista solo títulos, versiones y consumidores.
 
 | Contract | Version | Consumers | Asset |
 |----------|--------:|-----------|-------|
-| — | — | — | No hay contratos propios. |
+| — | — | — | Sin contratos propios. |
 
 ---
 
 ## 4. Invariantes <!-- SECTION: Invariants -->
 
-Condiciones que se cumplen en todo momento, sin importar la implementación. Cada invariante es verificable; QA cubre cada una con una prueba.
+Condiciones que se cumplen siempre, sea cual sea la implementación. Cada invariante es un enunciado verificable: QA cubre cada uno con una prueba.
 
-- **INV-01** La base guarda las 42 salas de las 3 sedes, con capacidad y equipamiento.
-- **INV-02** La base guarda cada reserva con su estado; una cancelación conserva el registro de la reserva.
-- **INV-03** La base rechaza toda reserva confirmada que se superponga con otra reserva confirmada de la misma sala, mediante una restricción de exclusión ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
-- **INV-04** Solo el Servicio de Reservas lee y escribe las tablas de la base ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
-- **INV-05** Las restricciones de integridad que exige el negocio (unicidad, no superposición) se declaran en la base, no solo en el código ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
-- **INV-06** Todo cambio de esquema se aplica con una migración versionada ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
+- **INV-01** Dos reservas confirmadas de la misma sala nunca se superponen en el tiempo; el motor las rechaza con una restricción de exclusión ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
+- **INV-02** Solo el Servicio de Reservas lee y escribe las tablas de Base de Datos de Reservas ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
+- **INV-03** La base guarda las 42 salas de las 3 sedes, cada una con capacidad y equipamiento.
+- **INV-04** Cada reserva se guarda con su estado; las cancelaciones permanecen registradas.
+- **INV-05** El esquema se versiona con migraciones ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
+- **INV-06** Las restricciones de integridad que el negocio exige (unicidad, no superposición) se declaran en la base, no solo en el código ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
+- **INV-07** La consistencia es fuerte: la integridad ante superposición la garantiza el motor, no la aplicación.
 
 ---
 
 ## 5. Presupuestos (de la descomposición) <!-- SECTION: Budgets -->
 
-Extraído de [`../SYSTEM_RUNTIME_VIEW.md § Budget Decomposition`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition), filas que referencian este componente. No se repite el SLO global: solo la asignación de este componente.
+Tomados textualmente de las filas de [`../SYSTEM_RUNTIME_VIEW.md § Budget Decomposition`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) que referencian este componente. No se repite el SLO global: solo la asignación de este componente.
 
 | Aspect | Allocation | Source |
 |--------|-----------:|--------|
-| Latencia p99 | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] |
-| Error budget | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] |
-| Throughput (pico) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] |
-| Throughput (sostenido) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] |
-| Techo de costo | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] |
+| Latencia p99 | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [SYSTEM_RUNTIME_VIEW.md § F-02](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
+| Error budget | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [SYSTEM_RUNTIME_VIEW.md § F-02](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
+| Throughput (pico) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [SYSTEM_RUNTIME_VIEW.md § F-02](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
+| Throughput (sostenido) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [SYSTEM_RUNTIME_VIEW.md § F-02](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
+| Techo de costo | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [SYSTEM_RUNTIME_VIEW.md § F-02](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
 
-Sin análisis de Latency Budget, las filas muestran el marcador `[NOT DOCUMENTED]` y el vacío se registra en § 11.
+Sin análisis de Latency Budget, las filas muestran el marcador `[NOT DOCUMENTED]` y la brecha se repite en § 11. El salto Servicio de Reservas → Base de Datos de Reservas no tiene presupuesto documentado.
 
 ---
 
@@ -143,7 +144,7 @@ Propiedad exclusiva. No existe propiedad mutable compartida en el sistema.
 - Registro de auditoría de cancelaciones
 - Claves de idempotencia
 
-El Servicio de Reservas es el dueño de esta base ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
+Dueño lógico: Servicio de Reservas ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
 
 **Lee (vía contrato, sin ser dueño):**
 
@@ -157,19 +158,17 @@ Sin prohibiciones explícitas.
 
 ## 7. Restricciones <!-- SECTION: Constraints -->
 
-Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o invariante). Una restricción sin razón se desvía con el tiempo: se cita una o se elimina.
+Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o invariante). Una restricción sin razón es deriva en espera: se cita una o se elimina la fila.
 
 **Obligatorias:**
 
-- PostgreSQL 16 gestionado por Plataforma Northwind — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
+- PostgreSQL 16 gestionado por Plataforma Northwind como motor relacional — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
 - Esquema versionado con migraciones en el repositorio del servicio (Flyway en Java) — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
-- Restricción de exclusión de PostgreSQL contra reservas confirmadas superpuestas de la misma sala (ADR en estado Proposed) — per [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)
-- Respaldo diario con retención de 30 días — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
+- Restricción de exclusión de PostgreSQL contra reservas confirmadas superpuestas de la misma sala — per [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md) (estado Proposed)
 
 **Prohibidas:**
 
-- Lectura o escritura directa de las tablas por un servicio distinto del Servicio de Reservas — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
-- Garantizar la no superposición solo en el código de la aplicación — per [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)
+Sin prohibiciones explícitas.
 
 ---
 
@@ -179,21 +178,21 @@ El equipo es dueño de las siguientes decisiones:
 
 - Estructura interna (organización de módulos, límites de paquetes)
 - Elección de persistencia dentro del límite propio
-- Idioma de programación y subconjunto de framework
-- Estrategia de pruebas (reparto unitarias/integración, herramientas)
+- Idioma del lenguaje y subconjunto del framework
+- Estrategia de pruebas (reparto unitarias vs integración, herramientas)
 - Caché local, pooling en proceso
 
-Sobreespecificar aquí reemplazaría el criterio por la prescripción. Si se está especificando alguno de los puntos anteriores, se escala: pertenece a Cross-Cutting Standards (si es de toda la institución) o a un ADR (si es de todo el proyecto), no a una Especificación de Componente.
+Sobreespecificar aquí reemplazaría el criterio por la prescripción. Si se encuentra especificando alguno de los puntos anteriores, escale: pertenece a Cross-Cutting Standards (si es institucional) o a un ADR (si es del proyecto), no a una Especificación de Componente.
 
 ---
 
 ## 9. Aceptación <!-- SECTION: Acceptance -->
 
-- [ ] Contratos de § 3 publicados y verificados por los consumidores
-- [ ] Presupuestos de § 5 demostrados bajo carga
-- [ ] Invariantes de § 4 cubiertas por pruebas
-- [ ] Semántica de fallo de las interfaces ejercitada (inyección de fallos según el Interface Contract)
-- [ ] Conformidad con Cross-Cutting Standards verificada; toda desviación registrada según [`../CROSS_CUTTING_STANDARDS.md § Deviations`](../CROSS_CUTTING_STANDARDS.md#deviations)
+- [ ] Contracts in § 3 published and consumer-verified
+- [ ] Budgets in § 5 demonstrated under load
+- [ ] Invariants in § 4 covered by tests
+- [ ] Interface failure semantics exercised (fault-injection per Interface Contract)
+- [ ] Cross-Cutting Standards conformance checked; any deviation recorded per [`../CROSS_CUTTING_STANDARDS.md § Deviations`](../CROSS_CUTTING_STANDARDS.md#deviations)
 
 ---
 
@@ -204,7 +203,7 @@ Activos entregables generados junto con esta Especificación de Componente.
 | Asset | File | Description |
 |-------|------|-------------|
 | DDL Script | [ddl.sql](assets/03-base-de-datos-de-reservas/ddl.sql) | Esquema de base de datos (CREATE TABLE, índices, restricciones) |
-| C4 Component Descriptor | [c4-descriptor.md](assets/03-base-de-datos-de-reservas/c4-descriptor.md) | Resumen operativo de una página para SRE/infraestructura |
+| C4 Component Descriptor | [c4-descriptor.md](assets/03-base-de-datos-de-reservas/c4-descriptor.md) | Ficha operativa para SRE/infraestructura |
 
 Los activos viven en `handoffs/assets/03-base-de-datos-de-reservas/`.
 
@@ -212,21 +211,22 @@ Los activos viven en `handoffs/assets/03-base-de-datos-de-reservas/`.
 
 ## 11. Preguntas abiertas <!-- SECTION: Open Questions -->
 
-Vacíos detectados al generar la Especificación de Componente: valores ausentes en la documentación de arquitectura o en los artefactos de origen (Runtime View, Cross-Cutting Standards, Interface Contracts).
+Brechas detectadas al generar la Especificación de Componente: valores ausentes de la documentación de arquitectura y de los artefactos de origen.
 
 | Section | What is missing | Where to fix it | What it blocks |
 |---------|-----------------|-----------------|----------------|
-| § Position | ID del diagrama del panel | Registro de diagramas | Referenciar el diagrama de forma estable |
-| § Budgets | Asignación de latencia p99 | `/sa-analysis:architecture-analysis latency-budget` | Pruebas de carga del presupuesto |
-| § Budgets | Error budget | `/sa-analysis:architecture-analysis latency-budget` | Criterio de aceptación de errores |
-| § Budgets | Throughput pico | `/sa-analysis:architecture-analysis latency-budget` | Dimensionar la base |
-| § Budgets | Throughput sostenido | `/sa-analysis:architecture-analysis latency-budget` | Dimensionar la base |
-| § Budgets | Techo de costo | `/sa-analysis:architecture-analysis latency-budget` | Validar el costo operativo |
-| Assets — ddl.sql | Columnas de salas | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | No se puede crear la tabla de salas; los docs solo dan 42 salas de 3 sedes, capacidad y equipamiento. |
-| Assets — ddl.sql | Columnas de reservas | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | No se puede crear la tabla de reservas; los docs solo mencionan el estado. |
-| Assets — ddl.sql | Columnas del registro de auditoría de cancelaciones | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | No se puede crear la tabla de auditoría. |
-| Assets — ddl.sql | Columnas de claves de idempotencia | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | No se puede crear la tabla de claves de idempotencia. |
-| Assets — ddl.sql | Definición de la restricción de exclusión (ADR-102) | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | Faltan columnas, tipo de rango y condición de estado confirmado; no se puede declarar el EXCLUDE. |
+| Metadata | Equipo propietario del componente | `docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md`, campo **Owner:** | Asignar responsabilidad del componente |
+| Position | ID del diagrama del Panel | Registro de diagramas de `docs/03-architecture-layers.md` | Trazabilidad del diagrama |
+| Budgets | Latencia p99 | `/sa-analysis:architecture-analysis latency-budget` | Pruebas de carga de § 9 |
+| Budgets | Error budget | `/sa-analysis:architecture-analysis latency-budget` | Pruebas de carga de § 9 |
+| Budgets | Throughput (pico) | `/sa-analysis:architecture-analysis latency-budget` | Dimensionamiento de capacidad |
+| Budgets | Throughput (sostenido) | `/sa-analysis:architecture-analysis latency-budget` | Dimensionamiento de capacidad |
+| Budgets | Techo de costo | `/sa-analysis:architecture-analysis latency-budget` | Control de costo |
+| Assets — ddl.sql | Columnas de la tabla salas | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | El equipo no puede crear la tabla. Los docs solo mencionan capacidad y equipamiento, sin nombres ni tipos de columna. |
+| Assets — ddl.sql | Columnas de la tabla reservas | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | El equipo no puede crear la tabla. Faltan columnas, tipos, claves y la representación del estado. |
+| Assets — ddl.sql | Columnas del registro de auditoría de cancelaciones | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | El equipo no puede crear la tabla de auditoría. Los docs no la describen más allá de su existencia. |
+| Assets — ddl.sql | Columnas de las claves de idempotencia | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | El equipo no puede crear la tabla de claves de idempotencia. Los docs no la describen más allá de su existencia. |
+| Assets — ddl.sql | Definición de la restricción de exclusión (ADR-102) | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | Faltan las columnas, el tipo de rango y el predicado de estado confirmado. La restricción EXCLUDE no se puede escribir. |
 | Assets — c4-descriptor.md | Responsable | agregar `**Owner:**` a docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md | escalamiento y propiedad en la CMDB |
 | Assets — c4-descriptor.md | Capacidad | docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md § Capacity <!-- LABEL: Capacity --> | dimensionamiento y planificación de capacidad |
 | Assets — c4-descriptor.md | Host · IP · SO · Dominio | docs/09-operational-considerations.md | registro en la CMDB y reglas de red |

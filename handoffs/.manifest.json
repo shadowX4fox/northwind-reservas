@@ -1,15 +1,15 @@
 {
   "version": "4",
   "generator": "sa-skills:architecture-dev-handoff",
-  "generator_version": "10.6.4",
+  "generator_version": "10.8.1",
   "run": {
-    "ekonte_hash": "sha256:4713806bd4af5c825c38be7df09cafab14480fb4108a5deeb27919163a25b0e3",
+    "ekonte_hash": "sha256:30f44d1c62623cb0a8775e3e0b5b9acbf204122a6e9c3e4716835fc31891a0de",
     "ekonte_template_version": "4.3.1",
-    "settei_hash": "sha256:4713806bd4af5c825c38be7df09cafab14480fb4108a5deeb27919163a25b0e3",
+    "settei_hash": "sha256:30f44d1c62623cb0a8775e3e0b5b9acbf204122a6e9c3e4716835fc31891a0de",
     "settei_template_version": "4.3.1",
     "schema_version": "4",
-    "architecture_version": "1.1.1",
-    "generated": "2026-10-19T04:45:18.060Z"
+    "architecture_version": "1.2.0",
+    "generated": "2026-10-19T21:33:52.338Z"
   },
   "seams": {
     "portal-de-reservas→servicio-de-reservas": {
@@ -29,7 +29,7 @@
         "ADR-105",
         "ADR-106"
       ],
-      "generated": "2026-10-19T04:45:18.111Z"
+      "generated": "2026-10-19T21:33:52.359Z"
     },
     "portal-de-reservas→proveedor-de-identidad-northwind": {
       "payload_hash": "sha256:28c07385a00bc0200d237fe4b9fa44b1edbc05269b54330c9db8b9f1b7b74900",
@@ -78,50 +78,47 @@
         "ADR-105",
         "ADR-106"
       ],
-      "generated": "2026-10-19T04:45:18.155Z"
+      "generated": "2026-10-19T21:33:52.378Z"
     }
   },
   "cut_sheets": {
     "portal-de-reservas": {
-      "payload_hash": "sha256:5ef663e757d2549f1c4202320b19334ff42a888a5c1f3190e094641705d04478",
+      "payload_hash": "sha256:77b2ba9406dd836d1b2b76eaa76441b84e3892143ef000adba2121f3f3de297e",
       "template_version": "4.3.1",
       "schema_version": "4",
-      "architecture_version": "1.1.1",
+      "architecture_version": "1.2.0",
       "cut_sheet_file": "components/01-portal-de-reservas.md",
       "assets": [
-        "c4-descriptor.md",
-        "security.md"
+        "c4-descriptor.md"
       ],
       "doc_language": "es",
-      "generated": "2026-10-19T04:45:18.178Z"
+      "generated": "2026-10-19T21:33:52.400Z"
     },
     "servicio-de-reservas": {
-      "payload_hash": "sha256:3dce610173ce64520a54835496ce9b331a9795935e4a731a659c7b586515fc84",
+      "payload_hash": "sha256:8787cd9c8fb8547b7b771cb642b0c521a75d62120d7feabfc6608d1e65fbdbbe",
       "template_version": "4.3.1",
       "schema_version": "4",
-      "architecture_version": "1.1.1",
+      "architecture_version": "1.2.0",
       "cut_sheet_file": "components/02-servicio-de-reservas.md",
       "assets": [
         "openapi.yaml",
-        "c4-descriptor.md",
-        "security.md"
+        "c4-descriptor.md"
       ],
       "doc_language": "es",
-      "generated": "2026-10-19T04:45:18.198Z"
+      "generated": "2026-10-19T21:33:52.424Z"
     },
     "base-de-datos-de-reservas": {
-      "payload_hash": "sha256:d8312b5afc8d4c515834c1df44009c241015f7b5a273a9cec4900cac06efc16c",
+      "payload_hash": "sha256:cc62423e7b59b3935d0d578c8f20c0306a90ca947caea2ac7b39219f35046cd8",
       "template_version": "4.3.1",
       "schema_version": "4",
-      "architecture_version": "1.1.1",
+      "architecture_version": "1.2.0",
       "cut_sheet_file": "components/03-base-de-datos-de-reservas.md",
       "assets": [
         "ddl.sql",
-        "c4-descriptor.md",
-        "security.md"
+        "c4-descriptor.md"
       ],
       "doc_language": "es",
-      "generated": "2026-10-19T04:45:18.218Z"
+      "generated": "2026-10-19T21:33:52.444Z"
     }
   }
 }
