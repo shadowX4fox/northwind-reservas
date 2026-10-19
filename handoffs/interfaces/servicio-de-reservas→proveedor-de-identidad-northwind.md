@@ -18,10 +18,9 @@
 | **QA** | Semántica de fallos → Estado de entrada → Estado de salida → Supuestos mutuos |
 | **Ops / SRE** | Semántica de fallos → Observabilidad en la interfaz → Registro de cambios |
 
-El orden de lectura de los cuatro documentos del kit está en `../README.md`.
+El orden de lectura de los cuatro documentos del handoff está en `../README.md`.
 
-Contrato de continuidad entre dos servicios adyacentes. Aquí se originan la mayoría de los defectos de integración: cada supuesto mutuo es vinculante.
-Cambiar uno es un cambio de interfaz, no un cambio local.
+Contrato de continuidad entre dos servicios adyacentes. Aquí se originan la mayoría de los defectos de integración. Cada supuesto mutuo es vinculante. Cambiar uno es un cambio de interfaz, no un cambio local.
 
 ---
 
@@ -29,7 +28,7 @@ Cambiar uno es un cambio de interfaz, no un cambio local.
 
 | Aspect | Value |
 |--------|-------|
-| Estilo | sync (request-response) |
+| Estilo | sync |
 | Transporte | HTTPS/JSON [Auth] |
 | Contrato | [NOT DOCUMENTED — add contract reference to docs/05-integration-points.md] |
 | Compatibilidad | ver [CROSS_CUTTING_STANDARDS § Versioning](../CROSS_CUTTING_STANDARDS.md#versioning) |
@@ -78,7 +77,7 @@ flowchart TB
 
 Lo que el Proveedor de Identidad Northwind puede asumir como cierto cuando se le invoca:
 
-- [NOT DOCUMENTED — docs/components/proveedor-de-identidad-northwind.md no tiene tabla de comunicación entrante]
+- [NOT DOCUMENTED — la ficha del Proveedor de Identidad Northwind no tiene tabla de comunicación entrante]
 
 ---
 
@@ -86,25 +85,23 @@ Lo que el Proveedor de Identidad Northwind puede asumir como cierto cuando se le
 
 Lo que el Proveedor de Identidad Northwind garantiza al responder o emitir:
 
-- Publica las claves públicas en su endpoint JWKS para validar tokens de acceso JWT (RS256) ([ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)).
-- Vida del token de acceso: 5 minutos ([ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)).
-- [NOT DOCUMENTED — otras postcondiciones del Proveedor de Identidad Northwind]
+- [NOT DOCUMENTED — la ficha del Proveedor de Identidad Northwind no tiene tabla de comunicación entrante]
 
 ---
 
 ## Supuestos mutuos (vinculantes) <!-- SECTION: Mutual assumptions -->
 
-Los supuestos listados aquí son vinculantes. Cambiar uno es un cambio de interfaz, no un cambio local.
+Los supuestos de esta sección son vinculantes. Cambiar uno es un cambio de interfaz, no un cambio local.
 
-**El upstream asume:**
+**El upstream (Servicio de Reservas) asume:**
 
-- El Proveedor de Identidad Northwind expone claves públicas JWKS (HTTPS) para validar firma y claims de cada token (I-03).
-- El Servicio de Reservas mantiene una caché local de las claves JWKS (I-03).
-- Sin claves disponibles, el Servicio de Reservas rechaza la solicitud (deny by default) (I-03).
+- El Proveedor de Identidad Northwind publica claves públicas JWKS (HTTPS) con las que valida la firma y los claims de cada token ([I-03](../../adr/ADR-002-oidc-keycloak-identity.md)).
+- Las claves JWKS admiten caché local en el Servicio de Reservas.
+- Sin claves disponibles, el Servicio de Reservas rechaza la solicitud (deny by default).
 
-**El downstream asume:**
+**El downstream (Proveedor de Identidad Northwind) asume:**
 
-- [NOT DOCUMENTED — docs/components/proveedor-de-identidad-northwind.md no documenta supuestos sobre el llamador]
+- [NOT DOCUMENTED — la ficha del Proveedor de Identidad Northwind no documenta supuestos sobre el llamante]
 
 ---
 
@@ -115,10 +112,9 @@ Responsabilidades fila por fila ante cada condición de fallo. Las celdas del up
 | Condition | Upstream behaviour | Downstream behaviour |
 |-----------|--------------------|----------------------|
 | timeout | [NOT DOCUMENTED] | [NOT DOCUMENTED] |
-| downstream no disponible | Usa la caché local de claves JWKS; sin claves disponibles rechaza la solicitud (deny by default) | — |
+| downstream no disponible | Usa la caché local de claves JWKS; sin claves disponibles, rechaza la solicitud (deny by default) | — |
 | poison message | — | [NOT DOCUMENTED] |
 | fallo parcial | [NOT DOCUMENTED] | [NOT DOCUMENTED] |
-| versiones incompatibles | [NOT DOCUMENTED] | [NOT DOCUMENTED] |
 
 Clasificación de cascada (de `analysis/BLAST_RADIUS-*.md`): [NOT DOCUMENTED — run /sa-analysis:architecture-analysis blast-radius]
 
@@ -126,12 +122,12 @@ Clasificación de cascada (de `analysis/BLAST_RADIUS-*.md`): [NOT DOCUMENTED —
 
 ## Propiedad <!-- SECTION: Ownership -->
 
-Datos que pertenecen al upstream y que el downstream lee solo a través del contrato. No existe propiedad mutable compartida en el sistema.
+Datos que pertenecen a un lado y el otro solo lee a través del contrato. No existe propiedad mutable compartida en el sistema.
 
 | Direction | Fields / entities |
 |-----------|-------------------|
-| Propiedad del upstream | Salas; reservas (con su cancelación y motivo); registro de auditoría de cancelaciones ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)); claves de idempotencia con su respuesta durante 24 horas ([ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)) |
-| Propiedad del downstream | [NOT DOCUMENTED — docs/components/proveedor-de-identidad-northwind.md no tiene sección de propiedad de datos] |
+| Propiedad del upstream | Salas; reservas (con su cancelación y motivo); registro de auditoría de cancelaciones ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)); claves de idempotencia con su respuesta durante 24 horas ([ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)). Todo en la Base de Datos de Reservas ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)) |
+| Propiedad del downstream | [NOT DOCUMENTED — la ficha del Proveedor de Identidad Northwind no tiene sección de propiedad de datos] |
 | Solo lectura (vía esta interfaz) | Claves públicas JWKS del Proveedor de Identidad Northwind (I-03); `sub`, rol `recepcion` y atributo `sede` del JWT validado ([ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md), [ADR-105](../../adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md)) |
 
 ---

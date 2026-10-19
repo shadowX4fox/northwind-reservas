@@ -18,9 +18,9 @@
 | **QA** | Semántica de fallos → Estado de entrada → Estado de salida → Supuestos mutuos |
 | **Ops / SRE** | Semántica de fallos → Observabilidad en la interfaz → Registro de cambios |
 
-El orden de lectura de los cuatro documentos del kit está en `../README.md`.
+El orden de lectura de los cuatro documentos del handoff está en `../README.md`.
 
-Contrato de continuidad entre dos servicios adyacentes. Aquí se originan la mayoría de los defectos de integración: cada supuesto mutuo es vinculante. Cambiar uno es un cambio de interfaz, no un cambio local.
+Contrato de continuidad entre dos servicios adyacentes. Aquí se originan la mayoría de los defectos de integración. Cada supuesto mutuo es vinculante. Cambiar uno es un cambio de interfaz, no un cambio local.
 
 ---
 
@@ -33,7 +33,7 @@ Contrato de continuidad entre dos servicios adyacentes. Aquí se originan la may
 | Contrato | [NOT DOCUMENTED — add contract reference to docs/05-integration-points.md] |
 | Compatibilidad | ver [CROSS_CUTTING_STANDARDS § Versioning](../CROSS_CUTTING_STANDARDS.md#versioning) |
 
-**Panel** — el par en el diagrama de contenedores, recortado de `docs/03` (generado, nunca editado a mano):
+**Panel** — el par en el diagrama de contenedores, extraído de `docs/03` (generado, nunca editado a mano):
 
 Cut of `docs/03-architecture-layers.md` § Diagram: C4 Level 2 — Container — Portal de Reservas → Proveedor de Identidad Northwind (generated, never hand-edited):
 
@@ -75,32 +75,17 @@ flowchart TB
 
 ## Estado de entrada <!-- SECTION: Entry state -->
 
-Lo que el Proveedor de Identidad Northwind puede asumir como cierto cuando se invoca:
+Lo que el Proveedor de Identidad Northwind puede asumir como cierto cuando se le invoca:
 
-- [NOT DOCUMENTED — `docs/components/proveedor-de-identidad-northwind.md` no tiene tabla de comunicación entrante]
-
-<!--
-Bullet template — one line per precondition:
-- [precondition]
-- [auth context propagated / not propagated]
-- [ordering guarantee, if any]
-- [idempotency-key handling per CROSS_CUTTING_STANDARDS § Idempotency]
--->
+- [NOT DOCUMENTED — docs/components/proveedor-de-identidad-northwind.md no tiene tabla de comunicación entrante]
 
 ---
 
 ## Estado de salida <!-- SECTION: Exit state -->
 
-Lo que el Proveedor de Identidad Northwind garantiza cuando responde o emite:
+Lo que el Proveedor de Identidad Northwind garantiza al responder o emitir:
 
-- [NOT DOCUMENTED — `docs/components/proveedor-de-identidad-northwind.md` no tiene tabla de comunicación entrante]
-
-<!--
-Bullet template:
-- [postcondition]
-- [side effects that are visible to others]
-- [emitted event names / topics, if any]
--->
+- [NOT DOCUMENTED — docs/components/proveedor-de-identidad-northwind.md no tiene tabla de comunicación entrante]
 
 ---
 
@@ -108,26 +93,13 @@ Bullet template:
 
 Los supuestos listados aquí son vinculantes. Cambiar uno es un cambio de interfaz, no un cambio local.
 
-**El Portal de Reservas asume:**
+**El upstream asume:**
 
-- [NOT DOCUMENTED — `docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md` no tiene tabla de comunicación saliente]
+- [NOT DOCUMENTED — docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md no tiene tabla de comunicación saliente]
 
-**El Proveedor de Identidad Northwind asume:**
+**El downstream asume:**
 
-- [NOT DOCUMENTED — `docs/components/proveedor-de-identidad-northwind.md` no tiene tabla de comunicación entrante]
-
-<!--
-Examples:
-Upstream assumes:
-  - Downstream is idempotent on `Idempotency-Key` header
-  - Downstream tolerates duplicate delivery within a 24h window
-  - Downstream returns 409 on business-rule conflict, never 500
-
-Downstream assumes:
-  - Caller retries with exponential backoff (see CROSS_CUTTING_STANDARDS § Resilience)
-  - Caller does not require message ordering
-  - Caller supplies a stable correlation-id per CROSS_CUTTING_STANDARDS § Observability
--->
+- [NOT DOCUMENTED — docs/components/proveedor-de-identidad-northwind.md no tiene tabla de comunicación entrante]
 
 ---
 
@@ -143,7 +115,7 @@ Responsabilidades fila por fila ante cada condición de fallo. Las celdas del up
 | fallo parcial | [NOT DOCUMENTED] | [NOT DOCUMENTED] |
 | versiones incompatibles | [NOT DOCUMENTED] | [NOT DOCUMENTED] |
 
-Falla de autenticación (I-01): el Portal de Reservas redirige al inicio de sesión.
+Falla de autenticación: el Portal de Reservas redirige al inicio de sesión (I-01).
 
 Clasificación de cascada (de `analysis/BLAST_RADIUS-*.md`): [NOT DOCUMENTED — run /sa-analysis:architecture-analysis blast-radius]
 
@@ -151,19 +123,19 @@ Clasificación de cascada (de `analysis/BLAST_RADIUS-*.md`): [NOT DOCUMENTED —
 
 ## Propiedad <!-- SECTION: Ownership -->
 
-Datos propiedad del upstream y de solo lectura a través del contrato desde el lado del downstream. Ninguna propiedad mutable compartida en el sistema.
+Datos propiedad del upstream y de solo lectura por contrato desde el lado del downstream. No existe propiedad mutable compartida en el sistema.
 
 | Direction | Fields / entities |
 |-----------|-------------------|
-| Propiedad del upstream | Ningún dato persistente; los tokens viven solo en memoria del navegador ([ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md)). |
-| Propiedad del downstream | [NOT DOCUMENTED — `docs/components/proveedor-de-identidad-northwind.md` no tiene sección de propiedad de datos] |
-| Solo lectura (vía esta interfaz) | [NOT DOCUMENTED] |
+| Propiedad del upstream | Ningún dato persistente; los tokens viven solo en memoria del navegador ([ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md)) |
+| Propiedad del downstream | [NOT DOCUMENTED — docs/components/proveedor-de-identidad-northwind.md no tiene sección de propiedad de datos] |
+| Solo lectura (vía esta interfaz) | Token de acceso con el rol `recepcion` y el atributo `sede`, en memoria del navegador |
 
 ---
 
 ## Observabilidad en la interfaz <!-- SECTION: Observability at the interface -->
 
-La interfaz se depura desde cualquiera de sus extremos sin cruzar logs entre equipos.
+La interfaz debe poder depurarse desde cualquiera de sus extremos sin cruzar logs entre equipos.
 
 | Signal | Requirement |
 |--------|-------------|
@@ -175,7 +147,7 @@ La interfaz se depura desde cualquiera de sus extremos sin cruzar logs entre equ
 
 ## Registro de cambios <!-- SECTION: Change log -->
 
-Los cambios de interfaz requieren un nuevo ADR — ver [Return Path](../SYSTEM_RUNTIME_VIEW.md#return-path).
+Los cambios de interfaz requieren un ADR nuevo — ver [Return Path](../SYSTEM_RUNTIME_VIEW.md#return-path).
 
 | Date | Change | ADR |
 |------|--------|----:|

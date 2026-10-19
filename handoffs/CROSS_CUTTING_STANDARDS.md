@@ -6,7 +6,7 @@
 |-------|-------|
 | Versión | 4.3.1 |
 | Aplica a | Todos los servicios en el alcance de Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión |
-| Versión de la arquitectura | 1.1.0 |
+| Versión de la arquitectura | 1.1.1 |
 | Generado | 2026-10-19 |
 
 ### Índice Rápido por Rol <!-- SECTION: Role Quick Index -->
@@ -18,11 +18,11 @@
 | **QA** | Idempotencia · Convenciones de observabilidad · Datos |
 | **Ops / SRE** | Convenciones de observabilidad · Valores de resiliencia por defecto · Datos |
 
-El orden de lectura de los cuatro documentos del handoff está en `handoffs/README.md`.
+El orden de lectura de los cuatro documentos de entrega está en `handoffs/README.md`.
 
-Reglas globales que aplican a todo servicio. Cada Especificación de Componente las **referencia**; ninguna las repite. Repetirlas genera deriva.
+Reglas globales que aplican a todo servicio. Cada Component Specification las **referencia**, nunca las repite. Repetirlas genera deriva; la deriva genera incoherencia.
 
-Cada regla es normativa (MUST / SHOULD / MAY) y enlaza su fuente: un ADR institucional (por ejemplo `ADR-001`). Las reglas sin cita se marcan `[NOT DOCUMENTED]` y no son exigibles.
+Cada regla es normativa (MUST / SHOULD / MAY) y enlaza a su fuente: un ADR institucional (por ejemplo `ADR-001`). Las reglas sin cita se marcan `[NOT DOCUMENTED]` y no se pueden exigir.
 
 ---
 
@@ -31,18 +31,16 @@ Cada regla es normativa (MUST / SHOULD / MAY) y enlaza su fuente: un ADR institu
 - **MUST** Los errores siguen RFC 9457 (`application/problem+json`) con un campo `code` estable.
   → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
 
-[NOT DOCUMENTED — no institutional ADR covers it]: clasificación reintentable vs terminal y enmascaramiento de errores internos.
-
 ---
 
 ## Versionado <!-- SECTION: Versioning -->
 
 - **MUST** Cada API se describe con un contrato OpenAPI 3.1 versionado en el repositorio del servicio; el contrato se escribe antes que el código.
   → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
-- **MUST** La versión mayor va en la ruta (`/v1/…`); un cambio incompatible publica `/v2` y mantiene `/v1` al menos 90 días.
+- **MUST** La versión mayor va en la ruta (`/v1/…`).
   → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
-- **MUST** El esquema de base de datos se versiona con migraciones en el repositorio del servicio (Flyway en Java).
-  → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
+- **MUST** Un cambio incompatible publica `/v2` y mantiene `/v1` al menos 90 días.
+  → per [ADR-001](../adr/ADR-001-rest-openapi-apis.md)
 
 ---
 
@@ -54,7 +52,7 @@ Cada regla es normativa (MUST / SHOULD / MAY) y enlaza su fuente: un ADR institu
   → per [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)
 - **MUST** Un servicio valida el token de acceso (JWT, RS256) con las llaves públicas del endpoint JWKS del proveedor, en cada solicitud, y autoriza por roles y atributos del token.
   → per [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)
-- **MUST** La vida del token de acceso es de 5 minutos; la renovación es silenciosa con el token de refresco.
+- **MUST** La vida del token de acceso es de 5 minutos, con renovación silenciosa mediante el token de refresco.
   → per [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)
 
 ---
@@ -85,16 +83,16 @@ Cada regla es normativa (MUST / SHOULD / MAY) y enlaza su fuente: un ADR institu
   → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
 - **MUST** Cada servicio es dueño de su esquema; ningún otro servicio lee ni escribe sus tablas directamente.
   → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
+- **MUST** El esquema se versiona con migraciones en el repositorio del servicio (Flyway en Java).
+  → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
 - **MUST** Las restricciones de integridad que el negocio exige (unicidad, no superposición) se declaran en la base, no solo en el código.
   → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
-- **MUST** El respaldo es diario con retención de 30 días y recuperación a un punto en el tiempo de 7 días.
+- **MUST** Respaldo diario con retención de 30 días y recuperación a un punto en el tiempo de 7 días.
   → per [ADR-003](../adr/ADR-003-postgresql-relational-store.md)
 - **MUST** Los secretos (credenciales de base de datos) se inyectan desde el gestor de secretos del clúster; nunca en la imagen ni en el repositorio.
   → per [ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)
 - **MUST** El tráfico externo entra por el ingress del clúster con TLS 1.2 o superior.
   → per [ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)
-
-[NOT DOCUMENTED — no institutional ADR covers it]: niveles de clasificación de datos y cifrado en reposo.
 
 ---
 
@@ -105,26 +103,24 @@ Cada regla es normativa (MUST / SHOULD / MAY) y enlaza su fuente: un ADR institu
 - **MUST** Cada servicio declara solicitudes y límites de CPU y memoria, sondas de vida y de disponibilidad, y un escalado horizontal por CPU.
   → per [ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)
 
-[NOT DOCUMENTED — no institutional ADR covers it]: timeouts, reintentos, backoff, circuit breaker y bulkhead.
-
 ---
 
 ## Desviaciones <!-- SECTION: Deviations -->
 
-Un servicio puede desviarse solo mediante una excepción registrada, fechada y con vencimiento. Nunca mediante una salida local silenciosa.
+Un servicio puede desviarse solo mediante una excepción registrada, fechada y con vencimiento. Nunca una salida local silenciosa.
 
 | Service | Rule | Deviation | Rationale | Expiry | Record |
 |---------|------|-----------|-----------|-------:|--------|
-| — | — | Sin desviaciones registradas. | — | — | — |
+| — | — | No hay desviaciones registradas. | — | — | — |
 
 ---
 
 ## Ruta de Retorno <!-- SECTION: Return Path -->
 
-Proceso de impugnación de reglas — ver [`SYSTEM_RUNTIME_VIEW.md § Return Path`](SYSTEM_RUNTIME_VIEW.md#return-path).
-Este documento solo se modifica mediante un nuevo ADR institucional que reemplace la regla anterior; la enmienda dispara la regeneración de este archivo en la siguiente ejecución de `architecture-dev-handoff`.
+Proceso de impugnación de reglas: ver [`SYSTEM_RUNTIME_VIEW.md § Return Path`](SYSTEM_RUNTIME_VIEW.md#return-path).
+Este documento se modifica solo mediante un nuevo ADR institucional que reemplace la regla anterior; la enmienda dispara la regeneración de este archivo en la siguiente ejecución de `architecture-dev-handoff`.
 
 ---
 
 *Generado por `sa-skills:architecture-dev-handoff` el 2026-10-19*
-*Fuentes: ADRs institucionales 001–100*
+*Fuentes: ADR institucionales 001–100*
