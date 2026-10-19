@@ -17,7 +17,8 @@
 # The record reaches the MCP server with the next release. Requests run one at a time, so two never take the same number.
 #
 # Repository settings: secret CLAUDE_CODE_OAUTH_TOKEN; variable SA_TIER0_AUTOMERGE (`true` merges without a reviewer);
-# labels architecture-tier0 and tier0-refused; Actions may create pull requests; the default branch accepts a merge by
+# labels architecture-tier0, tier0-refused and tier0:tdr-workaround · tier0:tdr-status · tier0:adr-proposed · tier0:doc-fix
+# (`gh issue create --label` fails outright on a label the repository lacks — the IDE's request would not be filed); Actions may create pull requests; the default branch accepts a merge by
 # GITHUB_TOKEN (no required review on it). A pull request opened with GITHUB_TOKEN starts no workflow, so the gates run
 # here, before the merge.
 name: Architecture Tier 0
@@ -33,7 +34,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.7.0
+  SA_PLUGIN_REF: v10.7.2
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
