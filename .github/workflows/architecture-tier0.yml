@@ -35,7 +35,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.7.4
+  SA_PLUGIN_REF: v10.8.0
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -114,8 +114,9 @@ jobs:
               record's row in the Risks and Technical Debt section.
             - adr-proposed: the ADR with the architecture-definition-record skill — id and file from the payload, status
               Proposed, Context / Decision / Consequences / Alternatives from the fields; then adr/README.md (adr-index.js --write).
-            Propagate it as the skill's workflow says — the index, the Section 13 row, the links both ways (the affected
-            components' descriptors, the related project ADRs): every hunk you change outside tdr/ or adr/<the new ADR>
+            Propagate it as the skill's workflow says — the index, the Section 13 row, the links both ways (each affected
+            component's descriptor names it on its `**Technical Debt:**` line; the related project ADRs; a move to
+            Resolved drops it from that line): every hunk you change outside tdr/ or adr/<the new ADR>
             names the record's id. Never an institutional ADR (001–100), never a fact — a name, type, technology,
             integration, flow, figure or another record's status: tier0.js verify refuses the write if one moves.
             The documents are in the architecture's language (DOC_LANGUAGE in ARCHITECTURE.md). Do not commit. End with
