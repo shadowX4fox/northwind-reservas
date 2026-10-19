@@ -10,8 +10,9 @@
 #                 canonical, a TDR move along an arrow, a doc fix whose text is where it says); a refusal is commented on
 #                 the issue with its reasons, labelled tier0-refused, and nothing is written
 #   3. write      a doc fix by code; a TDR, a TDR move or a Proposed ADR by Claude from the payload (the TDR / ADR skills)
-#   4. verify     tier0.js verify — the record matches the request and nothing else changed (a doc fix leaves the facts
-#                 ledger as it was) — and the release gates (lifecycle.js check)
+#   4. verify     tier0.js verify — the record matches the request; outside its folder every change names the record
+#                 (its propagation: index, Section 13 row, links both ways), no institutional ADR moves, and the facts
+#                 ledger moves in the record's own part only — and the release gates (lifecycle.js check)
 #   5. PR         tier0/issue-<n> with `Closes #<n>`, the issue retitled to the record's id; merged at once when
 #                 SA_TIER0_AUTOMERGE is true and the gates pass — Tier 0 needs no architect's approval. Left open otherwise.
 # The record reaches the MCP server with the next release. Requests run one at a time, so two never take the same number.
@@ -34,7 +35,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.7.3
+  SA_PLUGIN_REF: v10.7.4
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -113,8 +114,12 @@ jobs:
               record's row in the Risks and Technical Debt section.
             - adr-proposed: the ADR with the architecture-definition-record skill — id and file from the payload, status
               Proposed, Context / Decision / Consequences / Alternatives from the fields; then adr/README.md (adr-index.js --write).
-            The documents are in the architecture's language (DOC_LANGUAGE in ARCHITECTURE.md). Write nothing else; do not
-            commit. End with tdr-check.js's receipt (a TDR) or the ADR index's.
+            Propagate it as the skill's workflow says — the index, the Section 13 row, the links both ways (the affected
+            components' descriptors, the related project ADRs): every hunk you change outside tdr/ or adr/<the new ADR>
+            names the record's id. Never an institutional ADR (001–100), never a fact — a name, type, technology,
+            integration, flow, figure or another record's status: tier0.js verify refuses the write if one moves.
+            The documents are in the architecture's language (DOC_LANGUAGE in ARCHITECTURE.md). Do not commit. End with
+            tdr-check.js's receipt (a TDR) or the ADR index's.
           claude_args: |
             --allowedTools "Read,Write,Edit,Glob,Grep,Bash"
       - name: Keep Claude's transcript
