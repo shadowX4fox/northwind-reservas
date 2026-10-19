@@ -142,3 +142,4 @@ Not documented.
 
 - Calendario de la purga, RTO y RPO: Not documented.
 - Los respaldos conservan datos hasta 30 días después de la purga.
+- Deuda técnica: [TDR-002](../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md) — las claves de idempotencia vencidas no se purgan.
