@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 **Total**: 12 · **Institutional (001–100)**: 5 · **Project (101+)**: 7
-**Last Synced**: 2026-10-18
+**Last Synced**: 2026-10-19
 
 | ID | Title | Status | Scope | Date | Superseded By |
 |----|-------|--------|-------|------|---------------|
