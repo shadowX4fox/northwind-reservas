@@ -30,7 +30,7 @@ jobs:
           git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" https://github.com/shadowx4fox/solutions-architect-skills.git "$RUNNER_TEMP/sa-ci"
           SA_SKILLS_DIR="$RUNNER_TEMP/sa-ci" bash "$RUNNER_TEMP/sa-ci/plugins/sa-delivery/skills/architecture-index-export/ci/publish-index.sh" .
         env:
-          SA_PLUGIN_REF: v10.8.2
+          SA_PLUGIN_REF: v10.9.0
           SA_INDEX_PROJECT_KEY: ${{ vars.SA_INDEX_PROJECT_KEY }}
           SA_INDEX_SERVER: ${{ vars.SA_INDEX_SERVER }}
           SA_INDEX_MCP_URL: ${{ vars.SA_INDEX_MCP_URL }}
