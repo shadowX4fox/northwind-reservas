@@ -187,6 +187,15 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 - Acceso de otro servicio a las tablas del servicio — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
 - Tokens o datos personales completos en los logs — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md)
 
+### Deuda técnica <!-- LABEL: Technical Debt -->
+
+Registrada en este componente. El código mantiene cada atajo hasta que su registro pase a `Resolved`.
+
+| TDR | Title | Status |
+|---|---|---|
+| [TDR-001](../../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md) | La consulta de disponibilidad se sirve de una caché de 5 minutos | Open |
+| [TDR-002](../../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md) | Las claves de idempotencia vencidas nunca se purgan | Open |
+
 ---
 
 ## 8. Deliberadamente no especificado <!-- SECTION: Deliberately Unspecified -->
