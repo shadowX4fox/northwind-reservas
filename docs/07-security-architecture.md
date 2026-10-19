@@ -46,8 +46,17 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 - Roles: miembro (dueño de sus reservas) y `recepcion`, acotado por el atributo `sede` del token ([ADR-105](../adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md)).
 - Respuesta "no autorizado" en cualquier otro caso.
 
+**Autenticación por integración**
+
+| Integración | Mecanismo |
+|---|---|
+| [I-01](05-integration-points.md) | Código de autorización OIDC con PKCE en el `Proveedor de Identidad Northwind` ([ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)) |
+| [I-02](05-integration-points.md) | JWT RS256 en `Authorization: Bearer`, validado en cada solicitud con JWKS; sin token válido, 401 ([ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)) |
+| [I-03](05-integration-points.md) | Sin credencial de cliente: endpoint JWKS público por HTTPS con verificación del certificado del proveedor; claves en caché local |
+| [I-04](05-integration-points.md) | Usuario PostgreSQL propio del `Servicio de Reservas`, con credenciales del gestor de secretos del clúster ([ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)); JDBC con TLS |
+
 **Datos**
-- En tránsito: TLS 1.2 o superior hacia el ingress.
+- En tránsito: TLS 1.2 o superior hacia el ingress; TLS en la conexión JDBC de I-04.
 - En reposo: PostgreSQL 16 gestionado por Plataforma Northwind; respaldo diario con retención de 30 días ([ADR-003](../adr/ADR-003-postgresql-relational-store.md)).
 - Datos personales: nombre, correo y reservas del miembro.
 
@@ -55,7 +64,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 - Contrato OpenAPI 3.1 como fuente de la validación de entradas ([ADR-001](../adr/ADR-001-rest-openapi-apis.md)).
 - Acceso a la base de datos solo por el `Servicio de Reservas`; integración [I-04](05-integration-points.md).
 
-**Secretos**: Not documented. <!-- TODO: Add source reference -->
+**Secretos**: credenciales de la Base de Datos de Reservas inyectadas desde el gestor de secretos del clúster; nunca en la imagen ni en el repositorio ([ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)).
 
 ### 9.4 Cumplimiento <!-- SECTION: Compliance -->
 
