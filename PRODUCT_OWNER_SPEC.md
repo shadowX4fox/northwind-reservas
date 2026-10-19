@@ -1,10 +1,11 @@
+<!-- ARCHITECTURE_SYNC: 1.1.0 (2026-10-19) -->
 # Reservas de Salas Northwind - Product Owner Specification
 
 > Portal web donde los miembros de Northwind Cowork consultan la disponibilidad de salas de reunión, las reservan y cancelan sus reservas sin pasar por recepción.
 
 **Product Owner**: Gerencia de Producto Digital — Northwind Cowork *(empresa ficticia)*
-**Date**: 2026-10-17
-**Version**: 1.0
+**Date**: 2026-10-19
+**Version**: 1.1
 
 ---
 
@@ -194,7 +195,7 @@
 **Precondiciones**: el miembro tiene sesión iniciada y membresía vigente; la sala aparece como libre en la franja elegida.
 
 **Flujo principal**:
-1. El Portal de Reservas muestra el resumen: sala, sede, fecha, franja y un campo de asunto de hasta 80 caracteres.
+1. El Portal de Reservas muestra el resumen: sala, sede, fecha, franja y un campo de asunto obligatorio de hasta 80 caracteres.
 2. El miembro confirma.
 3. El Portal de Reservas envía la solicitud de reserva al Servicio de Reservas con una clave de idempotencia generada en el navegador.
 4. El Servicio de Reservas verifica que la sala no tenga otra reserva confirmada superpuesta y que el miembro no supere 3 reservas futuras por día, y registra la reserva con estado "Confirmada".
@@ -367,7 +368,7 @@ para liberar la sala.
 - El portal es una aplicación de una página (SPA) en React 18 con TypeScript, servida como archivos estáticos (norma de Plataforma Northwind).
 - El backend es un microservicio Java 21 con Spring Boot 3.3 desplegado en el clúster Kubernetes existente de Plataforma Northwind.
 - La base de datos es PostgreSQL 16 gestionada por Plataforma Northwind.
-- Prohibido guardar tokens en `localStorage` (política de Seguridad de la Información).
+- Prohibido guardar tokens en `localStorage` o `sessionStorage`; la sesión vive solo en la memoria del navegador (política de Seguridad de la Información).
 
 ### Restricciones Operativas <!-- SECTION: Operational Constraints -->
 
@@ -431,6 +432,12 @@ para liberar la sala.
 
 ### Aspiraciones <!-- SECTION: Aspirations -->
 - Que el portal sugiera la sala adecuada según el número de asistentes.
+
+### Registro de sincronización <!-- SECTION: Sync log -->
+
+| Date | Spec version | Architecture version | Applied | Declined |
+|---|---|---|---|---|
+| 2026-10-19 | 1.1 | 1.1.0 | 1, 2 | — |
 
 ---
 
