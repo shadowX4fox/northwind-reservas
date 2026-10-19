@@ -97,20 +97,9 @@
 
 ### Metas Principales <!-- SECTION: Primary Business Goals -->
 
-1. **Objetivo 1: Eliminar las reservas dobles**
-   - Métrica: reservas confirmadas superpuestas para la misma sala, por mes.
-   - Meta: 0.
-   - Plazo: desde el lanzamiento (2027-01-25).
-
-2. **Objetivo 2: Reducir el tiempo de recepción dedicado a reservas**
-   - Métrica: horas semanales de recepción registradas en la categoría "reservas".
-   - Meta: 4 horas semanales o menos (frente a 26).
-   - Plazo: 3 meses después del lanzamiento (2027-04-25).
-
-3. **Objetivo 3: Adopción del autoservicio**
-   - Métrica: porcentaje de reservas creadas en el portal sobre el total de reservas.
-   - Meta: 90 % o más.
-   - Plazo: 3 meses después del lanzamiento (2027-04-25).
+1. **Objetivo 1: Eliminar las reservas dobles** — 0 reservas confirmadas superpuestas para la misma sala por mes, desde el lanzamiento (2027-01-25).
+2. **Objetivo 2: Reducir el tiempo de recepción dedicado a reservas** — 4 horas semanales o menos de recepción en la categoría "reservas" (frente a 26), a los 3 meses del lanzamiento (2027-04-25).
+3. **Objetivo 3: Adopción del autoservicio** — 90 % o más de las reservas creadas en el portal sobre el total, a los 3 meses del lanzamiento (2027-04-25).
 
 ### Criterios de Éxito <!-- SECTION: Success Criteria -->
 
@@ -157,7 +146,7 @@
 
 **Disparador**: el miembro abre la página "Salas" del Portal de Reservas o cambia la sede, la fecha o la franja del filtro.
 
-**Precondiciones**: el miembro inició sesión con su cuenta de miembro en el Proveedor de Identidad Northwind y su membresía está vigente.
+**Precondiciones**: el miembro inició sesión con su cuenta de miembro en el Proveedor de Identidad Northwind y su membresía está vigente: su cuenta de miembro está activa en el Proveedor de Identidad Northwind; al darse de baja, Recepción la desactiva allí y el miembro ya no puede iniciar sesión.
 
 **Flujo principal**:
 1. El miembro elige sede (Centro, Norte o Puerto), fecha y franja horaria (inicio y fin en múltiplos de 30 minutos).
@@ -168,7 +157,7 @@
 **Flujos alternativos**:
 - **Alternativa 1: Ninguna sala libre**
   - Difiere en: paso 4.
-  - Flujo: el portal muestra el mensaje "No hay salas libres en esta franja" y las 3 franjas de 30 minutos más cercanas con al menos una sala libre.
+  - Flujo: el portal muestra el mensaje "No hay salas libres en esta franja" y las 3 franjas de 30 minutos más cercanas con al menos una sala libre: de la misma duración, el mismo día y la misma sede, las más próximas en el tiempo a la elegida, antes o después y nunca en el pasado; ante igual distancia, primero la posterior.
 
 **Casos borde**:
 - Franja en el pasado: el portal no permite elegir una hora de inicio anterior a la hora actual.
@@ -192,7 +181,7 @@
 
 **Disparador**: el miembro pulsa "Reservar" sobre una sala libre en el resultado del caso de uso 1.
 
-**Precondiciones**: el miembro tiene sesión iniciada y membresía vigente; la sala aparece como libre en la franja elegida.
+**Precondiciones**: el miembro tiene sesión iniciada y membresía vigente (cuenta de miembro activa en el Proveedor de Identidad Northwind); la sala aparece como libre en la franja elegida.
 
 **Flujo principal**:
 1. El Portal de Reservas muestra el resumen: sala, sede, fecha, franja y un campo de asunto obligatorio de hasta 80 caracteres.
@@ -243,7 +232,7 @@
 **Flujos alternativos**:
 - **Alternativa 1: Cancelación por recepción**
   - Difiere en: paso 4.
-  - Flujo: el Servicio de Reservas exige un motivo de hasta 120 caracteres y lo guarda con la reserva; el miembro ve el motivo en "Mis reservas".
+  - Flujo: el Servicio de Reservas exige un motivo de 10 a 120 caracteres y lo guarda con la reserva; el miembro ve el motivo en "Mis reservas".
 
 **Casos borde**:
 - Reserva ya iniciada: el Servicio de Reservas rechaza la cancelación con el motivo "reserva en curso".
@@ -356,7 +345,7 @@ para liberar la sala.
 ### Requisitos Regulatorios y de Cumplimiento <!-- SECTION: Regulatory and Compliance Requirements -->
 
 - Ley de protección de datos personales aplicable: el portal guarda nombre, correo y reservas del miembro; los datos de reservas se conservan 24 meses y luego se eliminan.
-- Registro de auditoría de cada cancelación (quién, cuándo, motivo), conservado 24 meses.
+- Registro de auditoría de cada cancelación (quién, cuándo y, en las cancelaciones de recepción, el motivo), conservado 24 meses.
 
 ### Restricciones de Integración <!-- SECTION: Integration Constraints -->
 
@@ -437,7 +426,7 @@ para liberar la sala.
 
 | Date | Spec version | Architecture version | Applied | Declined |
 |---|---|---|---|---|
-| 2026-10-19 | 1.1 | 1.1.0 | 1, 2 | — |
+| 2026-10-19 | 1.1 | 1.1.0 | 1, 2 · objetivos del § 3 en una frase · franjas sugeridas (CU1) · motivo de 10 a 120 caracteres (CU3) · motivo auditado solo en cancelaciones de recepción (§ 7) · membresía vigente definida (CU1, CU2) | — |
 
 ---
 
