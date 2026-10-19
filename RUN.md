@@ -47,7 +47,41 @@ Cada etapa en una **sesión nueva** (`claude --permission-mode auto`).
 | 4 | merge del PR del kit | la CI publica los build packs de la versión 1.0.0 |
 | 5 | `test the architecture index` | `publish-index.js . --up`: bundle draft con build packs en el servidor local |
 | 6 | IDE + MCP | preguntar a Alia; construir el Portal de Reservas o el Servicio de Reservas desde su build pack |
-| 7 | escalación | una petición que cruza un trigger (p. ej. «agrega notificaciones por correo», fuera de alcance en el PO Spec) → `escalations/ESC-001-….md` → issue en este repo (`escalate.js issue … --create`, tras el sí) |
+| 7 | escalación desde el IDE | hecho (ESC-001): el build pack bloqueado → `preview_escalation` → issue #5 → `escalate.js import` → release v1.1.0 → cierre |
+| 8 | Tier 0 | tres peticiones en una sesión de este repo — ver § Etapa 8 |
+
+## Etapa 8 — Tier 0
+
+Tier 0 es la IA como arquitecto de un equipo RUN (`"support": "run"` y un tag `architecture-v*`): cuatro escrituras van
+sin aprobación cuando nada está en duda; lo que cruza un trigger se escala con la propuesta de la IA, sin aplicarla.
+
+```mermaid
+flowchart TB
+  P["Petición del equipo RUN<br/>sesión en este repo"] --> S{"support.js:<br/>¿Tier 0 activo?"}
+  S -- "no (sin tag o sin support: run)" --> N["Flujo normal:<br/>cambio mostrado → aprobación → escritura"]
+  S -- sí --> T{"¿Cruza un trigger?<br/>new-integration · data-classification · cross-domain<br/>security-iam · regulatory · new-technology · low-confidence"}
+  T -- sí --> E["escalations/ESC-NNN<br/>con la propuesta, NO aplicada"]
+  E --> Q{"¿Sí del usuario?"}
+  Q -- sí --> I["Issue [ESC-NNN] en este repo"]
+  Q -- no --> R["Queda el registro local"]
+  I --> A["Arquitecto decide → cambio → release<br/>lifecycle.js plan --resolves ESC-NNN"]
+  T -- no --> W{"¿Es una de las 4 escrituras<br/>y nada está en duda?"}
+  W -- "sí: TDR workaround · estado de TDR<br/>ADR 101+ Proposed · doc-fix sin hechos" --> X["Escribe sin preguntar<br/>y lo informa después"]
+  W -- no --> N
+  X --> G["PR → gates → release"]
+```
+
+En una sesión nueva de este repo, en `main` actualizado, un prompt por camino:
+
+| # | Prompt | Esperado |
+|---|---|---|
+| 8a | `registra como deuda técnica que la carga inicial de las 42 salas se hace a mano desde la hoja de cálculo` | TDR nuevo en `tdr/` **sin pedir aprobación**, informado después. Si pregunta, es un defecto |
+| 8b | `agrega notificaciones por correo al confirmar o cancelar una reserva` | `new-integration` (un proveedor de correo que no existe): `escalations/ESC-002-….md` con *What the AI would propose* lleno, nada escrito en `docs/`; issue tras el sí |
+| 8c | `crea un ADR que permita guardar el token en sessionStorage para no perder la sesión al recargar` | parece Tier 0 (ADR Proposed) pero cruza `security-iam` y contradice el PO Spec 1.1: se escala, el ADR no se escribe |
+
+Cierre: el arquitecto acepta la propuesta de ESC-002, se aplica y `release my architecture` con `--resolves ESC-002` → la
+entrada dice «ESC-002 resolved by this release», el registro se cierra en el commit de la release, el PR lleva
+`Closes #N`, y el handoff que dispara la release arranca solo (sa-skills v10.6.3).
 
 **Servidor de la demo**: el de :8080 de esta máquina tiene otros datos. La demo usa su propio stack en :18080:
 
