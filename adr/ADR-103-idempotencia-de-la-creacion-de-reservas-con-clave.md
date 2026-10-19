@@ -132,3 +132,4 @@ Not documented
 ## Notes
 
 - Nombre de la tabla de claves y presupuesto de latencia p95 de la Fase 4: Not documented.
+- Deuda técnica: [TDR-002](../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md) — las claves de idempotencia vencidas no se purgan.
