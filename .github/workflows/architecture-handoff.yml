@@ -66,6 +66,8 @@ jobs:
           SA_JUDGE: agent
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # architecture-release.yml dispatches this run with GITHUB_TOKEN, so the actor is github-actions[bot]
+          allowed_bots: "github-actions[bot]"
           plugin_marketplaces: ${{ env.SA_PLUGIN_REPO }}
           plugins: |
             sa-skills@shadowx4fox-solution-architect-marketplace
