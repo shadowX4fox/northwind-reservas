@@ -40,6 +40,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 - Método: código de autorización OIDC con PKCE contra el `Proveedor de Identidad Northwind` ([ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)); integración [I-01](05-integration-points.md).
 - Sesión: token de acceso de 5 minutos con renovación silenciosa por token de refresco.
 - Almacenamiento: tokens solo en memoria del `Portal de Reservas`. ([ADR-104](../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md)).
+- Membresía vigente: cuenta de miembro activa en el `Proveedor de Identidad Northwind`; al darse de baja, Recepción la desactiva y el miembro ya no obtiene token. El `Servicio de Reservas` no hace una verificación de membresía aparte (PO Spec CU1 y CU2).
 
 **Autorización**
 - Validación del JWT en cada solicitud con JWKS; integración [I-03](05-integration-points.md).
@@ -71,7 +72,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 | Requisito | Control |
 |---|---|
 | Ley de protección de datos personales aplicable | Datos de reservas conservados 24 meses y eliminados por una purga programada |
-| Auditoría de cada cancelación (quién, cuándo, motivo) | El `Servicio de Reservas` escribe un registro de auditoría en la misma transacción de la cancelación; se conserva 24 meses |
+| Auditoría de cada cancelación (quién, cuándo y, en las de recepción, el motivo) | El `Servicio de Reservas` escribe un registro de auditoría en la misma transacción de la cancelación; se conserva 24 meses |
 
 **Decisión ([ADR-106](../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md))**: retención de 24 meses para reservas y registro de auditoría, con purga programada en la `Base de Datos de Reservas`.
 
