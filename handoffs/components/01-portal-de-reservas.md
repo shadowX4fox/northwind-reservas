@@ -10,9 +10,9 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.0.0 |
+| Versión de la arquitectura | 1.1.0 |
 | Versión del componente | 1.0.1 |
-| Generado | 2026-10-18 |
+| Generado | 2026-10-19 |
 | Documento fuente del componente | [../../docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md](../../docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md) |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->
@@ -231,5 +231,5 @@ Vacíos detectados al generar la Especificación de Componente: valores ausentes
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-18*
-*Fuente: /home/shadowx4fox/Project/Personal/northwind-reservas/ARCHITECTURE.md*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-19*
+*Fuente: /home/runner/work/northwind-reservas/northwind-reservas/ARCHITECTURE.md*
