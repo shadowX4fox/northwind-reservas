@@ -6,8 +6,8 @@
 |-------|-------|
 | Versión | 4.3.1 |
 | Aplica a | Todos los servicios dentro del alcance de Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión |
-| Versión de la arquitectura | 1.3.2 |
-| Generado | 2026-10-19 |
+| Versión de la arquitectura | 1.4.0 |
+| Generado | 2026-10-20 |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->
 
@@ -127,5 +127,5 @@ Este documento solo se modifica mediante un nuevo ADR institucional que reemplac
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-19*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-20*
 *Fuentes: ADR institucionales 001–100*

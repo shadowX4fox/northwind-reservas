@@ -9,8 +9,8 @@ Kit de cuatro partes. Lee los documentos compartidos junto con tu Especificació
 
 | Documento | Generado |
 |---|---|
-| [SYSTEM_RUNTIME_VIEW.md](SYSTEM_RUNTIME_VIEW.md) | 2026-10-19 |
-| [CROSS_CUTTING_STANDARDS.md](CROSS_CUTTING_STANDARDS.md) | 2026-10-19 |
+| [SYSTEM_RUNTIME_VIEW.md](SYSTEM_RUNTIME_VIEW.md) | 2026-10-20 |
+| [CROSS_CUTTING_STANDARDS.md](CROSS_CUTTING_STANDARDS.md) | 2026-10-20 |
 
 ## Referencia rápida — orden de lectura por rol
 
@@ -25,18 +25,18 @@ Kit de cuatro partes. Lee los documentos compartidos junto con tu Especificació
 
 | # | Arista | Contrato de Interfaz | ADR relacionados | Generado |
 |---|---|---|---|---|
-| 1 | Portal de Reservas → Proveedor de Identidad Northwind | [portal-de-reservas→proveedor-de-identidad-northwind.md](interfaces/portal-de-reservas→proveedor-de-identidad-northwind.md) | ADR-002, ADR-001, ADR-004, ADR-104 | 2026-10-19 |
-| 2 | Portal de Reservas → Servicio de Reservas | [portal-de-reservas→servicio-de-reservas.md](interfaces/portal-de-reservas→servicio-de-reservas.md) | ADR-103, ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-104, ADR-105, ADR-106 | 2026-10-19 |
-| 3 | Servicio de Reservas → Base de Datos de Reservas | [servicio-de-reservas→base-de-datos-de-reservas.md](interfaces/servicio-de-reservas→base-de-datos-de-reservas.md) | ADR-102, ADR-003, ADR-001, ADR-002, ADR-004, ADR-005, ADR-103, ADR-105, ADR-106 | 2026-10-19 |
-| 4 | Servicio de Reservas → Proveedor de Identidad Northwind | [servicio-de-reservas→proveedor-de-identidad-northwind.md](interfaces/servicio-de-reservas→proveedor-de-identidad-northwind.md) | ADR-002, ADR-001, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR-105, ADR-106 | 2026-10-19 |
+| 1 | Portal de Reservas → Proveedor de Identidad Northwind | [portal-de-reservas→proveedor-de-identidad-northwind.md](interfaces/portal-de-reservas→proveedor-de-identidad-northwind.md) | ADR-002, ADR-004, ADR-104 | 2026-10-20 |
+| 2 | Portal de Reservas → Servicio de Reservas | [portal-de-reservas→servicio-de-reservas.md](interfaces/portal-de-reservas→servicio-de-reservas.md) | ADR-001, ADR-004, ADR-102, ADR-103, ADR-104, ADR-105, ADR-106 | 2026-10-20 |
+| 3 | Servicio de Reservas → Base de Datos de Reservas | [servicio-de-reservas→base-de-datos-de-reservas.md](interfaces/servicio-de-reservas→base-de-datos-de-reservas.md) | ADR-102, ADR-003, ADR-103, ADR-106, ADR-004 | 2026-10-20 |
+| 4 | Servicio de Reservas → Proveedor de Identidad Northwind | [servicio-de-reservas→proveedor-de-identidad-northwind.md](interfaces/servicio-de-reservas→proveedor-de-identidad-northwind.md) | ADR-002, ADR-003, ADR-004, ADR-103, ADR-105, ADR-106 | 2026-10-20 |
 
 ## Especificaciones de Componente
 
 | # | Componente | Especificación de Componente | Estado | Assets | Generado |
 |---|---|---|---|---|---|
-| 5.1 | Portal de Reservas | [01-portal-de-reservas.md](components/01-portal-de-reservas.md) | Ready | [c4-descriptor.md](assets/01-portal-de-reservas/c4-descriptor.md) | 2026-10-19 |
-| 5.2 | Servicio de Reservas | [02-servicio-de-reservas.md](components/02-servicio-de-reservas.md) | Ready | [openapi.yaml](assets/02-servicio-de-reservas/openapi.yaml), [c4-descriptor.md](assets/02-servicio-de-reservas/c4-descriptor.md), [security.md](assets/02-servicio-de-reservas/security.md) | 2026-10-19 |
-| 5.3 | Base de Datos de Reservas | [03-base-de-datos-de-reservas.md](components/03-base-de-datos-de-reservas.md) | Ready | [ddl.sql](assets/03-base-de-datos-de-reservas/ddl.sql), [c4-descriptor.md](assets/03-base-de-datos-de-reservas/c4-descriptor.md), [security.md](assets/03-base-de-datos-de-reservas/security.md) | 2026-10-19 |
+| 5.1 | Portal de Reservas | [01-portal-de-reservas.md](components/01-portal-de-reservas.md) | Ready | [c4-descriptor.md](assets/01-portal-de-reservas/c4-descriptor.md), [security.md](assets/01-portal-de-reservas/security.md) | 2026-10-20 |
+| 5.2 | Servicio de Reservas | [02-servicio-de-reservas.md](components/02-servicio-de-reservas.md) | Ready | [openapi.yaml](assets/02-servicio-de-reservas/openapi.yaml), [c4-descriptor.md](assets/02-servicio-de-reservas/c4-descriptor.md), [security.md](assets/02-servicio-de-reservas/security.md) | 2026-10-20 |
+| 5.3 | Base de Datos de Reservas | [03-base-de-datos-de-reservas.md](components/03-base-de-datos-de-reservas.md) | Ready | [ddl.sql](assets/03-base-de-datos-de-reservas/ddl.sql), [c4-descriptor.md](assets/03-base-de-datos-de-reservas/c4-descriptor.md), [security.md](assets/03-base-de-datos-de-reservas/security.md) | 2026-10-20 |
 
 ## Documentación relacionada
 

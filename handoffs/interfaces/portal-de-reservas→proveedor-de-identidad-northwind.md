@@ -8,7 +8,7 @@
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
 | Decisión | [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md) |
-| Generado | 2026-10-19 |
+| Generado | 2026-10-20 |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->
 
@@ -152,8 +152,9 @@ Los cambios de interfaz requieren un ADR nuevo — ver [Return Path](../SYSTEM_R
 | Date | Change | ADR |
 |------|--------|----:|
 | 2026-10-19 | Contrato de interfaz inicial | [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md) |
+| 2026-10-20 | [ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md) pasa de Proposed a Accepted; sin cambio en el contenido del contrato | [ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md) |
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-19*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-20*
 *Fuentes: `docs/05-integration-points.md`, `analysis/BLAST_RADIUS-*.md`, `adr/`*
