@@ -2,6 +2,14 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.3.2] - 2026-10-19
+
+### Changed
+- Contenedor: Servicio de Reservas — deja de nombrar TDR-002, resuelta
+- Contenedor: Base de Datos de Reservas — deja de nombrar TDR-002, resuelta
+- TDR: TDR-002 — estado: In Progress → Resolved (la purga de claves de idempotencia vencidas está en main del Servicio de Reservas)
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-002 sale de 13.2 Deuda Técnica
+
 ## [1.3.1] - 2026-10-19
 
 ### Changed

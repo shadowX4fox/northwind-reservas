@@ -6,6 +6,19 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-20
+
+### Added
+- ADR: ADR-110 — Hora local de sede con zona única America/Bogota (Accepted)
+- TDR: TDR-004 — Zona horaria de las sedes leída de una variable de despliegue (In Progress)
+
+### Changed
+- Contenedor: Portal de Reservas — no deja elegir franjas anteriores a la hora actual de la sede (ADR-110)
+- Contenedor: Servicio de Reservas — `start`/`end` en hora local de la sede y reloj de negocio en America/Bogota (ADR-110)
+- Contenedor: Base de Datos de Reservas — horas de las reservas en hora local de la sede (ADR-110)
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-004 pasa a In Progress
+- ESC-004 resolved by this release: Zona horaria de las sedes no documentada (INV-01, INV-04, ADR-105)
+
 ## [1.6.0] - 2026-10-20
 
 ### Added
@@ -59,13 +72,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 - Sección: Escalabilidad y Rendimiento (`docs/08-scalability-and-performance.md`) — caché de aplicación en cada réplica, sin caché distribuida
 - TDR: TDR-001 — sigue Open; nombra la caché Caffeine de ADR-108
 - ESC-002 resolved by this release: TDR-001 registra una caché de disponibilidad que el Servicio de Reservas no tiene
-
-## [1.3.2] - 2026-10-19
-
-### Changed
-- Contenedor: Servicio de Reservas — deja de nombrar TDR-002, resuelta
-- Contenedor: Base de Datos de Reservas — deja de nombrar TDR-002, resuelta
-- TDR: TDR-002 — estado: In Progress → Resolved (la purga de claves de idempotencia vencidas está en main del Servicio de Reservas)
-- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-002 sale de 13.2 Deuda Técnica
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).

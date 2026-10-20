@@ -1,6 +1,6 @@
 ---
 id: ESC-004
-status: Open
+status: Resolved
 date: 2026-10-20
 architecture: architecture-v1.6.0
 route: tier-1
@@ -11,8 +11,8 @@ adrs: [ADR-105]
 tdrs: []
 requested_by: "Luis Borja (desarrollador del Servicio de Reservas), build desatendido"
 issue: https://github.com/shadowX4fox/northwind-reservas/issues/62
-resolution:
-closed:
+resolution: architecture-v1.7.0
+closed: 2026-10-20
 ---
 # ESC-004 — Zona horaria de las sedes no documentada (INV-01, INV-04, ADR-105)
 
@@ -43,4 +43,4 @@ Construye desde el build pack (BUILD.md, vía Alia): resuelve el TODO(architectu
 
 ## Resolution
 
-- Pending.
+- Resolved 2026-10-20 by architecture-v1.7.0.
