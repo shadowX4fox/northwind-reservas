@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-**Total**: 14 · **Institutional (001–100)**: 5 · **Project (101+)**: 9
+**Total**: 15 · **Institutional (001–100)**: 5 · **Project (101+)**: 10
 **Last Synced**: 2026-10-20
 
 | ID | Title | Status | Scope | Date | Superseded By |
@@ -19,3 +19,4 @@
 | ADR-107 | Portal de Reservas como archivos estáticos en CDN | Accepted | Project | 2026-10-18 | — |
 | ADR-108 | Caché en proceso con Caffeine para disponibilidad | Superseded | Project | 2026-10-20 | ADR-109 |
 | ADR-109 | Invalidación de la caché con LISTEN/NOTIFY | Accepted | Project | 2026-10-20 | — |
+| ADR-110 | Hora local de sede con zona única America/Bogota | Accepted | Project | 2026-10-20 | — |
