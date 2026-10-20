@@ -8,7 +8,7 @@
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
 | Decisión | [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md) |
-| Generado | 2026-10-19 |
+| Generado | 2026-10-20 |
 
 ### Índice Rápido por Rol <!-- SECTION: Role Quick Index -->
 
@@ -151,8 +151,9 @@ Los cambios de interfaz requieren un nuevo ADR — ver [Return Path](../SYSTEM_R
 | Date | Change | ADR |
 |------|--------|----:|
 | 2026-10-19 | Contrato de interfaz inicial | [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md) |
+| 2026-10-20 | Sincronización con architecture-v1.4.0: ADR-102, ADR-103, ADR-105 y ADR-106 pasan a Accepted; ADR-108 (caché Caffeine) no altera la interfaz | [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md) |
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-19*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-20*
 *Fuentes: `docs/05-integration-points.md`, `analysis/BLAST_RADIUS-*.md`, `adr/`*

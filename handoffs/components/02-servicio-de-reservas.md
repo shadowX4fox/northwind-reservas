@@ -10,9 +10,9 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.3.2 |
+| Versión de la arquitectura | 1.4.0 |
 | Versión del componente | 1.1.1 |
-| Generado | 2026-10-19 |
+| Generado | 2026-10-20 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->
@@ -175,7 +175,8 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 
 **Obligatorio:**
 
-- Java 21 y Spring Boot 3.3 — per [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md)
+- Java 21, Spring Boot 3.3 y Caffeine 3.2 — per [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md)
+- Caché de disponibilidad por sede y fecha en Caffeine dentro de cada réplica, con expiración de 5 minutos — per [ADR-108](../../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)
 - API REST sobre HTTPS con cuerpos JSON y contrato OpenAPI 3.1 escrito antes que el código; versión mayor en la ruta (`/v1`) — per [ADR-001](../../adr/ADR-001-rest-openapi-apis.md)
 - Autenticación con JWT del Proveedor de Identidad Northwind, validado en cada solicitud con JWKS — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)
 - PostgreSQL 16 vía JDBC con TLS; esquema versionado con migraciones Flyway; integridad (no superposición) declarada en la base — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md) y [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)
@@ -258,5 +259,5 @@ Vacíos detectados al generar la Especificación de Componente: valores ausentes
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-19*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-20*
 *Fuente: ARCHITECTURE.md*

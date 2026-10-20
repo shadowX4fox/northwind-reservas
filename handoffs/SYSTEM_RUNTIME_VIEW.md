@@ -7,8 +7,8 @@
 | Versión | 4.3.1 |
 | Responsable | Equipo de Arquitectura Northwind |
 | Estado | draft |
-| Versión de la arquitectura | 1.3.2 |
-| Generado | 2026-10-19 |
+| Versión de la arquitectura | 1.4.0 |
+| Generado | 2026-10-20 |
 | Proyecto | Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión |
 
 ### Índice por Rol <!-- SECTION: Role Quick Index -->
@@ -46,7 +46,7 @@ Cada flujo extremo a extremo significativo: disparador, ruta, enlace al diagrama
 ### F-01 — Consultar disponibilidad
 
 - **Disparador:** El miembro abre "Salas" o cambia sede, fecha o franja
-- **Ruta:** Portal de Reservas → Proveedor de Identidad Northwind → Portal de Reservas → Servicio de Reservas → Proveedor de Identidad Northwind → Servicio de Reservas → Base de Datos de Reservas
+- **Ruta:** Portal de Reservas → Proveedor de Identidad Northwind → Portal de Reservas → Servicio de Reservas → Proveedor de Identidad Northwind → Servicio de Reservas → caché Caffeine del Servicio de Reservas → Base de Datos de Reservas, sin entrada vigente (ADR-108)
 - **Fases:** 1 (Inicio de sesión) → 2 (Validación del token) → 3 (Consulta de disponibilidad)
 - **Secuencia:** [docs/04-data-flow-patterns.md#flujo-1--consultar-disponibilidad](../docs/04-data-flow-patterns.md#flujo-1--consultar-disponibilidad)
 - **Presupuesto global:** ≤ 1 s p95
@@ -76,10 +76,14 @@ sequenceDiagram
   alt Token inválido o ausente
   SRV-->>POR: 2.5 Responde 401
   end
-  SRV->>BDR: 3.1 Lee las salas de la sede y sus reservas confirmadas en la franja
-  BDR-->>SRV: 3.2 Devuelve salas, capacidad, equipamiento y ocupación
-  SRV-->>POR: 3.3 Devuelve cada sala libre u ocupada
-  POR->>POR: 3.4 Muestra primero las libres, por capacidad ascendente
+  SRV->>SRV: 3.1 Busca sede y fecha en la caché Caffeine
+  alt Sin entrada vigente
+  SRV->>BDR: 3.2 Lee las salas de la sede y sus reservas confirmadas del día
+  BDR-->>SRV: 3.3 Devuelve salas, capacidad, equipamiento y ocupación
+  SRV->>SRV: 3.4 Guarda la entrada durante 5 minutos
+  end
+  SRV-->>POR: 3.5 Devuelve cada sala libre u ocupada en la franja
+  POR->>POR: 3.6 Muestra primero las libres, por capacidad ascendente
 ```
 
 ### F-02 — Reservar una sala
@@ -206,10 +210,14 @@ sequenceDiagram
     participant POR as Portal de Reservas
     participant SRV as Servicio de Reservas
     participant BDR as Base de Datos de Reservas
-    SRV->>BDR: 1. Lee las salas de la sede y sus reservas confirmadas en la franja
-    BDR-->>SRV: 2. Devuelve salas, capacidad, equipamiento y ocupación
-    SRV-->>POR: 3. Devuelve cada sala libre u ocupada
-    POR->>POR: 4. Muestra primero las libres, por capacidad ascendente
+    SRV->>SRV: 1. Busca sede y fecha en la caché Caffeine
+    alt Sin entrada vigente
+        SRV->>BDR: 2. Lee las salas de la sede y sus reservas confirmadas del día
+        BDR-->>SRV: 3. Devuelve salas, capacidad, equipamiento y ocupación
+        SRV->>SRV: 4. Guarda la entrada durante 5 minutos
+    end
+    SRV-->>POR: 5. Devuelve cada sala libre u ocupada en la franja
+    POR->>POR: 6. Muestra primero las libres, por capacidad ascendente
 ```
 
 ### Phase 4 — Creación de reserva
@@ -312,5 +320,5 @@ Todo lo anterior tiene un responsable nombrado y un registro de decisión. Los h
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-19*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-20*
 *Fuente: /home/runner/work/northwind-reservas/northwind-reservas/ARCHITECTURE.md*
