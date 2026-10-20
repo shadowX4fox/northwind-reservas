@@ -5,7 +5,8 @@
 # files a request — an issue `[T0-?] …` the architecture MCP server's preview_tier0 renders (scripts/shared/tier0.js is
 # the format). Labelling the issue `architecture-tier0` runs this workflow:
 #   1. the key    the run goes on only when the user who put the label can triage or write here: on a public repository
-#                 anyone may open an issue, and its text reaches Claude
+#                 anyone may open an issue, and its text reaches Claude; a refused key is commented on the issue and the
+#                 label taken off, nothing written
 #   2. prepare    tier0.js prepare re-reads the policy here (Tier 0 active, one of the four kinds, every component name
 #                 canonical, a TDR move along an arrow, a doc fix whose text is where it says); a refusal is commented on
 #                 the issue with its reasons, labelled tier0-refused, and nothing is written
@@ -40,7 +41,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.11.2
+  SA_PLUGIN_REF: v10.11.3
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -65,12 +66,21 @@ jobs:
           AGENTS: ${{ vars.SA_TIER0_AGENTS }}
         run: |
           # a person's key: never an automation account — a bot, or a machine user listed in SA_TIER0_AGENTS — even with
-          # write access; an unattended build agent files its request without the label, and a person puts it (10.10.0)
+          # write access; an unattended build agent files its request without the label, and a person puts it (10.10.0).
+          # A refused key says so on the issue and takes the label off — the request stands, so no tier0-refused (10.11.3)
+          refuse() {
+            echo "::error::$1"
+            { echo '### Tier 0 not started'; echo; echo "$1."; echo
+              echo 'Nothing was written and the request stands: a person who can triage or write here, and is not listed in `SA_TIER0_AGENTS`, applies `architecture-tier0`.'; } > "$RUNNER_TEMP/k.md"
+            gh issue comment "$N" --body-file "$RUNNER_TEMP/k.md"
+            gh issue edit "$N" --remove-label architecture-tier0
+            exit 1
+          }
           if [ "$SENDER_TYPE" = "Bot" ] || printf '%s\n' $AGENTS | tr ',' '\n' | grep -qixF -- "$SENDER"; then
-            echo "::error::$SENDER is an automation account: a person applies architecture-tier0"; exit 1; fi
+            refuse "\`$SENDER\` is an automation account (a bot, or listed in \`SA_TIER0_AGENTS\`): a person applies architecture-tier0"; fi
           role=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$SENDER/permission" --jq .role_name 2>/dev/null || echo none)
           case "$role" in admin|maintain|write|triage) echo "labelled by $SENDER ($role)";;
-            *) echo "::error::$SENDER ($role) cannot start a Tier 0 write"; exit 1;; esac
+            *) refuse "\`$SENDER\` ($role) cannot start a Tier 0 write";; esac
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
