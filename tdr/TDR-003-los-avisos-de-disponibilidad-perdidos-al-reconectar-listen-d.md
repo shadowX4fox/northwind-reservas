@@ -1,5 +1,5 @@
 ---
-status: Open
+status: In Progress
 date: 2026-10-20
 related-adrs: ["ADR-109", "ADR-102"]
 affected-components: ["Servicio de Reservas"]
@@ -11,7 +11,7 @@ driver: Architecture
 
 ## Status
 
-`Open`
+`In Progress`
 
 **Initiative**: Reservas de Salas Northwind (architecture v1.5.1)
 **Driver**: Architecture — la reconexión de LISTEN no vacía la caché de la réplica
@@ -39,3 +39,4 @@ El Portal de Reservas puede mostrar libre una franja ya reservada. La reserva no
 ## History
 
 - 2026-10-20: Creado. Status: `Open`. Evidencia: northwind-servicio-reservas@33fc2f0 `EscuchaDisponibilidad.java` líneas 82-88 y `ErrorDeNegocio.java` línea 31; solicitud https://github.com/shadowX4fox/northwind-reservas/issues/52.
+- 2026-10-20: Open → In Progress; opción A: vaciar la caché tras LISTEN al reconectar. Evidencia: northwind-servicio-reservas@3d5408e, CacheDisponibilidadIT; https://github.com/shadowX4fox/northwind-reservas/issues/55.
