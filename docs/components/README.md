@@ -12,7 +12,7 @@
 | # | Component | File | Type | Technology |
 |---|-----------|------|------|------------|
 | 5.1 | Portal de Reservas | [01-portal-de-reservas.md](reservas-de-salas-northwind/01-portal-de-reservas.md) | Web Application | [React 18, TypeScript] |
-| 5.2 | Servicio de Reservas | [02-servicio-de-reservas.md](reservas-de-salas-northwind/02-servicio-de-reservas.md) | API Service | [Java 21, Spring Boot 3.3] |
+| 5.2 | Servicio de Reservas | [02-servicio-de-reservas.md](reservas-de-salas-northwind/02-servicio-de-reservas.md) | API Service | [Java 21, Spring Boot 3.3, Caffeine 3.2] |
 | 5.3 | Base de Datos de Reservas | [03-base-de-datos-de-reservas.md](reservas-de-salas-northwind/03-base-de-datos-de-reservas.md) | Database | [PostgreSQL 16] |
 
 ### Sistemas externos

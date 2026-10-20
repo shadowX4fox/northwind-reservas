@@ -1,6 +1,6 @@
 # ADR-103: Idempotencia de la creación de reservas con clave
 
-**Status**: Proposed
+**Status**: Accepted
 **Scope**: User
 **Date**: 2026-10-18
 **Authors**: Architecture Team
@@ -126,6 +126,7 @@ Not documented
 | Date | Reviewer | Action | Notes |
 |------|----------|--------|-------|
 | 2026-10-18 | Architecture Team | Created | Initial draft |
+| 2026-10-20 | Architecture Team | Accepted | Aceptado por el arquitecto |
 
 ---
 
