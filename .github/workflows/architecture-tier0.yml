@@ -38,7 +38,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.10.9
+  SA_PLUGIN_REF: v10.10.10
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -121,7 +121,8 @@ jobs:
               Technical Debt section (Section 13, the docs/ file anchored `SECTION: Risks and Technical Debt`).
             - tdr-status: the move from → fields.to with the technical-debt-records skill (tdr-check.js --move first), a
               dated History note with fields.note, the evidence and the issue URL; target-date when Planned; the index and the
-              record's row in the Risks and Technical Debt section.
+              record's row in the Risks and Technical Debt section; then `tdr-check.js . --mentions <id>` — every line it marks
+              ✗ states the old status: edit that line to the new one (or drop the stale clause), nothing else on it.
             - adr-proposed: the ADR with the architecture-definition-record skill — id and file from the payload, status
               Proposed, Context / Decision / Consequences / Alternatives from the fields; then adr/README.md (adr-index.js --write).
             Propagate it as the skill's workflow says — the index, the Section 13 row, the links both ways (each affected
@@ -166,7 +167,10 @@ jobs:
           git commit -q -m "tier0: ${ID:-$KIND} — $title (#$N)"
           git push -u origin "$branch"
           { echo "Tier 0 write \`$KIND\`${ID:+ — **$ID**}, requested in #$N and written by the Architecture Tier 0 workflow. No architect's approval: the policy allows it, and the gates below hold it."
-            echo; echo "Closes #$N"; echo; echo '### Gates'; echo; echo '```'; cat "$RUNNER_TEMP/gates.txt"; echo '```'; } > "$RUNNER_TEMP/pr.md"
+            echo; echo "Closes #$N"
+            # the mentions of a closed record the write left (tier0.js verify, 10.10.10): whether one still calls it debt is a person's call
+            if [ "$(wc -l < "$RUNNER_TEMP/verify.txt")" -gt 1 ]; then echo; echo '### Mentions to review'; echo; sed 1d "$RUNNER_TEMP/verify.txt"; fi
+            echo; echo '### Gates'; echo; echo '```'; cat "$RUNNER_TEMP/gates.txt"; echo '```'; } > "$RUNNER_TEMP/pr.md"
           url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "Tier 0: ${ID:-$KIND} — $title" --body-file "$RUNNER_TEMP/pr.md")
           [ -n "$ID" ] && gh issue edit "$N" --title "[$ID] $title"
           if [ "$AUTOMERGE" = "true" ] && [ "$gates" -eq 0 ]; then
