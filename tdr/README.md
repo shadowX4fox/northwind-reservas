@@ -9,4 +9,4 @@ Registros de deuda técnica (TDR), formato breve según https://www.workingsoftw
 | TDR-001 | La consulta de disponibilidad se sirve de una caché de 5 minutos | Resolved | Architecture | Equipo del Servicio de Reservas |
 | TDR-002 | Las claves de idempotencia vencidas nunca se purgan               | Resolved | Architecture | Equipo del Servicio de Reservas |
 | TDR-003 | Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos | Resolved | Architecture | Equipo del Servicio de Reservas |
-| TDR-004 | Zona horaria de las sedes leída de una variable de despliegue | In Progress | Architecture | Servicio de Reservas — Team Owner: Not documented (spec línea 9) |
+| TDR-004 | Zona horaria de las sedes leída de una variable de despliegue | In Progress | Architecture | Equipo del Servicio de Reservas |
