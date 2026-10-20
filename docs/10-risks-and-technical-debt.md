@@ -29,7 +29,7 @@ Los registros de deuda técnica (TDR) completos están en [`/tdr/`](../tdr/); es
 
 | ID | Title | Status | Owner |
 |----|-------|--------|-------|
-| [TDR-003](../tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md) | Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos | Open | Equipo del Servicio de Reservas |
+| [TDR-003](../tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md) | Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos | In Progress | Equipo del Servicio de Reservas |
 
 ### Convenciones <!-- LABEL: Conventions -->
 
