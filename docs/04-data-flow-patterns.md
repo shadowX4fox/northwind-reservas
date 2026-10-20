@@ -78,9 +78,9 @@ sequenceDiagram
 #### Fase 3 — Consulta de disponibilidad
 
 **Purpose**: Devolver cada sala de la sede con su estado libre u ocupada en la franja pedida.
-**Hops**: Servicio de Reservas → caché Caffeine del Servicio de Reservas → Base de Datos de Reservas, sin entrada vigente ([ADR-108](../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)).
+**Hops**: Servicio de Reservas → caché Caffeine del Servicio de Reservas → Base de Datos de Reservas, sin entrada vigente ([ADR-109](../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 **Latency budget (p95)**: Not documented <!-- TODO: Add source reference -->; el flujo completo, ≤ 1 s.
-**Side effects**: guarda la entrada sede y fecha en la caché local durante 5 minutos ([ADR-108](../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)).
+**Side effects**: guarda la entrada sede y fecha en la caché local durante 5 minutos ([ADR-109](../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 
 ```mermaid
 sequenceDiagram
@@ -102,7 +102,7 @@ sequenceDiagram
 **Purpose**: Registrar una reserva "Confirmada" sin superposición, una sola vez por clave de idempotencia.
 **Hops**: Servicio de Reservas → Base de Datos de Reservas.
 **Latency budget (p95)**: Not documented <!-- TODO: Add source reference -->; el flujo completo, ≤ 2 s.
-**Side effects**: reserva "Confirmada" con código `RS-` y clave de idempotencia con su respuesta, guardada 24 horas ([ADR-001](../adr/ADR-001-rest-openapi-apis.md); [ADR-103](../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)). La restricción de exclusión rechaza la superposición ([ADR-102](../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)). Invalida la entrada sede y fecha en la caché de esa réplica ([ADR-108](../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)).
+**Side effects**: reserva "Confirmada" con código `RS-` y clave de idempotencia con su respuesta, guardada 24 horas ([ADR-001](../adr/ADR-001-rest-openapi-apis.md); [ADR-103](../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)). La restricción de exclusión rechaza la superposición ([ADR-102](../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)). Emite `NOTIFY` en el canal `disponibilidad` con sede y fecha en la misma transacción; cada réplica borra su entrada ([ADR-109](../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 
 ```mermaid
 sequenceDiagram
@@ -125,7 +125,7 @@ sequenceDiagram
 **Purpose**: Pasar una reserva futura a "Cancelada" si quien cancela es su dueño o recepción de la sede.
 **Hops**: Servicio de Reservas → Base de Datos de Reservas.
 **Latency budget (p95)**: Not documented <!-- TODO: Add source reference -->; el flujo completo, ≤ 2 s.
-**Side effects**: estado "Cancelada" con autor, hora y, para recepción, motivo de 10 a 120 caracteres (PO Spec CU3). Autorización por rol `recepcion` y atributo `sede` ([ADR-105](../adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md)). Invalida la entrada sede y fecha en la caché de esa réplica ([ADR-108](../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)).
+**Side effects**: estado "Cancelada" con autor, hora y, para recepción, motivo de 10 a 120 caracteres (PO Spec CU3). Autorización por rol `recepcion` y atributo `sede` ([ADR-105](../adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md)). Emite `NOTIFY` en el canal `disponibilidad` con sede y fecha en la misma transacción; cada réplica borra su entrada ([ADR-109](../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 
 ```mermaid
 sequenceDiagram

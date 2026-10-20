@@ -8,7 +8,7 @@ technologies: Java 21, Spring Boot 3.3, Caffeine 3.2
 component_self: servicio-de-reservas
 component_type: api-service
 scope: API REST de disponibilidad, reserva y cancelación de salas; no cubre la autenticación ni la interfaz
-related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR-105, ADR-106, ADR-108
+related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR-105, ADR-106, ADR-108, ADR-109
 -->
 
 > Servicio de Reservas es el único microservicio del sistema: expone la API REST de disponibilidad, reserva y cancelación, valida los tokens y es dueño de la Base de Datos de Reservas.
@@ -20,9 +20,9 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR
 **Communicates via:** HTTPS
 **Description:** Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.
 
-**Component Version:** 1.2.0
+**Component Version:** 1.3.0
 **Architecture Version:** 1.4.0
-**Last Updated:** 2026-10-19
+**Last Updated:** 2026-10-20
 **Technical Debt:** [TDR-001](../../../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md)
 
 **Bounded Context**: Reservas de salas — disponibilidad, creación y cancelación.
@@ -92,7 +92,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 
 - **Almacén**: [Base de Datos de Reservas](03-base-de-datos-de-reservas.md), de su propiedad exclusiva (ADR-003).
 - **Acceso**: JDBC; ningún otro servicio lee ni escribe sus tablas (ADR-003).
-- **Caché**: disponibilidad por sede y fecha en Caffeine dentro de cada réplica, 5 minutos, invalidada localmente al crear o cancelar ([ADR-108](../../../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)); deuda en [TDR-001](../../../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md).
+- **Caché**: disponibilidad por sede y fecha en Caffeine dentro de cada réplica, 5 minutos, invalidada en todas las réplicas con LISTEN/NOTIFY y, como red de seguridad, a los 5 minutos ([ADR-109](../../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)); deuda en [TDR-001](../../../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md).
 - **Consistencia**: fuerte; la superposición la rechaza la base de datos ([ADR-102](../../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
 
 ## Patrones de Comunicación <!-- LABEL: Communication Patterns -->
@@ -108,7 +108,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 | Integración | Contraparte | Protocolo | Uso |
 |---|---|---|---|
 | I-03 | [Proveedor de Identidad Northwind](../proveedor-de-identidad-northwind.md) | HTTPS (JWKS) | Claves públicas para validar tokens |
-| I-04 | [Base de Datos de Reservas](03-base-de-datos-de-reservas.md) | JDBC con TLS | Lee y escribe salas, reservas, auditoría y claves de idempotencia |
+| I-04 | [Base de Datos de Reservas](03-base-de-datos-de-reservas.md) | JDBC con TLS | Lee y escribe salas, reservas, auditoría y claves de idempotencia; `LISTEN`/`NOTIFY` de invalidación de caché |
 
 ## Propiedad de datos <!-- LABEL: Data Ownership -->
 

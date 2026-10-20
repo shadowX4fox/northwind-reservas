@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-**Total**: 13 · **Institutional (001–100)**: 5 · **Project (101+)**: 8
+**Total**: 14 · **Institutional (001–100)**: 5 · **Project (101+)**: 9
 **Last Synced**: 2026-10-20
 
 | ID | Title | Status | Scope | Date | Superseded By |
@@ -17,4 +17,5 @@
 | ADR-105 | Autorización por rol recepcion y atributo sede | Accepted | Project | 2026-10-18 | — |
 | ADR-106 | Retención de 24 meses, purga y auditoría | Accepted | Project | 2026-10-18 | — |
 | ADR-107 | Portal de Reservas como archivos estáticos en CDN | Accepted | Project | 2026-10-18 | — |
-| ADR-108 | Caché en proceso con Caffeine para disponibilidad | Accepted | Project | 2026-10-20 | — |
+| ADR-108 | Caché en proceso con Caffeine para disponibilidad | Superseded | Project | 2026-10-20 | ADR-109 |
+| ADR-109 | Invalidación de la caché con LISTEN/NOTIFY | Accepted | Project | 2026-10-20 | — |
