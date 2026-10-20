@@ -140,3 +140,4 @@ Not documented
 ## Notes
 
 Latencia p95 de la creación: Not documented; el flujo completo apunta a ≤ 2 s.
+- Deuda técnica: [TDR-003](../tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md) — los avisos perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos.
