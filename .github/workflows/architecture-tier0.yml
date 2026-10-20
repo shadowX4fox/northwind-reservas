@@ -22,8 +22,9 @@
 # that may file a request but never put the label (a GitHub App's bot is refused by its type);
 # labels architecture-tier0, tier0-refused and tier0:tdr-workaround · tier0:tdr-status · tier0:adr-proposed · tier0:doc-fix
 # (`gh issue create --label` fails outright on a label the repository lacks — the IDE's request would not be filed); Actions may create pull requests; the default branch accepts a merge by
-# GITHUB_TOKEN (no required review on it). A pull request opened with GITHUB_TOKEN starts no workflow, so the gates run
-# here, before the merge.
+# GITHUB_TOKEN (no required review on it). A pull request opened with GITHUB_TOKEN starts no workflow — GitHub holds its
+# pull_request runs for approval, with no job — so the gates run here, before the merge; a merged one's held runs, which
+# GitHub then ends as failures, are deleted here (`actions: write`). Left open, a member of the team may approve them.
 name: Architecture Tier 0
 
 on:
@@ -37,7 +38,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.10.8
+  SA_PLUGIN_REF: v10.10.9
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -49,6 +50,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      actions: write               # deletes the gates run GitHub held for the merged pull request
       id-token: write
     env:
       GH_TOKEN: ${{ github.token }}
@@ -153,6 +155,8 @@ jobs:
           fi
           set +e; bun "$SA_SKILLS_DIR/skills/architecture-lifecycle/scripts/lifecycle.js" check . --undecided warn --no-render > "$RUNNER_TEMP/gates.txt"; gates=$?; set -e
           title=$(bun -e "console.log(require('./$P').request.title)")
+          # the request may already open with the record's id ("TDR-002: …"); the issue and the pull request add it once
+          [ -n "$ID" ] && title=$(printf '%s' "$title" | sed -E "s/^\[?$ID\]?[[:space:]]*(:|—|–|-)?[[:space:]]*//")
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
@@ -166,7 +170,14 @@ jobs:
           url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "Tier 0: ${ID:-$KIND} — $title" --body-file "$RUNNER_TEMP/pr.md")
           [ -n "$ID" ] && gh issue edit "$N" --title "[$ID] $title"
           if [ "$AUTOMERGE" = "true" ] && [ "$gates" -eq 0 ]; then
+            sha=$(git rev-parse HEAD)
             gh pr merge "$url" --squash --delete-branch
+            # the pull_request runs GitHub held for approval end as failures with no job once the pull request is merged
+            for i in 1 2 3 4 5 6; do
+              ids=$(gh run list --commit "$sha" --event pull_request --json databaseId,status --jq '.[] | select(.status == "completed") | .databaseId')
+              [ -n "$ids" ] && { for r in $ids; do gh run delete "$r" >/dev/null || true; done; break; }
+              sleep 5
+            done
             # a merge by GITHUB_TOKEN does not run the PR's closing keywords: the issue is closed here
             gh issue close "$N" --reason completed --comment "Written as ${ID:-a $KIND} in $url."
           else
