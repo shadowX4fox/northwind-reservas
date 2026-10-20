@@ -57,8 +57,9 @@ related_adrs: ADR-002, ADR-003, ADR-005, ADR-101, ADR-107
 
 **Caché**
 - CDN: archivos estáticos del `Portal de Reservas` fuera del clúster ([ADR-107](../adr/ADR-107-publicacion-del-portal-de-reservas-como-archivos-estaticos.md)).
-- Caché de aplicación: Caffeine 3.2 en cada réplica del `Servicio de Reservas`, con la disponibilidad por sede y fecha durante 5 minutos ([ADR-108](../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)).
-- Invalidación: solo en la réplica que crea o cancela; tamaño máximo Not documented. La ventana de 5 minutos es [TDR-001](../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md).
+- Caché de aplicación: Caffeine 3.2 en cada réplica del `Servicio de Reservas`, con la disponibilidad por sede y fecha durante 5 minutos ([ADR-109](../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
+- Invalidación: `NOTIFY` en el canal `disponibilidad` al crear o cancelar; cada réplica, con su conexión `LISTEN`, borra su entrada.
+- La expiración de 5 minutos es la red de seguridad; tamaño máximo Not documented. Hasta que esté implementada, la ventana sigue en [TDR-001](../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md) (In Progress).
 - Caché distribuida: ninguna.
 
 **Base de datos**

@@ -32,3 +32,5 @@ El Servicio de Reservas valida la firma y los claims de cada token con las clave
 
 **I-04 — Persistencia de reservas**
 El Servicio de Reservas lee y escribe la Base de Datos de Reservas por JDBC; ningún otro componente accede a sus tablas. La restricción de exclusión rechaza reservas superpuestas ([ADR-102](../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)). Falla de conexión: la solicitud responde error de servicio. Gobierna [ADR-003](../adr/ADR-003-postgresql-relational-store.md).
+
+Además, el Servicio de Reservas emite `NOTIFY` en el canal `disponibilidad` (sede y fecha) al crear o cancelar. Cada réplica mantiene una conexión `LISTEN` fuera del pool para invalidar su caché ([ADR-109](../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).

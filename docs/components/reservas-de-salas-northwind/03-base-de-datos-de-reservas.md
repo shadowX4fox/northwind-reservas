@@ -22,7 +22,7 @@ related_adrs: ADR-003, ADR-102
 
 **Component Version:** 1.0.1
 **Architecture Version:** 1.4.0
-**Last Updated:** 2026-10-18
+**Last Updated:** 2026-10-20
 
 ## Propósito <!-- LABEL: Purpose -->
 
@@ -47,7 +47,7 @@ Fuente de verdad de salas y reservas. PostgreSQL 16 gestionado por Plataforma No
 
 | Integración | Contraparte | Protocolo | Uso |
 |---|---|---|---|
-| I-04 | [Servicio de Reservas](02-servicio-de-reservas.md) | JDBC con TLS | Única lectura y escritura de sus tablas |
+| I-04 | [Servicio de Reservas](02-servicio-de-reservas.md) | JDBC con TLS | Única lectura y escritura de sus tablas; canal `disponibilidad` |
 
 **Saliente:** ninguna.
 

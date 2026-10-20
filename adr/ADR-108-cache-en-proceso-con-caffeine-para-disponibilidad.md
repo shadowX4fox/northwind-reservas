@@ -1,6 +1,7 @@
 # ADR-108: Caché en proceso con Caffeine para disponibilidad
 
-**Status**: Accepted
+**Status**: Superseded by [ADR-109](ADR-109-invalidacion-de-la-cache-con-listen-notify.md)
+**Superseded Date**: 2026-10-20
 **Scope**: User
 **Date**: 2026-10-20
 **Authors**: Architecture Team

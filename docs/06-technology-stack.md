@@ -28,7 +28,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-107
 |---|---|---|---|
 | React | 18 | Portal de Reservas | SPA de consulta, reserva y cancelación (PO Spec §7) |
 | Spring Boot | 3.3 | Servicio de Reservas | API REST de disponibilidad, reserva y cancelación (PO Spec §7) |
-| Caffeine | 3.2 | Servicio de Reservas | Caché en proceso de la disponibilidad por sede y fecha ([ADR-108](../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)) |
+| Caffeine | 3.2 | Servicio de Reservas | Caché en proceso de la disponibilidad por sede y fecha ([ADR-109](../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)) |
 | Flyway | Not documented <!-- TODO: Add source reference --> | Servicio de Reservas | Migraciones de esquema versionadas en el repositorio del servicio (ADR-003) |
 | JDBC | — | Servicio de Reservas | Acceso a la Base de Datos de Reservas (descriptor del Servicio de Reservas; ADR-003) |
 | OpenAPI | 3.1 | Servicio de Reservas | Contrato de la API, escrito antes que el código (ADR-001) |
