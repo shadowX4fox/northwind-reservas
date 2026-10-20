@@ -655,31 +655,6 @@
    }
   },
   "tdrs": {
-   "TDR-001": {
-    "id": "TDR-001",
-    "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
-    "file": "tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md",
-    "status": "In Progress",
-    "date": "2026-10-19",
-    "components": [
-     {
-      "slug": "Servicio de Reservas",
-      "node": "servicio-de-reservas"
-     }
-    ],
-    "adrs": [
-     "ADR-108",
-     "ADR-109"
-    ],
-    "tags": [
-     "disponibilidad",
-     "cache",
-     "CU1"
-    ],
-    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha (ADR-108). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.",
-    "impact": "Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
-    "owner": "---"
-   },
    "TDR-002": {
     "id": "TDR-002",
     "title": "Las claves de idempotencia vencidas nunca se purgan",
@@ -708,6 +683,31 @@
     ],
     "summary": "El Servicio de Reservas guarda cada Idempotency-Key con su respuesta en la tabla clave_idempotencia de la Base de Datos de Reservas (ADR-103), pero ninguna purga elimina las claves de más de 24 horas. La búsqueda las ignora al vencer, así que la idempotencia funciona; las filas se quedan para siempre.",
     "impact": "La tabla crece sin límite, una fila por cada creación de reserva, y con ella el almacenamiento y los respaldos de la Base de Datos de Reservas. Cada fila guarda la respuesta de la creación (el sub del miembro y el asunto de la reserva), que permanece más allá de las 24 horas de ADR-103 y del plazo de 24 meses de ADR-106.",
+    "owner": "---"
+   },
+   "TDR-001": {
+    "id": "TDR-001",
+    "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
+    "file": "tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md",
+    "status": "Resolved",
+    "date": "2026-10-19",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-108",
+     "ADR-109"
+    ],
+    "tags": [
+     "disponibilidad",
+     "cache",
+     "CU1"
+    ],
+    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha (ADR-108). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.",
+    "impact": "Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
     "owner": "---"
    }
   },
@@ -1008,7 +1008,7 @@
       "bullets": [
        "Almacén: Base de Datos de Reservas, de su propiedad exclusiva (ADR-003).",
        "Acceso: JDBC; ningún otro servicio lee ni escribe sus tablas (ADR-003).",
-       "Caché: disponibilidad por sede y fecha en Caffeine dentro de cada réplica, 5 minutos, invalidada en todas las réplicas con LISTEN/NOTIFY y, como red de seguridad, a los 5 minutos (ADR-109); deuda en TDR-001.",
+       "Caché: disponibilidad por sede y fecha en Caffeine dentro de cada réplica, 5 minutos, invalidada en todas las réplicas con LISTEN/NOTIFY y, como red de seguridad, a los 5 minutos (ADR-109).",
        "Consistencia: fuerte; la superposición la rechaza la base de datos (ADR-102)."
       ]
      },
@@ -2568,7 +2568,7 @@
       "anchor": "Performance Optimization"
      }
     ],
-    "bytes": 4815
+    "bytes": 4660
    },
    {
     "id": "09-operational-considerations",
@@ -2685,7 +2685,7 @@
       "anchor": "Conventions"
      }
     ],
-    "bytes": 2560
+    "bytes": 2350
    },
    {
     "id": "11-references",

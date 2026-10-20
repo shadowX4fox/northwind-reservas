@@ -6,6 +6,14 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-10-20
+
+### Changed
+- Contenedor: Servicio de Reservas — deja de nombrar TDR-001, resuelta
+- TDR: TDR-001 — estado: In Progress → Resolved (ADR-109 implementado en northwind-servicio-reservas@3238407)
+- Sección: Escalabilidad y Rendimiento (`docs/08-scalability-and-performance.md`) — la ventana de TDR-001 ya no aplica
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-001 sale de 13.2 Deuda Técnica
+
 ## [1.5.0] - 2026-10-20
 
 ### Added
@@ -56,17 +64,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 ### Changed
 - TDR: TDR-002 — estado: Open → In Progress
 - Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-002 en curso en 13.2 Deuda Técnica
-
-## [1.3.0] - 2026-10-19
-
-### Added
-- TDR: TDR-002 — Las claves de idempotencia vencidas nunca se purgan (Open)
-
-### Changed
-- Contenedor: Servicio de Reservas — nombra su deuda técnica TDR-002
-- Contenedor: Base de Datos de Reservas — nombra su deuda técnica TDR-002
-- ADR: ADR-103 — enlaza la deuda técnica TDR-002
-- ADR: ADR-106 — enlaza la deuda técnica TDR-002
-- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — fila de TDR-002 en 13.2 Deuda Técnica
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).
