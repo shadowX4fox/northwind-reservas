@@ -21,7 +21,7 @@ related_adrs: ADR-003, ADR-102
 **Description:** Base de Datos de Reservas guarda salas y reservas e impide dos reservas confirmadas superpuestas de una sala.
 
 **Component Version:** 1.0.1
-**Architecture Version:** 1.3.0
+**Architecture Version:** 1.3.1
 **Last Updated:** 2026-10-18
 **Technical Debt:** [TDR-002](../../../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md)
 

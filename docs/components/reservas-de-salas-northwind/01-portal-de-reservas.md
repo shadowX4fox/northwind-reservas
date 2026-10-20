@@ -21,7 +21,7 @@ related_adrs: ADR-001, ADR-002, ADR-004, ADR-104
 **Description:** Portal de Reservas es la SPA donde miembros y recepción consultan disponibilidad, reservan y cancelan salas.
 
 **Component Version:** 1.0.1
-**Architecture Version:** 1.3.0
+**Architecture Version:** 1.3.1
 **Last Updated:** 2026-10-18
 
 **Team Owner**: Not documented <!-- TODO: Add source reference -->

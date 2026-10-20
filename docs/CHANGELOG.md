@@ -6,6 +6,12 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-10-19
+
+### Changed
+- TDR: TDR-002 — estado: Open → In Progress
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-002 en curso en 13.2 Deuda Técnica
+
 ## [1.3.0] - 2026-10-19
 
 ### Added
@@ -43,11 +49,4 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 - Contenedor: Base de Datos de Reservas — patrones de comunicación y propiedad de datos
 - Sección: Arquitectura de Seguridad (`docs/07-security-architecture.md`) — autenticación por integración (I-01 a I-04), TLS en I-04 y gestión de secretos (ADR-005)
 
-## [1.0.0] - 2026-10-18
-
-### Added
-- Arquitectura inicial desde la PO Spec y el HLD.
-- 2 sistemas, 4 componentes (ver `docs/components/README.md`).
-- 5 ADR institucionales y 7 ADR de proyecto, ADR-101 a ADR-107, en estado Proposed (ver `adr/`).
-- Tipo de arquitectura: Microservices.
-- 11 archivos de sección en `docs/`.
+> Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).
