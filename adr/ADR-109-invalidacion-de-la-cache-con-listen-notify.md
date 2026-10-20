@@ -141,6 +141,7 @@ Not documented.
 - docs/05-integration-points.md (I-04)
 - docs/08-scalability-and-performance.md (sección 10.4)
 - tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md
+- tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md
 - escalations/ESC-003-tdr-001-invalidar-la-cache-de-disponibilidad-en-todas-las-re.md
 
 ### Related ADRs
