@@ -1,5 +1,7 @@
 # Architecture index — GitHub Actions. Copy to .github/workflows/architecture-index.yml in the architecture's repository.
 # Repository variables: SA_INDEX_PROJECT_KEY, SA_INDEX_SERVER, SA_INDEX_MCP_URL (optional). Secret: SA_INDEX_TOKEN.
+# Service repositories (10.13.0): variable SA_SERVICE_REPOS and secret SA_DISPATCH_TOKEN — a released publish with build
+# packs sends each `architecture-released`, which its architecture-build.yml answers.
 # Phase 1 (the release tag) is architecture-release.yml's `index` job; this workflow is phase 2 — the handoff kit merged
 # on main publishes the same version with its build packs — and the manual draft publish.
 name: Architecture index
@@ -30,13 +32,27 @@ jobs:
           git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" https://github.com/shadowx4fox/solutions-architect-skills.git "$RUNNER_TEMP/sa-ci"
           SA_SKILLS_DIR="$RUNNER_TEMP/sa-ci" bash "$RUNNER_TEMP/sa-ci/plugins/sa-delivery/skills/architecture-index-export/ci/publish-index.sh" .
         env:
-          SA_PLUGIN_REF: v10.12.0
+          SA_PLUGIN_REF: v10.13.0
           SA_INDEX_PROJECT_KEY: ${{ vars.SA_INDEX_PROJECT_KEY }}
           SA_INDEX_SERVER: ${{ vars.SA_INDEX_SERVER }}
           SA_INDEX_MCP_URL: ${{ vars.SA_INDEX_MCP_URL }}
           SA_INDEX_TOKEN: ${{ secrets.SA_INDEX_TOKEN }}
           SA_INDEX_ALLOW_DRAFT: ${{ inputs.draft || 'false' }}
           SA_INDEX_ARTIFACT: ${{ runner.temp }}/out/architecture-index.tgz
+      - name: Tell the service repositories
+        # the build packs of a released version: a tag push carries none (phase 1), and a draft is not built from
+        if: github.ref_type != 'tag' && inputs.draft != true && vars.SA_SERVICE_REPOS != ''
+        env:
+          GH_TOKEN: ${{ secrets.SA_DISPATCH_TOKEN }}
+          REPOS: ${{ vars.SA_SERVICE_REPOS }}
+          KEY: ${{ vars.SA_INDEX_PROJECT_KEY }}
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo "::warning::SA_DISPATCH_TOKEN is not set: the service repositories are not told"; exit 0; }
+          v=$(sed -n 's/.*ARCHITECTURE_VERSION: *\([0-9][0-9.]*\).*/\1/p' ARCHITECTURE.md | head -1)
+          for r in $(printf '%s' "$REPOS" | tr ',' ' '); do
+            if gh api "repos/$r/dispatches" -f event_type=architecture-released -f "client_payload[version]=$v" -f "client_payload[project]=$KEY" >/dev/null
+            then echo "architecture-released $v → $r"; else echo "::warning::$r: the dispatch failed — the token cannot write there, or the repository does not exist"; fi
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: architecture-index
