@@ -1,5 +1,5 @@
 ---
-status: Open
+status: In Progress
 date: 2026-10-19
 related-adrs: ["ADR-103", "ADR-106"]
 affected-components: ["Servicio de Reservas", "Base de Datos de Reservas"]
@@ -11,7 +11,7 @@ driver: Architecture
 
 ## Status
 
-`Open`
+`In Progress`
 
 **Initiative**: Reservas de Salas Northwind (architecture v1.2.0)
 **Driver**: Architecture — sin purga programada para la tabla de claves de idempotencia
@@ -39,3 +39,4 @@ La tabla crece sin límite, una fila por cada creación de reserva, y con ella e
 ## History
 
 - 2026-10-19: Creado. Status: `Open`. Evidencia: northwind-servicio-reservas@53bad3d `V1__esquema_inicial.sql` líneas 57 y 65 y `RepositorioReservas.java` línea 90; solicitud https://github.com/shadowX4fox/northwind-reservas/issues/24.
+- 2026-10-20: Open → In Progress. Opción B en northwind-servicio-reservas@2614325; frecuencia de la purga sin documentar; Resolved al desplegarse. Solicitud https://github.com/shadowX4fox/northwind-reservas/issues/29.

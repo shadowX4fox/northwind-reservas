@@ -7,4 +7,4 @@ Registros de deuda técnica (TDR), formato breve según https://www.workingsoftw
 | ID      | Title                                                             | Status | Driver       | Owner                          |
 |---------|-------------------------------------------------------------------|--------|--------------|--------------------------------|
 | TDR-001 | La consulta de disponibilidad se sirve de una caché de 5 minutos | Open   | Architecture | Equipo del Servicio de Reservas |
-| TDR-002 | Las claves de idempotencia vencidas nunca se purgan               | Open   | Architecture | Equipo del Servicio de Reservas |
+| TDR-002 | Las claves de idempotencia vencidas nunca se purgan               | In Progress | Architecture | Equipo del Servicio de Reservas |
