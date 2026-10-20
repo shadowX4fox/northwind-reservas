@@ -31,7 +31,7 @@ Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan m
 
 ## Owner
 
-- **Technical**: Servicio de Reservas — Team Owner: Not documented (spec línea 9)
+- **Technical**: Equipo del Servicio de Reservas
 - **Business (P&L)**: Gerencia de Producto Digital
 
 ---
@@ -40,3 +40,4 @@ Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan m
 
 - 2026-10-20: Creado. Status: `Open`. Evidencia: PropiedadesReservas.java:36, application.yaml:47 y ConfiguracionReloj.java:13 en northwind-servicio-reservas@1cbd29c; solicitud https://github.com/shadowX4fox/northwind-reservas/issues/65.
 - 2026-10-20: Open → In Progress; opción A: [ADR-110](../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md) fija America/Bogota para las 3 sedes (ESC-004, #62). Resolved cuando el servicio retire `RESERVAS_ZONA_HORARIA`.
+- 2026-10-20: Owner técnico: Equipo del Servicio de Reservas, como en TDR-003.
