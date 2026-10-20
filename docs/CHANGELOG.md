@@ -6,6 +6,15 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-20
+
+### Added
+- TDR: TDR-003 — Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos (Resolved)
+
+### Changed
+- ADR: ADR-102 — enlaza TDR-003 en Notes
+- ADR: ADR-109 — cita TDR-003 en References
+
 ## [1.5.1] - 2026-10-20
 
 ### Changed
@@ -58,11 +67,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 - Contenedor: Base de Datos de Reservas — deja de nombrar TDR-002, resuelta
 - TDR: TDR-002 — estado: In Progress → Resolved (la purga de claves de idempotencia vencidas está en main del Servicio de Reservas)
 - Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-002 sale de 13.2 Deuda Técnica
-
-## [1.3.1] - 2026-10-19
-
-### Changed
-- TDR: TDR-002 — estado: Open → In Progress
-- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-002 en curso en 13.2 Deuda Técnica
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).
