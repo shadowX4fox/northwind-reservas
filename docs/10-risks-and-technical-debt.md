@@ -30,7 +30,6 @@ Los registros de deuda técnica (TDR) completos están en [`/tdr/`](../tdr/); es
 | ID | Title | Status | Owner |
 |----|-------|--------|-------|
 | [TDR-001](../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md) | La consulta de disponibilidad se sirve de una caché de 5 minutos | Open | Equipo del Servicio de Reservas |
-| [TDR-002](../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md) | Las claves de idempotencia vencidas nunca se purgan | In Progress | Equipo del Servicio de Reservas |
 
 ### Convenciones <!-- LABEL: Conventions -->
 
