@@ -3,12 +3,12 @@
 # Servicio de Reservas
 
 <!-- EXPLORER_HEADER
-key_concepts: microservicio de reservas, disponibilidad, creación de reserva, cancelación, validación JWT, JWKS, rol recepcion, atributo sede, contrato OpenAPI
+key_concepts: microservicio de reservas, disponibilidad, creación de reserva, cancelación, validación JWT, JWKS, rol recepcion, atributo sede, contrato OpenAPI, hora local de sede, zona America/Bogota
 technologies: Java 21, Spring Boot 3.3, Caffeine 3.2
 component_self: servicio-de-reservas
 component_type: api-service
 scope: API REST de disponibilidad, reserva y cancelación de salas; no cubre la autenticación ni la interfaz
-related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR-105, ADR-106, ADR-108, ADR-109
+related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR-105, ADR-106, ADR-108, ADR-109, ADR-110
 -->
 
 > Servicio de Reservas es el único microservicio del sistema: expone la API REST de disponibilidad, reserva y cancelación, valida los tokens y es dueño de la Base de Datos de Reservas.
@@ -20,7 +20,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR
 **Communicates via:** HTTPS
 **Description:** Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.
 
-**Component Version:** 1.3.0
+**Component Version:** 1.4.0
 **Architecture Version:** 1.6.0
 **Last Updated:** 2026-10-20
 **Technical Debt:** [TDR-004](../../../tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md)
@@ -68,7 +68,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 **Tipos y obligatoriedad**
 
 - `roomId`, `memberId`, `cancelledBy`: string opaco; `memberId` y `cancelledBy` son el `sub` del JWT del Proveedor de Identidad Northwind (ADR-002).
-- `capacity`: entero. `date`: fecha ISO 8601. `start`, `end` y las franjas de `suggestedSlots`: `HH:mm`. `cancelledAt`: fecha y hora ISO 8601.
+- `capacity`: entero. `date`: fecha ISO 8601. `start`, `end` y las franjas de `suggestedSlots`: `HH:mm` en hora local de la sede, sin desfase ([ADR-110](../../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md)). `cancelledAt`: fecha y hora ISO 8601.
 - `name`, `subject`, `cancellationReason`, `reason`: texto con los límites de la tabla de esquemas.
 - `Idempotency-Key`: UUID v4 generado en el navegador por cada confirmación ([ADR-103](../../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)); obligatorio en la creación.
 - `BookingRequest`: obligatorios `roomId`, `date`, `start`, `end` y `subject`.
@@ -94,6 +94,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 - **Acceso**: JDBC; ningún otro servicio lee ni escribe sus tablas (ADR-003).
 - **Caché**: disponibilidad por sede y fecha en Caffeine dentro de cada réplica, 5 minutos, invalidada en todas las réplicas con LISTEN/NOTIFY y, como red de seguridad, a los 5 minutos ([ADR-109](../../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 - **Consistencia**: fuerte; la superposición la rechaza la base de datos ([ADR-102](../../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
+- **Reloj de negocio**: "ahora" se calcula en la zona America/Bogota, común a las 3 sedes. Lo usan la franja en el pasado, las reservas futuras del día y la reserva ya iniciada ([ADR-110](../../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md)).
 
 ## Patrones de Comunicación <!-- LABEL: Communication Patterns -->
 

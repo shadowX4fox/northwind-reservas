@@ -8,7 +8,7 @@ technologies: PostgreSQL 16
 component_self: base-de-datos-de-reservas
 component_type: database
 scope: Almacén de salas y reservas del Servicio de Reservas; no cubre la retención ni la purga de datos
-related_adrs: ADR-003, ADR-102
+related_adrs: ADR-003, ADR-102, ADR-110
 -->
 
 > Base de Datos de Reservas guarda las salas y las reservas. Es propiedad exclusiva del Servicio de Reservas y rechaza por construcción dos reservas confirmadas superpuestas de la misma sala.
@@ -20,7 +20,7 @@ related_adrs: ADR-003, ADR-102
 **Communicates via:** TCP
 **Description:** Base de Datos de Reservas guarda salas y reservas e impide dos reservas confirmadas superpuestas de una sala.
 
-**Component Version:** 1.0.1
+**Component Version:** 1.0.2
 **Architecture Version:** 1.6.0
 **Last Updated:** 2026-10-20
 
@@ -38,6 +38,7 @@ Fuente de verdad de salas y reservas. PostgreSQL 16 gestionado por Plataforma No
 
 - **Propietario**: [Servicio de Reservas](02-servicio-de-reservas.md); ningún otro servicio lee ni escribe sus tablas (ADR-003).
 - **Esquema**: versionado con migraciones (ADR-003).
+- **Horas**: fecha y horas de cada reserva en hora local de la sede, sin desfase; las 3 sedes comparten zona ([ADR-110](../../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md)).
 - **Carga inicial**: las 42 salas se cargan una vez desde la hoja de cálculo de recepción antes del piloto (PO Spec, Supuestos).
 - **Consistencia**: fuerte; la integridad ante superposición la garantiza el motor, no la aplicación.
 

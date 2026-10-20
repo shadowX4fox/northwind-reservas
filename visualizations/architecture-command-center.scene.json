@@ -655,6 +655,31 @@
    }
   },
   "tdrs": {
+   "TDR-004": {
+    "id": "TDR-004",
+    "title": "Zona horaria de las sedes leída de una variable de despliegue",
+    "file": "tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md",
+    "status": "In Progress",
+    "date": "2026-10-20",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-105"
+    ],
+    "tags": [
+     "zona-horaria",
+     "despliegue",
+     "INV-01",
+     "INV-04"
+    ],
+    "summary": "La arquitectura 1.6.0 no documenta la zona horaria de las sedes (spec § 4, INV-01 e INV-04; escalado en #62). Mientras #62 no tenga respuesta, el Servicio de Reservas la lee de la variable de despliegue RESERVAS_ZONA_HORARIA (identificador IANA, una sola zona para las 3 sedes), sin valor por defecto: sin ella, o con un identificador inválido, el servicio no arranca. El reloj de negocio usa esa zona para INV-01, INV-04 y ADR-105.",
+    "impact": "Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan mal las franjas \"en el pasado\" (INV-01), las reservas \"futuras\" (INV-04) y las que \"ya iniciaron\" (ADR-105). Una sola zona para las 3 sedes: si las sedes tienen zonas distintas, la regla falla en alguna de ellas.",
+    "owner": "---"
+   },
    "TDR-002": {
     "id": "TDR-002",
     "title": "Las claves de idempotencia vencidas nunca se purgan",
@@ -753,6 +778,7 @@
       "label": "Responsibilities",
       "bullets": [
        "Mostrar la disponibilidad de salas por sede, fecha y franja, con capacidad y equipamiento.",
+       "No dejar elegir una franja anterior a la hora actual de la sede (America/Bogota), no la del navegador (ADR-110).",
        "Enviar la reserva de una sala libre y mostrar la confirmación con el código de reserva.",
        "Listar las reservas futuras del miembro y permitir su cancelación.",
        "Permitir al recepcionista cancelar cualquier reserva de su sede.",
@@ -871,8 +897,8 @@
     "deploysAs": "Archivos estáticos",
     "communicatesVia": "HTTPS",
     "description": "Portal de Reservas es la SPA donde miembros y recepción consultan disponibilidad, reservan y cancelan salas.",
-    "componentVersion": "1.0.1",
-    "lastUpdated": "2026-10-18"
+    "componentVersion": "1.0.2",
+    "lastUpdated": "2026-10-20"
    },
    "servicio-de-reservas": {
     "name": "Servicio de Reservas",
@@ -904,7 +930,7 @@
       ],
       "bullets": [
        "roomId, memberId, cancelledBy: string opaco; memberId y cancelledBy son el sub del JWT del Proveedor de Identidad Northwind (ADR-002).",
-       "capacity: entero. date: fecha ISO 8601. start, end y las franjas de suggestedSlots: HH:mm. cancelledAt: fecha y hora ISO 8601.",
+       "capacity: entero. date: fecha ISO 8601. start, end y las franjas de suggestedSlots: HH:mm en hora local de la sede, sin desfase (ADR-110). cancelledAt: fecha y hora ISO 8601.",
        "name, subject, cancellationReason, reason: texto con los límites de la tabla de esquemas.",
        "Idempotency-Key: UUID v4 generado en el navegador por cada confirmación (ADR-103); obligatorio en la creación.",
        "BookingRequest: obligatorios roomId, date, start, end y subject.",
@@ -1034,7 +1060,8 @@
        "Almacén: Base de Datos de Reservas, de su propiedad exclusiva (ADR-003).",
        "Acceso: JDBC; ningún otro servicio lee ni escribe sus tablas (ADR-003).",
        "Caché: disponibilidad por sede y fecha en Caffeine dentro de cada réplica, 5 minutos, invalidada en todas las réplicas con LISTEN/NOTIFY y, como red de seguridad, a los 5 minutos (ADR-109).",
-       "Consistencia: fuerte; la superposición la rechaza la base de datos (ADR-102)."
+       "Consistencia: fuerte; la superposición la rechaza la base de datos (ADR-102).",
+       "Reloj de negocio: \"ahora\" se calcula en la zona America/Bogota, común a las 3 sedes. Lo usan la franja en el pasado, las reservas futuras del día y la reserva ya iniciada (ADR-110)."
       ]
      },
      {
@@ -1161,7 +1188,7 @@
     "deploysAs": "Docker container",
     "communicatesVia": "HTTPS",
     "description": "Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.",
-    "componentVersion": "1.3.0",
+    "componentVersion": "1.4.0",
     "lastUpdated": "2026-10-20"
    },
    "base-de-datos-de-reservas": {
@@ -1190,6 +1217,7 @@
       "bullets": [
        "Propietario: Servicio de Reservas; ningún otro servicio lee ni escribe sus tablas (ADR-003).",
        "Esquema: versionado con migraciones (ADR-003).",
+       "Horas: fecha y horas de cada reserva en hora local de la sede, sin desfase; las 3 sedes comparten zona (ADR-110).",
        "Carga inicial: las 42 salas se cargan una vez desde la hoja de cálculo de recepción antes del piloto (PO Spec, Supuestos).",
        "Consistencia: fuerte; la integridad ante superposición la garantiza el motor, no la aplicación."
       ]
@@ -1281,7 +1309,7 @@
     "deploysAs": "managed service",
     "communicatesVia": "TCP",
     "description": "Base de Datos de Reservas guarda salas y reservas e impide dos reservas confirmadas superpuestas de una sala.",
-    "componentVersion": "1.0.1",
+    "componentVersion": "1.0.2",
     "lastUpdated": "2026-10-20"
    },
    "proveedor-de-identidad-northwind": {
@@ -2710,7 +2738,7 @@
       "anchor": "Conventions"
      }
     ],
-    "bytes": 2350
+    "bytes": 2546
    },
    {
     "id": "11-references",

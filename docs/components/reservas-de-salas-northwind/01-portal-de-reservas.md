@@ -8,7 +8,7 @@ technologies: React 18, TypeScript
 component_self: portal-de-reservas
 component_type: web-application
 scope: SPA de consulta, reserva y cancelación de salas; no contiene reglas de negocio ni datos persistentes
-related_adrs: ADR-001, ADR-002, ADR-004, ADR-104
+related_adrs: ADR-001, ADR-002, ADR-004, ADR-104, ADR-110
 -->
 
 > Portal de Reservas es la aplicación web por la que miembros y recepcionistas consultan, reservan y cancelan salas. Autentica con el Proveedor de Identidad Northwind y llama al Servicio de Reservas.
@@ -20,9 +20,9 @@ related_adrs: ADR-001, ADR-002, ADR-004, ADR-104
 **Communicates via:** HTTPS
 **Description:** Portal de Reservas es la SPA donde miembros y recepción consultan disponibilidad, reservan y cancelan salas.
 
-**Component Version:** 1.0.1
+**Component Version:** 1.0.2
 **Architecture Version:** 1.6.0
-**Last Updated:** 2026-10-18
+**Last Updated:** 2026-10-20
 
 **Team Owner**: Not documented <!-- TODO: Add source reference -->
 
@@ -33,6 +33,7 @@ Interfaz de autoservicio de reservas, responsiva para navegador y teléfono. Sus
 ## Responsabilidades <!-- LABEL: Responsibilities -->
 
 - Mostrar la disponibilidad de salas por sede, fecha y franja, con capacidad y equipamiento.
+- No dejar elegir una franja anterior a la hora actual de la sede (America/Bogota), no la del navegador ([ADR-110](../../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md)).
 - Enviar la reserva de una sala libre y mostrar la confirmación con el código de reserva.
 - Listar las reservas futuras del miembro y permitir su cancelación.
 - Permitir al recepcionista cancelar cualquier reserva de su sede.
