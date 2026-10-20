@@ -500,7 +500,7 @@
     "id": "ADR-102",
     "title": "Restricción de exclusión contra reservas dobles",
     "file": "adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md",
-    "status": "Proposed",
+    "status": "Accepted",
     "date": "2026-10-18",
     "scope": "User",
     "summary": "La Base de Datos de Reservas rechaza con una restricción de exclusión de PostgreSQL toda reserva confirmada superpuesta para la misma sala. El motor garantiza la integridad; el Servicio de Reservas no la coordina.",
@@ -523,7 +523,7 @@
     "id": "ADR-103",
     "title": "Idempotencia de la creación de reservas con clave",
     "file": "adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md",
-    "status": "Proposed",
+    "status": "Accepted",
     "date": "2026-10-18",
     "scope": "User",
     "summary": "El Portal de Reservas genera en el navegador una clave por cada confirmación y la envía en Idempotency-Key. El Servicio de Reservas busca la clave antes de insertar y guarda clave y respuesta 24 horas en la Base de Datos de Reservas.",
@@ -546,7 +546,7 @@
     "id": "ADR-104",
     "title": "Tokens OIDC solo en memoria en la SPA",
     "file": "adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md",
-    "status": "Proposed",
+    "status": "Accepted",
     "date": "2026-10-18",
     "scope": "User",
     "summary": "Los tokens OIDC viven solo en la memoria del Portal de Reservas. Nunca se guardan en localStorage ni en sessionStorage. El token de acceso dura 5 minutos y se renueva en silencio.",
@@ -568,7 +568,7 @@
     "id": "ADR-105",
     "title": "Autorización por rol recepcion y atributo sede",
     "file": "adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md",
-    "status": "Proposed",
+    "status": "Accepted",
     "date": "2026-10-18",
     "scope": "User",
     "summary": "El Servicio de Reservas autoriza la cancelación al dueño de la reserva. También la autoriza a un token con rol recepcion cuyo atributo sede coincide con la sede de la sala. En cualquier otro caso responde \"no autorizado\" y la reserva sigue \"Confirmada\".",
@@ -590,7 +590,7 @@
     "id": "ADR-106",
     "title": "Retención de 24 meses, purga y auditoría",
     "file": "adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md",
-    "status": "Proposed",
+    "status": "Accepted",
     "date": "2026-10-18",
     "scope": "User",
     "summary": "Las reservas y el registro de auditoría de cancelaciones se conservan 24 meses en la Base de Datos de Reservas. Una purga programada los elimina. El Servicio de Reservas escribe la auditoría en la misma transacción de la cancelación.",
@@ -652,13 +652,16 @@
       "node": "servicio-de-reservas"
      }
     ],
+    "adrs": [
+     "ADR-108"
+    ],
     "tags": [
      "disponibilidad",
      "cache",
      "CU1"
     ],
-    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en memoria de 5 minutos por sede y fecha, para cumplir el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas.",
-    "impact": "Una sala recién reservada puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
+    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha (ADR-108). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.",
+    "impact": "Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
     "owner": "---"
    }
   },
@@ -959,6 +962,7 @@
       "bullets": [
        "Almacén: Base de Datos de Reservas, de su propiedad exclusiva (ADR-003).",
        "Acceso: JDBC; ningún otro servicio lee ni escribe sus tablas (ADR-003).",
+       "Caché: disponibilidad por sede y fecha en Caffeine dentro de cada réplica, 5 minutos, invalidada localmente al crear o cancelar (ADR-108); deuda en TDR-001.",
        "Consistencia: fuerte; la superposición la rechaza la base de datos (ADR-102)."
       ]
      },
@@ -1081,12 +1085,12 @@
      }
     ],
     "type": "API Service",
-    "technology": "[Java 21, Spring Boot 3.3]",
+    "technology": "[Java 21, Spring Boot 3.3, Caffeine 3.2]",
     "c4": "Container (L2)",
     "deploysAs": "Docker container",
     "communicatesVia": "HTTPS",
     "description": "Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.",
-    "componentVersion": "1.1.1",
+    "componentVersion": "1.2.0",
     "lastUpdated": "2026-10-19"
    },
    "base-de-datos-de-reservas": {
@@ -2230,7 +2234,7 @@
       "title": "Secuencias Extremo a Extremo"
      }
     ],
-    "bytes": 15729
+    "bytes": 16612
    },
    {
     "id": "05-integration-points",
@@ -2304,6 +2308,7 @@
      "TypeScript",
      "Java 21",
      "Spring Boot 3.3",
+     "Caffeine 3.2",
      "Flyway",
      "OpenAPI 3.1",
      "PostgreSQL 16",
@@ -2371,7 +2376,7 @@
       "anchor": "CI/CD"
      }
     ],
-    "bytes": 5665
+    "bytes": 5860
    },
    {
     "id": "07-security-architecture",
@@ -2517,7 +2522,7 @@
       "anchor": "Performance Optimization"
      }
     ],
-    "bytes": 4283
+    "bytes": 4652
    },
    {
     "id": "09-operational-considerations",

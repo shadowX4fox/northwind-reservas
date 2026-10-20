@@ -2,6 +2,14 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.1.1] - 2026-10-18
+
+### Changed
+- Contenedor: Servicio de Reservas — motivo de cancelación de recepción de 10 a 120 caracteres; regla de las franjas sugeridas (PO Spec 1.1)
+- Sección: Patrones de Flujo de Datos (`docs/04-data-flow-patterns.md`) — motivo de 10 a 120 caracteres en la Fase 5; regla de las franjas sugeridas en el Flujo 1
+- Sección: Arquitectura de Seguridad (`docs/07-security-architecture.md`) — auditoría con motivo solo en cancelaciones de recepción; membresía vigente definida por la cuenta en el Proveedor de Identidad Northwind
+- ESC-001 resolved by architecture-v1.1.0: Servicio de Reservas: contrato de API vacío y autenticación de I-02/I-03/I-04 sin documentar bloquean la construcción
+
 ## [1.1.0] - 2026-10-18
 
 ### Changed
