@@ -10,7 +10,7 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.3.0 |
+| Versión de la arquitectura | 1.3.1 |
 | Versión del componente | 1.1.1 |
 | Generado | 2026-10-19 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
@@ -194,7 +194,7 @@ Registrada en este componente. El código mantiene cada atajo hasta que su regis
 | TDR | Title | Status |
 |---|---|---|
 | [TDR-001](../../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md) | La consulta de disponibilidad se sirve de una caché de 5 minutos | Open |
-| [TDR-002](../../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md) | Las claves de idempotencia vencidas nunca se purgan | Open |
+| [TDR-002](../../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md) | Las claves de idempotencia vencidas nunca se purgan | In Progress |
 
 ---
 
