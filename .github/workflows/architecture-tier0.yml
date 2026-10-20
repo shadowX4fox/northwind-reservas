@@ -41,7 +41,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.11.3
+  SA_PLUGIN_REF: v10.11.4
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -67,13 +67,14 @@ jobs:
         run: |
           # a person's key: never an automation account — a bot, or a machine user listed in SA_TIER0_AGENTS — even with
           # write access; an unattended build agent files its request without the label, and a person puts it (10.10.0).
-          # A refused key says so on the issue and takes the label off — the request stands, so no tier0-refused (10.11.3)
+          # A refused key says so on the issue and takes the label off — the request stands, so no tier0-refused (10.11.3);
+          # -R, because this step runs before the checkout and gh finds no repository on disk (10.11.4)
           refuse() {
             echo "::error::$1"
             { echo '### Tier 0 not started'; echo; echo "$1."; echo
               echo 'Nothing was written and the request stands: a person who can triage or write here, and is not listed in `SA_TIER0_AGENTS`, applies `architecture-tier0`.'; } > "$RUNNER_TEMP/k.md"
-            gh issue comment "$N" --body-file "$RUNNER_TEMP/k.md"
-            gh issue edit "$N" --remove-label architecture-tier0
+            gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/k.md"
+            gh issue edit "$N" -R "$GITHUB_REPOSITORY" --remove-label architecture-tier0
             exit 1
           }
           if [ "$SENDER_TYPE" = "Bot" ] || printf '%s\n' $AGENTS | tr ',' '\n' | grep -qixF -- "$SENDER"; then
