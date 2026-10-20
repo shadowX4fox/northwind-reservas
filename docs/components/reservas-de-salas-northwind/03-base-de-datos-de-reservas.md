@@ -23,7 +23,6 @@ related_adrs: ADR-003, ADR-102
 **Component Version:** 1.0.1
 **Architecture Version:** 1.3.1
 **Last Updated:** 2026-10-18
-**Technical Debt:** [TDR-002](../../../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md)
 
 ## Propósito <!-- LABEL: Purpose -->
 
