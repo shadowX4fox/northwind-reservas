@@ -1,6 +1,6 @@
 {
  "project": "Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión",
- "version": "1.3.2",
+ "version": "1.4.0",
  "status": "Released",
  "architectureType": "MICROSERVICES",
  "language": "es",
@@ -62,7 +62,7 @@
    "layer": 2,
    "system": "reservas-de-salas-northwind",
    "kind": "service",
-   "tech": "Java 21, Spring Boot 3.3",
+   "tech": "Java 21, Spring Boot 3.3, Caffeine 3.2",
    "adrs": [
     "ADR-001",
     "ADR-002",
@@ -72,7 +72,8 @@
     "ADR-102",
     "ADR-103",
     "ADR-105",
-    "ADR-106"
+    "ADR-106",
+    "ADR-108"
    ],
    "note": "Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única puerta a sus datos (ADR-003)."
   },
@@ -181,12 +182,7 @@
    "name": "Consulta de disponibilidad",
    "budget": "≤ 1 s",
    "kind": "online",
-   "path": [
-    [
-     "servicio-de-reservas",
-     "base-de-datos-de-reservas"
-    ]
-   ],
+   "path": [],
    "extra": []
   },
   "4": {
@@ -606,6 +602,30 @@
     "related": [
      "ADR-003",
      "ADR-005"
+    ]
+   },
+   "ADR-108": {
+    "id": "ADR-108",
+    "title": "Caché en proceso con Caffeine para disponibilidad",
+    "file": "adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md",
+    "status": "Accepted",
+    "date": "2026-10-20",
+    "scope": "User",
+    "summary": "El Servicio de Reservas guarda la disponibilidad por sede y fecha en una caché Caffeine 3.2 dentro de cada réplica. Cada entrada expira a los 5 minutos.",
+    "consequences": {
+     "positive": [
+      "Menos carga en la Base de Datos de Reservas — la consulta más frecuente casi nunca llega a ella.",
+      "Sin dependencia nueva de Plataforma Northwind — la caché vive y muere con la réplica."
+     ],
+     "negative": [
+      "Disponibilidad desactualizada — una sala reservada en otra réplica puede verse libre hasta 5 minutos; el miembro recibe \"sala ocupada\" al reservar. Severity: Medium. Mitigation: deuda registrada en TDR-001.",
+      "Memoria por réplica — sin tamaño máximo documentado. Severity: Low. Mitigation: Not documented."
+     ]
+    },
+    "related": [
+     "ADR-003",
+     "ADR-005",
+     "ADR-102"
     ]
    }
   },
