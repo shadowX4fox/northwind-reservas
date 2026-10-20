@@ -1,5 +1,8 @@
 {
   "support": "run",
   "framework": "none",
-  "packs": []
+  "packs": [],
+  "tier0": {
+    "auto": "all"
+  }
 }
