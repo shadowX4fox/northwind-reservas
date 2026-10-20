@@ -1,6 +1,6 @@
 ---
 id: ESC-002
-status: Open
+status: Resolved
 date: 2026-10-20
 architecture: architecture-v1.3.2
 route: tier-1
@@ -11,8 +11,8 @@ adrs: []
 tdrs: [TDR-001]
 requested_by: Equipo del Servicio de Reservas
 issue: https://github.com/shadowX4fox/northwind-reservas/issues/38
-resolution:
-closed:
+resolution: architecture-v1.4.0
+closed: 2026-10-20
 ---
 # ESC-002 — TDR-001 registra una caché de disponibilidad que el Servicio de Reservas no tiene
 
@@ -42,4 +42,4 @@ TDR-001 registra una caché que el código del Servicio de Reservas no tiene. Ll
 
 ## Resolution
 
-- Pending.
+- Resolved 2026-10-20 by architecture-v1.4.0.

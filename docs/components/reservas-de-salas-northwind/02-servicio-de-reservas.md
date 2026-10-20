@@ -21,7 +21,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR
 **Description:** Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.
 
 **Component Version:** 1.2.0
-**Architecture Version:** 1.3.2
+**Architecture Version:** 1.4.0
 **Last Updated:** 2026-10-19
 **Technical Debt:** [TDR-001](../../../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md)
 
