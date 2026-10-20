@@ -10,7 +10,7 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.6.0 |
+| Versión de la arquitectura | 1.7.0 |
 | Versión del componente | 1.3.0 |
 | Generado | 2026-10-20 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
@@ -126,6 +126,7 @@ Condiciones que se cumplen en todo momento, sin importar la implementación. Cad
 - **INV-11** Todo error usa RFC 9457 (`application/problem+json`) con un campo `code` estable, per [ADR-001](../../adr/ADR-001-rest-openapi-apis.md).
 - **INV-12** Ningún otro servicio lee ni escribe las tablas del servicio, per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md).
 - **INV-13** Los logs no incluyen tokens ni datos personales completos, per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
+- **INV-14** Las franjas `start`, `end` y `suggestedSlots` se expresan en hora local de la sede, sin desfase, y "ahora" se calcula en la zona `America/Bogota`, común a las 3 sedes; esa hora decide la franja en el pasado, las reservas futuras del día y la reserva ya iniciada, per [ADR-110](../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md).
 
 ---
 
@@ -177,6 +178,7 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 
 - Java 21, Spring Boot 3.3 y Caffeine 3.2 — per [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md)
 - Caché de disponibilidad por sede y fecha en Caffeine dentro de cada réplica, con expiración de 5 minutos e invalidación en todas las réplicas con `LISTEN`/`NOTIFY` de PostgreSQL al crear o cancelar una reserva — per [ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)
+- Franjas en hora local de la sede, sin desfase; reloj de negocio en la zona `America/Bogota` para las 3 sedes — per [ADR-110](../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md)
 - API REST sobre HTTPS con cuerpos JSON y contrato OpenAPI 3.1 escrito antes que el código; versión mayor en la ruta (`/v1`) — per [ADR-001](../../adr/ADR-001-rest-openapi-apis.md)
 - Autenticación con JWT del Proveedor de Identidad Northwind, validado en cada solicitud con JWKS — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)
 - PostgreSQL 16 vía JDBC con TLS; esquema versionado con migraciones Flyway; integridad (no superposición) declarada en la base — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md) y [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)
@@ -187,6 +189,14 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 
 - Acceso de otro servicio a las tablas del servicio — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
 - Tokens o datos personales completos en los logs — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md)
+
+### Deuda técnica <!-- LABEL: Technical Debt -->
+
+Registrada en este componente. El código mantiene cada atajo hasta que su registro pase a `Resolved`.
+
+| TDR | Title | Status |
+|---|---|---|
+| [TDR-004](../../tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md) | Zona horaria de las sedes leída de una variable de despliegue | In Progress |
 
 ---
 
