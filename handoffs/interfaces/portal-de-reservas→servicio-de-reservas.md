@@ -162,6 +162,7 @@ Los cambios de interfaz requieren un nuevo ADR — ver [Return Path](../SYSTEM_R
 |------|--------|----:|
 | 2026-10-19 | Contrato de interfaz inicial | [ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md) |
 | 2026-10-20 | ADR-103, ADR-102, ADR-104, ADR-105 y ADR-106 pasan a Accepted; se añade ADR-108 (caché Caffeine interna del Servicio de Reservas), sin cambio en el contrato de la interfaz | [ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md) |
+| 2026-10-20 | ADR-109 reemplaza a ADR-108: el Servicio de Reservas invalida la caché Caffeine en todas las réplicas con LISTEN/NOTIFY de PostgreSQL, sin cambio en el contrato de la interfaz | [ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md) |
 
 ---
 

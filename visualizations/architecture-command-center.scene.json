@@ -1,6 +1,6 @@
 {
  "project": "Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión",
- "version": "1.4.0",
+ "version": "1.5.0",
  "status": "Released",
  "architectureType": "MICROSERVICES",
  "language": "es",
@@ -73,7 +73,8 @@
     "ADR-103",
     "ADR-105",
     "ADR-106",
-    "ADR-108"
+    "ADR-108",
+    "ADR-109"
    ],
    "note": "Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única puerta a sus datos (ADR-003)."
   },
@@ -627,9 +628,58 @@
      "ADR-005",
      "ADR-102"
     ]
+   },
+   "ADR-109": {
+    "id": "ADR-109",
+    "title": "Invalidación de la caché con LISTEN/NOTIFY",
+    "file": "adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md",
+    "status": "Accepted",
+    "date": "2026-10-20",
+    "scope": "User",
+    "summary": "El Servicio de Reservas mantiene la caché Caffeine de ADR-108. Al crear o cancelar una reserva, avisa a todas las réplicas con NOTIFY de PostgreSQL para que borren su entrada.",
+    "consequences": {
+     "positive": [
+      "TDR-001 se puede cerrar — la ventana de 5 minutos queda solo para avisos perdidos.",
+      "Sin dependencia nueva — el canal vive en la Base de Datos de Reservas."
+     ],
+     "negative": [
+      "Una conexión más por réplica — la conexión LISTEN queda fuera del pool. Severity: Low. Mitigation: Not documented.",
+      "Avisos perdidos al reconectar — PostgreSQL no guarda los avisos. Severity: Low. Mitigation: la expiración de 5 minutos."
+     ]
+    },
+    "related": [
+     "ADR-108",
+     "ADR-003",
+     "ADR-102"
+    ]
    }
   },
   "tdrs": {
+   "TDR-001": {
+    "id": "TDR-001",
+    "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
+    "file": "tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md",
+    "status": "In Progress",
+    "date": "2026-10-19",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-108",
+     "ADR-109"
+    ],
+    "tags": [
+     "disponibilidad",
+     "cache",
+     "CU1"
+    ],
+    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha (ADR-108). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.",
+    "impact": "Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
+    "owner": "---"
+   },
    "TDR-002": {
     "id": "TDR-002",
     "title": "Las claves de idempotencia vencidas nunca se purgan",
@@ -658,31 +708,6 @@
     ],
     "summary": "El Servicio de Reservas guarda cada Idempotency-Key con su respuesta en la tabla clave_idempotencia de la Base de Datos de Reservas (ADR-103), pero ninguna purga elimina las claves de más de 24 horas. La búsqueda las ignora al vencer, así que la idempotencia funciona; las filas se quedan para siempre.",
     "impact": "La tabla crece sin límite, una fila por cada creación de reserva, y con ella el almacenamiento y los respaldos de la Base de Datos de Reservas. Cada fila guarda la respuesta de la creación (el sub del miembro y el asunto de la reserva), que permanece más allá de las 24 horas de ADR-103 y del plazo de 24 meses de ADR-106.",
-    "owner": "---"
-   },
-   "TDR-001": {
-    "id": "TDR-001",
-    "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
-    "file": "tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md",
-    "status": "In Progress",
-    "date": "2026-10-19",
-    "components": [
-     {
-      "slug": "Servicio de Reservas",
-      "node": "servicio-de-reservas"
-     }
-    ],
-    "adrs": [
-     "ADR-108",
-     "ADR-109"
-    ],
-    "tags": [
-     "disponibilidad",
-     "cache",
-     "CU1"
-    ],
-    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha (ADR-108). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.",
-    "impact": "Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
     "owner": "---"
    }
   },

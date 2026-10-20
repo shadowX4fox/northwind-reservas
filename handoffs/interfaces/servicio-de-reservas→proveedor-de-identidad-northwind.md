@@ -152,6 +152,7 @@ Los cambios de interfaz requieren un nuevo ADR — ver [Return Path](../SYSTEM_R
 |------|--------|----:|
 | 2026-10-19 | Contrato de interfaz inicial | [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md) |
 | 2026-10-20 | Sincronización con architecture-v1.4.0: ADR-102, ADR-103, ADR-105 y ADR-106 pasan a Accepted; ADR-108 (caché Caffeine) no altera la interfaz | [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md) |
+| 2026-10-20 | Sincronización con architecture-v1.5.0: ADR-109 (invalidación de la caché con LISTEN/NOTIFY) sustituye a ADR-108; no altera la interfaz | [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md) |
 
 ---
 

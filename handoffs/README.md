@@ -26,8 +26,8 @@ Kit de cuatro partes. Lee los documentos compartidos junto con tu Especificació
 | # | Arista | Contrato de Interfaz | ADR relacionados | Generado |
 |---|---|---|---|---|
 | 1 | Portal de Reservas → Proveedor de Identidad Northwind | [portal-de-reservas→proveedor-de-identidad-northwind.md](interfaces/portal-de-reservas→proveedor-de-identidad-northwind.md) | ADR-002, ADR-004, ADR-104 | 2026-10-20 |
-| 2 | Portal de Reservas → Servicio de Reservas | [portal-de-reservas→servicio-de-reservas.md](interfaces/portal-de-reservas→servicio-de-reservas.md) | ADR-001, ADR-004, ADR-102, ADR-103, ADR-104, ADR-105, ADR-106 | 2026-10-20 |
-| 3 | Servicio de Reservas → Base de Datos de Reservas | [servicio-de-reservas→base-de-datos-de-reservas.md](interfaces/servicio-de-reservas→base-de-datos-de-reservas.md) | ADR-102, ADR-003, ADR-103, ADR-106, ADR-004 | 2026-10-20 |
+| 2 | Portal de Reservas → Servicio de Reservas | [portal-de-reservas→servicio-de-reservas.md](interfaces/portal-de-reservas→servicio-de-reservas.md) | ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR-104, ADR-105, ADR-106, ADR-109 | 2026-10-20 |
+| 3 | Servicio de Reservas → Base de Datos de Reservas | [servicio-de-reservas→base-de-datos-de-reservas.md](interfaces/servicio-de-reservas→base-de-datos-de-reservas.md) | ADR-102, ADR-003, ADR-103, ADR-106, ADR-004, ADR-109 | 2026-10-20 |
 | 4 | Servicio de Reservas → Proveedor de Identidad Northwind | [servicio-de-reservas→proveedor-de-identidad-northwind.md](interfaces/servicio-de-reservas→proveedor-de-identidad-northwind.md) | ADR-002, ADR-003, ADR-004, ADR-103, ADR-105, ADR-106 | 2026-10-20 |
 
 ## Especificaciones de Componente

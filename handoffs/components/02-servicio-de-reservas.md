@@ -10,8 +10,8 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.4.0 |
-| Versión del componente | 1.1.1 |
+| Versión de la arquitectura | 1.5.0 |
+| Versión del componente | 1.3.0 |
 | Generado | 2026-10-20 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
 
@@ -176,7 +176,7 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 **Obligatorio:**
 
 - Java 21, Spring Boot 3.3 y Caffeine 3.2 — per [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md)
-- Caché de disponibilidad por sede y fecha en Caffeine dentro de cada réplica, con expiración de 5 minutos — per [ADR-108](../../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)
+- Caché de disponibilidad por sede y fecha en Caffeine dentro de cada réplica, con expiración de 5 minutos e invalidación en todas las réplicas con `LISTEN`/`NOTIFY` de PostgreSQL al crear o cancelar una reserva — per [ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)
 - API REST sobre HTTPS con cuerpos JSON y contrato OpenAPI 3.1 escrito antes que el código; versión mayor en la ruta (`/v1`) — per [ADR-001](../../adr/ADR-001-rest-openapi-apis.md)
 - Autenticación con JWT del Proveedor de Identidad Northwind, validado en cada solicitud con JWKS — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)
 - PostgreSQL 16 vía JDBC con TLS; esquema versionado con migraciones Flyway; integridad (no superposición) declarada en la base — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md) y [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)
@@ -194,7 +194,7 @@ Registrada en este componente. El código mantiene cada atajo hasta que su regis
 
 | TDR | Title | Status |
 |---|---|---|
-| [TDR-001](../../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md) | La consulta de disponibilidad se sirve de una caché de 5 minutos | Open |
+| [TDR-001](../../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md) | La consulta de disponibilidad se sirve de una caché de 5 minutos | In Progress |
 
 ---
 

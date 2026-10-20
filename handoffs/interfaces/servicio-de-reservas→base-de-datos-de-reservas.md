@@ -80,6 +80,8 @@ Lo que la Base de Datos de Reservas puede asumir como cierto cuando recibe una l
 - El Servicio de Reservas es el único llamador: nadie más lee ni escribe sus tablas (I-04, [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
 - La conexión JDBC usa TLS (I-04).
 - El Servicio de Reservas lee y escribe salas, reservas, auditoría y claves de idempotencia.
+- El Servicio de Reservas emite `NOTIFY` en el canal `disponibilidad` (sede y fecha) al crear o cancelar una reserva ([ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
+- Cada réplica del Servicio de Reservas mantiene una conexión `LISTEN` fuera del pool ([ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 
 ---
 
@@ -91,6 +93,7 @@ Lo que la Base de Datos de Reservas garantiza al responder:
 - Guarda salas, reservas, registro de auditoría de cancelaciones y claves de idempotencia con su respuesta durante 24 horas ([ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)).
 - Conserva las reservas y la auditoría 24 meses; una purga programada las elimina ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)).
 - Persiste la auditoría en la misma transacción de la cancelación ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)).
+- Ofrece el canal `disponibilidad` de `NOTIFY` de PostgreSQL para avisar a todas las réplicas, que borran su entrada de caché ([ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 
 ---
 
@@ -102,12 +105,14 @@ Los supuestos de esta sección son vinculantes. Cambiar uno es un cambio de inte
 
 - La Base de Datos de Reservas garantiza la integridad de no superposición con la restricción de exclusión; el Servicio de Reservas no la coordina ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
 - La Base de Datos de Reservas guarda la clave de idempotencia y su respuesta durante 24 horas ([ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)).
+- La Base de Datos de Reservas entrega cada `NOTIFY` del canal `disponibilidad` a todas las réplicas con `LISTEN`, para que invaliden su caché Caffeine ([ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 
 **Downstream asume:**
 
 - El Servicio de Reservas es el único que lee y escribe sus tablas (I-04).
 - El Servicio de Reservas se conecta por JDBC con TLS (I-04).
 - El Servicio de Reservas escribe la auditoría en la misma transacción de la cancelación ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)).
+- El Servicio de Reservas emite `NOTIFY` en el canal `disponibilidad` al crear o cancelar y mantiene una conexión `LISTEN` por réplica fuera del pool ([ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 
 ---
 
@@ -159,6 +164,7 @@ Los cambios de interfaz requieren un nuevo ADR — ver [Return Path](../SYSTEM_R
 |------|--------|----:|
 | 2026-10-19 | Contrato de interfaz inicial | [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md) |
 | 2026-10-20 | ADR-102, ADR-103, ADR-105 y ADR-106 pasan a Accepted; ADR-108 (caché Caffeine en el Servicio de Reservas) no modifica los supuestos de esta interfaz | [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md) |
+| 2026-10-20 | ADR-109: `NOTIFY`/`LISTEN` en el canal `disponibilidad` para invalidar la caché en todas las réplicas; se agregan al estado de entrada, estado de salida y supuestos mutuos | [ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md) |
 
 ---
 
