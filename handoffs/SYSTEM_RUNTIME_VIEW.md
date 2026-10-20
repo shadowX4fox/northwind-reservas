@@ -7,7 +7,7 @@
 | Versión | 4.3.1 |
 | Responsable | Equipo de Arquitectura Northwind |
 | Estado | draft |
-| Versión de la arquitectura | 1.4.0 |
+| Versión de la arquitectura | 1.5.0 |
 | Generado | 2026-10-20 |
 | Proyecto | Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión |
 
@@ -46,7 +46,7 @@ Cada flujo extremo a extremo significativo: disparador, ruta, enlace al diagrama
 ### F-01 — Consultar disponibilidad
 
 - **Disparador:** El miembro abre "Salas" o cambia sede, fecha o franja
-- **Ruta:** Portal de Reservas → Proveedor de Identidad Northwind → Portal de Reservas → Servicio de Reservas → Proveedor de Identidad Northwind → Servicio de Reservas → caché Caffeine del Servicio de Reservas → Base de Datos de Reservas, sin entrada vigente (ADR-108)
+- **Ruta:** Portal de Reservas → Proveedor de Identidad Northwind → Portal de Reservas → Servicio de Reservas → Proveedor de Identidad Northwind → Servicio de Reservas → caché Caffeine del Servicio de Reservas → Base de Datos de Reservas, sin entrada vigente (ADR-109)
 - **Fases:** 1 (Inicio de sesión) → 2 (Validación del token) → 3 (Consulta de disponibilidad)
 - **Secuencia:** [docs/04-data-flow-patterns.md#flujo-1--consultar-disponibilidad](../docs/04-data-flow-patterns.md#flujo-1--consultar-disponibilidad)
 - **Presupuesto global:** ≤ 1 s p95
@@ -295,7 +295,7 @@ Cada conexión del diagrama lleva una línea y un enlace a su ADR. Sin conexione
 | Portal de Reservas → Proveedor de Identidad Northwind | sync | Autenticación del usuario (I-01) | [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md) |
 | Portal de Reservas → Servicio de Reservas | sync | Consulta, reserva y cancelación (I-02) | ADR-103, [ADR-001](../adr/ADR-001-rest-openapi-apis.md) |
 | Servicio de Reservas → Proveedor de Identidad Northwind | sync | Validación de tokens (I-03) | [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md) |
-| Servicio de Reservas → Base de Datos de Reservas | sync | Persistencia de reservas (I-04) | ADR-102, [ADR-003](../adr/ADR-003-postgresql-relational-store.md) |
+| Servicio de Reservas → Base de Datos de Reservas | sync | Persistencia de reservas (I-04) | ADR-102, [ADR-003](../adr/ADR-003-postgresql-relational-store.md), ADR-109 |
 
 ---
 
