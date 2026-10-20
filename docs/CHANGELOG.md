@@ -6,6 +6,23 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-20
+
+### Added
+- ADR: ADR-109 — Invalidación de la caché con LISTEN/NOTIFY (Accepted)
+
+### Changed
+- Contenedor: Servicio de Reservas — la caché se invalida en todas las réplicas con LISTEN/NOTIFY (ADR-109)
+- Contenedor: Base de Datos de Reservas — I-04 incluye el canal `disponibilidad`
+- ADR: ADR-108 — estado: Accepted → Superseded by ADR-109
+- TDR: TDR-001 — estado: Open → In Progress
+- Sección: Patrones de Flujo de Datos (`docs/04-data-flow-patterns.md`) — crear y cancelar emiten NOTIFY en el canal `disponibilidad`
+- Sección: Puntos de Integración (`docs/05-integration-points.md`) — I-04 añade NOTIFY y una conexión LISTEN por réplica
+- Sección: Stack Tecnológico (`docs/06-technology-stack.md`) — la fila de Caffeine cita ADR-109
+- Sección: Escalabilidad y Rendimiento (`docs/08-scalability-and-performance.md`) — invalidación en todas las réplicas; 5 minutos como red de seguridad
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-001 en In Progress
+- ESC-003 resolved by this release: TDR-001: invalidar la caché de disponibilidad en todas las réplicas con LISTEN/NOTIFY de PostgreSQL
+
 ## [1.4.0] - 2026-10-20
 
 ### Added
@@ -51,14 +68,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 - ADR: ADR-103 — enlaza la deuda técnica TDR-002
 - ADR: ADR-106 — enlaza la deuda técnica TDR-002
 - Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — fila de TDR-002 en 13.2 Deuda Técnica
-
-## [1.2.0] - 2026-10-19
-
-### Added
-- TDR: TDR-001 — La consulta de disponibilidad se sirve de una caché de 5 minutos (Open)
-
-### Changed
-- Contenedor: Servicio de Reservas — nombra su deuda técnica (TDR-001)
-- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — fila de TDR-001 en 13.2 Deuda Técnica
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).

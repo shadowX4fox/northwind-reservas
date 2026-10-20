@@ -1,6 +1,6 @@
 ---
 id: ESC-003
-status: Open
+status: Resolved
 date: 2026-10-20
 architecture: architecture-v1.4.0
 route: tier-2
@@ -11,8 +11,8 @@ adrs: [ADR-108]
 tdrs: [TDR-001]
 requested_by: Equipo del Servicio de Reservas
 issue: https://github.com/shadowX4fox/northwind-reservas/issues/42
-resolution:
-closed:
+resolution: architecture-v1.5.0
+closed: 2026-10-20
 ---
 # ESC-003 — TDR-001: invalidar la caché de disponibilidad en todas las réplicas con LISTEN/NOTIFY de PostgreSQL
 
@@ -48,4 +48,4 @@ Cerremos el TDR-001
 
 ## Resolution
 
-- Pending.
+- Resolved 2026-10-20 by architecture-v1.5.0.
