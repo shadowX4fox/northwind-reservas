@@ -1,5 +1,5 @@
 ---
-status: In Progress
+status: Resolved
 date: 2026-10-20
 related-adrs: [ADR-105]
 affected-components: ["Servicio de Reservas"]
@@ -11,7 +11,7 @@ driver: Architecture
 
 ## Status
 
-`In Progress`
+`Resolved`
 
 **Initiative**: Reservas de Salas Northwind (architecture v1.6.0)
 **Driver**: Architecture — la zona horaria de las sedes no está documentada en la arquitectura
@@ -41,3 +41,4 @@ Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan m
 - 2026-10-20: Creado. Status: `Open`. Evidencia: PropiedadesReservas.java:36, application.yaml:47 y ConfiguracionReloj.java:13 en northwind-servicio-reservas@1cbd29c; solicitud https://github.com/shadowX4fox/northwind-reservas/issues/65.
 - 2026-10-20: Open → In Progress; opción A: [ADR-110](../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md) fija America/Bogota para las 3 sedes (ESC-004, #62). Resolved cuando el servicio retire `RESERVAS_ZONA_HORARIA`.
 - 2026-10-20: Owner técnico: Equipo del Servicio de Reservas, como en TDR-003.
+- 2026-10-20: Status: `Resolved`. [ADR-110](../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md); retiran RESERVAS_ZONA_HORARIA, northwind-servicio-reservas@db8498c (PR #2); https://github.com/shadowX4fox/northwind-reservas/issues/74.
