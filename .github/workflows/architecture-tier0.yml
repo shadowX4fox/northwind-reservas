@@ -15,7 +15,9 @@
 #                 ledger moves in the record's own part only — and the release gates (lifecycle.js check)
 #   5. PR         tier0/issue-<n> with `Closes #<n>`, the issue retitled to the record's id; merged at once when
 #                 SA_TIER0_AUTOMERGE is true and the gates pass — Tier 0 needs no architect's approval. Left open otherwise.
-# The record reaches the MCP server with the next release. Requests run one at a time, so two never take the same number.
+#   6. index      after a merge, architecture-index.yml is dispatched as a draft (10.10.11): the IDE reads the record — and
+#                 previews the next move on it — before the next release, which publishes it as released
+# Requests run one at a time, so two never take the same number.
 #
 # Repository settings: secret CLAUDE_CODE_OAUTH_TOKEN; variable SA_TIER0_AUTOMERGE (`true` merges without a reviewer);
 # variable SA_TIER0_AGENTS — the automation accounts (unattended build agents, machine users), comma- or space-separated,
@@ -38,7 +40,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.10.10
+  SA_PLUGIN_REF: v10.10.11
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -50,7 +52,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
-      actions: write               # deletes the gates run GitHub held for the merged pull request
+      actions: write               # deletes the gates run GitHub held for the merged pull request; dispatches the draft index
       id-token: write
     env:
       GH_TOKEN: ${{ github.token }}
@@ -184,7 +186,12 @@ jobs:
             done
             # a merge by GITHUB_TOKEN does not run the PR's closing keywords: the issue is closed here
             gh issue close "$N" --reason completed --comment "Written as ${ID:-a $KIND} in $url."
+            # a merge by GITHUB_TOKEN starts no push workflow: the draft index is dispatched, so the IDE sees the write now
+            if [ -f .github/workflows/architecture-index.yml ]; then
+              gh workflow run architecture-index.yml -R "$GITHUB_REPOSITORY" --ref "${{ github.event.repository.default_branch }}" -f draft=true \
+                || echo "::warning::the draft index was not dispatched — run Architecture index with draft=true"
+            fi
           else
             why=$([ "$gates" -ne 0 ] && echo 'a release gate blocks' || echo 'SA_TIER0_AUTOMERGE is not true')
-            gh pr comment "$url" --body "Not merged automatically: $why. A member of the team merges it."
+            gh pr comment "$url" --body "Not merged automatically: $why. A member of the team merges it, then runs *Architecture index* with draft=true so the IDE sees it before the next release."
           fi
