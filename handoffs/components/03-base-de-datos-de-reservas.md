@@ -10,7 +10,7 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.6.0 |
+| Versión de la arquitectura | 1.7.0 |
 | Versión del componente | 1.0.1 |
 | Generado | 2026-10-20 |
 | Documento fuente del componente | [../docs/components/03-base-de-datos-de-reservas.md](../docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md) |
@@ -114,6 +114,7 @@ Condiciones que se cumplen siempre, sea cual sea la implementación. Cada invari
 - **INV-05** El esquema se versiona con migraciones ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
 - **INV-06** Las restricciones de integridad que el negocio exige (unicidad, no superposición) se declaran en la base, no solo en el código ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
 - **INV-07** La consistencia es fuerte: la integridad ante superposición la garantiza el motor, no la aplicación.
+- **INV-08** La fecha y las horas de cada reserva se guardan en hora local de la sede, sin desfase; las 3 sedes comparten la zona `America/Bogota` ([ADR-110](../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md)).
 
 ---
 
@@ -165,6 +166,7 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 - PostgreSQL 16 gestionado por Plataforma Northwind como motor relacional — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
 - Esquema versionado con migraciones en el repositorio del servicio (Flyway en Java) — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
 - Restricción de exclusión de PostgreSQL contra reservas confirmadas superpuestas de la misma sala — per [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md) (estado Accepted)
+- Fecha y horas de cada reserva en hora local de la sede, sin desfase, con la zona única `America/Bogota` — per [ADR-110](../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md)
 
 **Prohibidas:**
 

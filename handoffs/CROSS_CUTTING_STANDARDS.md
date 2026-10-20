@@ -6,7 +6,7 @@
 |-------|-------|
 | Versión | 4.3.1 |
 | Aplica a | Todos los servicios dentro del alcance de Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión |
-| Versión de la arquitectura | 1.6.0 |
+| Versión de la arquitectura | 1.7.0 |
 | Generado | 2026-10-20 |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->

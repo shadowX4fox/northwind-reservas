@@ -10,7 +10,7 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.6.0 |
+| Versión de la arquitectura | 1.7.0 |
 | Versión del componente | 1.0.1 |
 | Generado | 2026-10-20 |
 | Documento fuente del componente | [../../docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md](../../docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md) |
@@ -131,6 +131,7 @@ Condiciones que se cumplen siempre, sin importar la implementación. Cada invari
 - **INV-07** Cada llamada al Servicio de Reservas propaga W3C Trace Context (`traceparent`) — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
 - **INV-08** El portal emite trazas, métricas y logs con OpenTelemetry hacia el colector de Plataforma Northwind; los logs nunca incluyen tokens — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
 - **INV-09** El portal no persiste ningún dato de negocio; solo lee disponibilidad y reservas del Servicio de Reservas (I-02).
+- **INV-10** El portal no permite elegir una franja anterior a la hora actual de la sede, calculada en `America/Bogota` y no con la zona del navegador — per [ADR-110](../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md).
 
 ---
 
@@ -179,6 +180,7 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 - Autenticación OIDC con código de autorización y PKCE contra el Proveedor de Identidad Northwind — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)
 - Observabilidad con OpenTelemetry y propagación `traceparent` — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md)
 - Tokens solo en memoria; el token de acceso dura 5 minutos y se renueva en silencio — per [ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md) (estado: Accepted)
+- Franjas de reserva en hora local de la sede, con la zona única `America/Bogota` para las sedes Centro, Norte y Puerto; "ahora" se calcula en esa zona — per [ADR-110](../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md) (estado: Accepted)
 
 **Prohibido:**
 
