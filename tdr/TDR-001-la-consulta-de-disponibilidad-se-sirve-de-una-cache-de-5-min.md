@@ -1,7 +1,7 @@
 ---
 status: Open
 date: 2026-10-19
-related-adrs: []
+related-adrs: [ADR-108]
 affected-components: ["Servicio de Reservas"]
 tags: [disponibilidad, cache, CU1]
 driver: Architecture
@@ -18,16 +18,16 @@ driver: Architecture
 
 ## Description
 
-El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en memoria de 5 minutos por sede y fecha, para cumplir el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas.
+El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha ([ADR-108](../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.
 
 ## Impact
 
-Una sala recién reservada puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.
+Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.
 
 ## Possible Solutions
 
 - Opción A: índice por sala y franja en la Base de Datos de Reservas y retirar la caché.
-- Opción B: invalidar la caché de la sede y fecha al crear o cancelar una reserva.
+- Opción B: invalidar la entrada de la sede y fecha en todas las réplicas al crear o cancelar una reserva.
 
 ## Owner
 
@@ -39,3 +39,4 @@ Una sala recién reservada puede verse libre hasta 5 minutos. La reserva doble l
 ## History
 
 - 2026-10-19: Creado. Status: `Open`. Evidencia: caché de 5 minutos en northwind-servicio-reservas (prueba de CI de la etapa 9); solicitud https://github.com/shadowX4fox/northwind-reservas/issues/19.
+- 2026-10-20: La caché no existía en el código (ESC-002, https://github.com/shadowX4fox/northwind-reservas/issues/38); el arquitecto decide implementarla con Caffeine (ADR-108). Status: `Open`.

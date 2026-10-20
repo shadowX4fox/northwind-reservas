@@ -2,7 +2,7 @@
 
 <!-- EXPLORER_HEADER
 key_concepts: stack tecnológico, SPA, microservicio, migraciones de esquema, contrato OpenAPI, OIDC PKCE, validación JWT, observabilidad, despliegue en contenedores, CDN de archivos estáticos
-technologies: React 18, TypeScript, Java 21, Spring Boot 3.3, Flyway, OpenAPI 3.1, PostgreSQL 16, Keycloak 25, OpenTelemetry, Kubernetes, Helm
+technologies: React 18, TypeScript, Java 21, Spring Boot 3.3, Caffeine 3.2, Flyway, OpenAPI 3.1, PostgreSQL 16, Keycloak 25, OpenTelemetry, Kubernetes, Helm
 components: portal-de-reservas, servicio-de-reservas, base-de-datos-de-reservas, proveedor-de-identidad-northwind
 scope: Tecnologías por capa con el ADR que las exige; no cubre la configuración ni el dimensionamiento
 related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-107
@@ -28,6 +28,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-107
 |---|---|---|---|
 | React | 18 | Portal de Reservas | SPA de consulta, reserva y cancelación (PO Spec §7) |
 | Spring Boot | 3.3 | Servicio de Reservas | API REST de disponibilidad, reserva y cancelación (PO Spec §7) |
+| Caffeine | 3.2 | Servicio de Reservas | Caché en proceso de la disponibilidad por sede y fecha ([ADR-108](../adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md)) |
 | Flyway | Not documented <!-- TODO: Add source reference --> | Servicio de Reservas | Migraciones de esquema versionadas en el repositorio del servicio (ADR-003) |
 | JDBC | — | Servicio de Reservas | Acceso a la Base de Datos de Reservas (descriptor del Servicio de Reservas; ADR-003) |
 | OpenAPI | 3.1 | Servicio de Reservas | Contrato de la API, escrito antes que el código (ADR-001) |

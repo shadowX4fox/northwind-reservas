@@ -1,6 +1,6 @@
 # ADR-106: Retención de 24 meses, purga y auditoría
 
-**Status**: Proposed
+**Status**: Accepted
 **Scope**: User
 **Date**: 2026-10-18
 **Authors**: Architecture Team
@@ -135,6 +135,7 @@ Not documented.
 | Date | Reviewer | Action | Notes |
 |------|----------|--------|-------|
 | 2026-10-18 | Architecture Team | Created | Initial draft |
+| 2026-10-20 | Architecture Team | Accepted | Aceptado por el arquitecto |
 
 ---
 
