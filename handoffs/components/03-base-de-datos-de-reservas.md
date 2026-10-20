@@ -10,7 +10,7 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.3.0 |
+| Versión de la arquitectura | 1.3.1 |
 | Versión del componente | 1.0.1 |
 | Generado | 2026-10-19 |
 | Documento fuente del componente | [../docs/components/03-base-de-datos-de-reservas.md](../docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md) |
@@ -176,7 +176,7 @@ Registrada en este componente. El código mantiene cada atajo hasta que su regis
 
 | TDR | Title | Status |
 |---|---|---|
-| [TDR-002](../../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md) | Las claves de idempotencia vencidas nunca se purgan | Open |
+| [TDR-002](../../tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md) | Las claves de idempotencia vencidas nunca se purgan | In Progress |
 
 ---
 
