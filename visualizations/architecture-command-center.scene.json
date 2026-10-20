@@ -608,7 +608,7 @@
     "id": "ADR-108",
     "title": "Caché en proceso con Caffeine para disponibilidad",
     "file": "adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md",
-    "status": "Accepted",
+    "status": "Superseded by ADR-109",
     "date": "2026-10-20",
     "scope": "User",
     "summary": "El Servicio de Reservas guarda la disponibilidad por sede y fecha en una caché Caffeine 3.2 dentro de cada réplica. Cada entrada expira a los 5 minutos.",
@@ -664,7 +664,7 @@
     "id": "TDR-001",
     "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
     "file": "tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md",
-    "status": "Open",
+    "status": "In Progress",
     "date": "2026-10-19",
     "components": [
      {
@@ -673,7 +673,8 @@
      }
     ],
     "adrs": [
-     "ADR-108"
+     "ADR-108",
+     "ADR-109"
     ],
     "tags": [
      "disponibilidad",
@@ -982,7 +983,7 @@
       "bullets": [
        "Almacén: Base de Datos de Reservas, de su propiedad exclusiva (ADR-003).",
        "Acceso: JDBC; ningún otro servicio lee ni escribe sus tablas (ADR-003).",
-       "Caché: disponibilidad por sede y fecha en Caffeine dentro de cada réplica, 5 minutos, invalidada localmente al crear o cancelar (ADR-108); deuda en TDR-001.",
+       "Caché: disponibilidad por sede y fecha en Caffeine dentro de cada réplica, 5 minutos, invalidada en todas las réplicas con LISTEN/NOTIFY y, como red de seguridad, a los 5 minutos (ADR-109); deuda en TDR-001.",
        "Consistencia: fuerte; la superposición la rechaza la base de datos (ADR-102)."
       ]
      },
@@ -1026,7 +1027,7 @@
           "I-04",
           "Base de Datos de Reservas",
           "JDBC con TLS",
-          "Lee y escribe salas, reservas, auditoría y claves de idempotencia"
+          "Lee y escribe salas, reservas, auditoría y claves de idempotencia; LISTEN/NOTIFY de invalidación de caché"
          ]
         ]
        }
@@ -1110,8 +1111,8 @@
     "deploysAs": "Docker container",
     "communicatesVia": "HTTPS",
     "description": "Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.",
-    "componentVersion": "1.2.0",
-    "lastUpdated": "2026-10-19"
+    "componentVersion": "1.3.0",
+    "lastUpdated": "2026-10-20"
    },
    "base-de-datos-de-reservas": {
     "name": "Base de Datos de Reservas",
@@ -1163,7 +1164,7 @@
           "I-04",
           "Servicio de Reservas",
           "JDBC con TLS",
-          "Única lectura y escritura de sus tablas"
+          "Única lectura y escritura de sus tablas; canal disponibilidad"
          ]
         ]
        }
@@ -1231,7 +1232,7 @@
     "communicatesVia": "TCP",
     "description": "Base de Datos de Reservas guarda salas y reservas e impide dos reservas confirmadas superpuestas de una sala.",
     "componentVersion": "1.0.1",
-    "lastUpdated": "2026-10-18"
+    "lastUpdated": "2026-10-20"
    },
    "proveedor-de-identidad-northwind": {
     "name": "Proveedor de Identidad Northwind",
@@ -2254,7 +2255,7 @@
       "title": "Secuencias Extremo a Extremo"
      }
     ],
-    "bytes": 16612
+    "bytes": 16696
    },
    {
     "id": "05-integration-points",
@@ -2304,7 +2305,7 @@
       "summary": "Actores: las aristas \"Usa\" del HLD (Miembro del cowork y Recepcionista de sede hacia el Portal de Reservas) son uso por personas desde el navegador, no integraciones entre sistemas; no llevan fila I-nn."
      }
     ],
-    "bytes": 3204
+    "bytes": 3479
    },
    {
     "id": "06-technology-stack",
@@ -2396,7 +2397,7 @@
       "anchor": "CI/CD"
      }
     ],
-    "bytes": 5860
+    "bytes": 5853
    },
    {
     "id": "07-security-architecture",
@@ -2542,7 +2543,7 @@
       "anchor": "Performance Optimization"
      }
     ],
-    "bytes": 4652
+    "bytes": 4815
    },
    {
     "id": "09-operational-considerations",
@@ -2659,7 +2660,7 @@
       "anchor": "Conventions"
      }
     ],
-    "bytes": 2553
+    "bytes": 2560
    },
    {
     "id": "11-references",
