@@ -23,7 +23,6 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR
 **Component Version:** 1.3.0
 **Architecture Version:** 1.5.0
 **Last Updated:** 2026-10-20
-**Technical Debt:** [TDR-001](../../../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md)
 
 **Bounded Context**: Reservas de salas — disponibilidad, creación y cancelación.
 **Team Owner**: Not documented <!-- TODO: Add source reference -->
