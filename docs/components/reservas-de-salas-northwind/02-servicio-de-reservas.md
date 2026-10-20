@@ -23,6 +23,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR
 **Component Version:** 1.3.0
 **Architecture Version:** 1.6.0
 **Last Updated:** 2026-10-20
+**Technical Debt:** [TDR-004](../../../tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md)
 
 **Bounded Context**: Reservas de salas — disponibilidad, creación y cancelación.
 **Team Owner**: Not documented <!-- TODO: Add source reference -->

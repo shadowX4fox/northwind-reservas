@@ -29,6 +29,7 @@ Los registros de deuda técnica (TDR) completos están en [`/tdr/`](../tdr/); es
 
 | ID | Title | Status | Owner |
 |----|-------|--------|-------|
+| [TDR-004](../tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md) | Zona horaria de las sedes leída de una variable de despliegue | Open | Servicio de Reservas |
 
 ### Convenciones <!-- LABEL: Conventions -->
 
