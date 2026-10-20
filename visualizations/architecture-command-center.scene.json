@@ -614,7 +614,7 @@
     "id": "TDR-002",
     "title": "Las claves de idempotencia vencidas nunca se purgan",
     "file": "tdr/TDR-002-las-claves-de-idempotencia-vencidas-nunca-se-purgan.md",
-    "status": "In Progress",
+    "status": "Resolved",
     "date": "2026-10-19",
     "components": [
      {
@@ -2634,7 +2634,7 @@
       "anchor": "Conventions"
      }
     ],
-    "bytes": 2740
+    "bytes": 2553
    },
    {
     "id": "11-references",

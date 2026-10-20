@@ -6,6 +6,14 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-10-19
+
+### Changed
+- Contenedor: Servicio de Reservas — deja de nombrar TDR-002, resuelta
+- Contenedor: Base de Datos de Reservas — deja de nombrar TDR-002, resuelta
+- TDR: TDR-002 — estado: In Progress → Resolved (la purga de claves de idempotencia vencidas está en main del Servicio de Reservas)
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-002 sale de 13.2 Deuda Técnica
+
 ## [1.3.1] - 2026-10-19
 
 ### Changed
@@ -40,13 +48,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 - Sección: Patrones de Flujo de Datos (`docs/04-data-flow-patterns.md`) — motivo de 10 a 120 caracteres en la Fase 5; regla de las franjas sugeridas en el Flujo 1
 - Sección: Arquitectura de Seguridad (`docs/07-security-architecture.md`) — auditoría con motivo solo en cancelaciones de recepción; membresía vigente definida por la cuenta en el Proveedor de Identidad Northwind
 - ESC-001 resolved by architecture-v1.1.0: Servicio de Reservas: contrato de API vacío y autenticación de I-02/I-03/I-04 sin documentar bloquean la construcción
-
-## [1.1.0] - 2026-10-18
-
-### Changed
-- Contenedor: Portal de Reservas — sección de propiedad de datos (ADR-104)
-- Contenedor: Servicio de Reservas — contrato de API v1 (consulta, reserva, listado y cancelación), esquemas, tipos, errores RFC 9457, patrones de comunicación y propiedad de datos (ESC-001)
-- Contenedor: Base de Datos de Reservas — patrones de comunicación y propiedad de datos
-- Sección: Arquitectura de Seguridad (`docs/07-security-architecture.md`) — autenticación por integración (I-01 a I-04), TLS en I-04 y gestión de secretos (ADR-005)
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).
