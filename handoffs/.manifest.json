@@ -8,7 +8,7 @@
     "settei_hash": "sha256:f7d984099f81fb106b0c71b85ff6de558ecf073e33526727e8f4b86f851b5e05",
     "settei_template_version": "4.3.1",
     "schema_version": "4",
-    "architecture_version": "1.5.0",
+    "architecture_version": "1.5.1",
     "generated": "2026-10-20T06:28:35.943Z"
   },
   "seams": {
@@ -80,7 +80,7 @@
       "payload_hash": "sha256:02e515c156e4fc0b9aa777b70cc15bb2db8b58047d28945c5754636bc08ccfc1",
       "template_version": "4.3.1",
       "schema_version": "4",
-      "architecture_version": "1.5.0",
+      "architecture_version": "1.5.1",
       "cut_sheet_file": "components/01-portal-de-reservas.md",
       "assets": [
         "c4-descriptor.md",
@@ -90,10 +90,10 @@
       "generated": "2026-10-20T06:04:54.618Z"
     },
     "servicio-de-reservas": {
-      "payload_hash": "sha256:383d21d9f3ed38bc2d480798c313b906df965f6fa46f371008a914f17533b0a8",
+      "payload_hash": "sha256:1685cba67e8742ff7910018d6638b8af0556b7a19adde3f5973b53cb7c431570",
       "template_version": "4.3.1",
       "schema_version": "4",
-      "architecture_version": "1.5.0",
+      "architecture_version": "1.5.1",
       "cut_sheet_file": "components/02-servicio-de-reservas.md",
       "assets": [
         "openapi.yaml",
@@ -101,13 +101,13 @@
         "security.md"
       ],
       "doc_language": "es",
-      "generated": "2026-10-20T06:28:36.086Z"
+      "generated": "2026-10-20T06:43:17.524Z"
     },
     "base-de-datos-de-reservas": {
       "payload_hash": "sha256:37aa4c2f9da02f28fa1e3fff231f4259f0b85c91d98c916e45ef2c25c3be0e61",
       "template_version": "4.3.1",
       "schema_version": "4",
-      "architecture_version": "1.5.0",
+      "architecture_version": "1.5.1",
       "cut_sheet_file": "components/03-base-de-datos-de-reservas.md",
       "assets": [
         "ddl.sql",

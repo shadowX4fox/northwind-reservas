@@ -10,7 +10,7 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.5.0 |
+| Versión de la arquitectura | 1.5.1 |
 | Versión del componente | 1.3.0 |
 | Generado | 2026-10-20 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
@@ -187,14 +187,6 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 
 - Acceso de otro servicio a las tablas del servicio — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
 - Tokens o datos personales completos en los logs — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md)
-
-### Deuda técnica <!-- LABEL: Technical Debt -->
-
-Registrada en este componente. El código mantiene cada atajo hasta que su registro pase a `Resolved`.
-
-| TDR | Title | Status |
-|---|---|---|
-| [TDR-001](../../tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md) | La consulta de disponibilidad se sirve de una caché de 5 minutos | In Progress |
 
 ---
 
