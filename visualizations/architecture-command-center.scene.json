@@ -685,6 +685,31 @@
     "impact": "La tabla crece sin límite, una fila por cada creación de reserva, y con ella el almacenamiento y los respaldos de la Base de Datos de Reservas. Cada fila guarda la respuesta de la creación (el sub del miembro y el asunto de la reserva), que permanece más allá de las 24 horas de ADR-103 y del plazo de 24 meses de ADR-106.",
     "owner": "---"
    },
+   "TDR-003": {
+    "id": "TDR-003",
+    "title": "Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos",
+    "file": "tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md",
+    "status": "Resolved",
+    "date": "2026-10-20",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-109",
+     "ADR-102"
+    ],
+    "tags": [
+     "disponibilidad",
+     "cache",
+     "listen-notify"
+    ],
+    "summary": "Cuando se pierde la conexión LISTEN al canal disponibilidad, los avisos de ese intervalo se pierden: PostgreSQL no los guarda. La réplica del Servicio de Reservas registra el aviso, espera y reconecta, pero no vacía la caché; esa réplica sirve disponibilidad desactualizada hasta 5 minutos, la expiración de ADR-109.",
+    "impact": "El Portal de Reservas puede mostrar libre una franja ya reservada. La reserva no se duplica, porque la Base de Datos de Reservas la rechaza (ADR-102), pero el usuario recibe un 409 inesperado (ROOM_OCCUPIED).",
+    "owner": "---"
+   },
    "TDR-001": {
     "id": "TDR-001",
     "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",

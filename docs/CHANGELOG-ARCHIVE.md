@@ -2,6 +2,12 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.3.1] - 2026-10-19
+
+### Changed
+- TDR: TDR-002 — estado: Open → In Progress
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-002 en curso en 13.2 Deuda Técnica
+
 ## [1.3.0] - 2026-10-19
 
 ### Added
