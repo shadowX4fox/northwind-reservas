@@ -35,7 +35,7 @@ Kit de cuatro partes. Lee los documentos compartidos junto con tu Especificació
 | # | Componente | Especificación de Componente | Estado | Assets | Generado |
 |---|---|---|---|---|---|
 | 5.1 | Portal de Reservas | [01-portal-de-reservas.md](components/01-portal-de-reservas.md) | Ready | [c4-descriptor.md](assets/01-portal-de-reservas/c4-descriptor.md), [security.md](assets/01-portal-de-reservas/security.md) | 2026-10-20 |
-| 5.2 | Servicio de Reservas | [02-servicio-de-reservas.md](components/02-servicio-de-reservas.md) | Ready | [openapi.yaml](assets/02-servicio-de-reservas/openapi.yaml), [c4-descriptor.md](assets/02-servicio-de-reservas/c4-descriptor.md), [security.md](assets/02-servicio-de-reservas/security.md) | 2026-10-20 |
+| 5.2 | Servicio de Reservas | [02-servicio-de-reservas.md](components/02-servicio-de-reservas.md) | Ready | [openapi.yaml](assets/02-servicio-de-reservas/openapi.yaml), [c4-descriptor.md](assets/02-servicio-de-reservas/c4-descriptor.md), [security.md](assets/02-servicio-de-reservas/security.md) | 2026-10-21 |
 | 5.3 | Base de Datos de Reservas | [03-base-de-datos-de-reservas.md](components/03-base-de-datos-de-reservas.md) | Ready | [ddl.sql](assets/03-base-de-datos-de-reservas/ddl.sql), [c4-descriptor.md](assets/03-base-de-datos-de-reservas/c4-descriptor.md), [security.md](assets/03-base-de-datos-de-reservas/security.md) | 2026-10-20 |
 
 ## Documentación relacionada
