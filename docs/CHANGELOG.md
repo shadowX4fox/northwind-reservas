@@ -6,6 +6,10 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+
+- Servicio de Reservas: operación `getBooking` (`GET /v1/bookings/{code}`) para el paso 1 de CU3; contrato 1.1.0.
+
 ## [1.7.0] - 2026-10-20
 
 ### Added

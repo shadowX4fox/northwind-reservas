@@ -42,7 +42,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 
 **API Type**: REST sobre HTTPS con cuerpos JSON (ADR-001).
 **Contrato**: OpenAPI 3.1 versionado en el repositorio del servicio, escrito antes que el código (ADR-001).
-**Versión del contrato**: 1.0.0; la versión mayor va en la ruta, `/v1` (ADR-001).
+**Versión del contrato**: 1.1.0; la versión mayor va en la ruta, `/v1` (ADR-001).
 **URL base**: `/v1`, detrás del ingress del clúster de Plataforma Northwind (ADR-005); host: Not documented.
 **Autenticación**: JWT del Proveedor de Identidad Northwind en `Authorization: Bearer` (ADR-002); ver [Sección 9](../../07-security-architecture.md#93-controles-de-seguridad).
 
@@ -51,6 +51,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 | Consultar disponibilidad | CU1 | `GET /v1/availability?site=&date=&start=&end=` | 200 `AvailabilityResponse` |
 | Crear reserva | CU2 | `POST /v1/bookings` con cabecera `Idempotency-Key` ([ADR-103](../../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)) | 201 `Booking`; la misma clave en 24 horas devuelve la respuesta guardada |
 | Listar reservas | CU3 (páginas "Mis reservas" y "Reservas de la sede") | `GET /v1/bookings` · `GET /v1/bookings?scope=site` | 200 lista de `Booking` futuras: las propias, o las de la `sede` del token con rol `recepcion` ([ADR-105](../../../adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md)) |
+| Consultar reserva | CU3 (paso 1: estado vigente antes de pedir la confirmación) | `GET /v1/bookings/{code}` | 200 `Booking`: la propia, o una de la `sede` del token con rol `recepcion` ([ADR-105](../../../adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md)) |
 | Cancelar reserva | CU3 | `POST /v1/bookings/{code}/cancel` | 200 `Booking` con `status: cancelled` |
 
 **Esquemas**
@@ -73,7 +74,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 - `BookingRequest`: obligatorios `roomId`, `date`, `start`, `end` y `subject`.
 - `Booking`: siempre `code`, `roomId`, `site`, `date`, `start`, `end`, `subject`, `memberId` y `status`; `cancelledBy`, `cancelledAt` y `cancellationReason` solo con `status: cancelled`.
 - `CancellationRequest`: cuerpo opcional para el dueño; `reason` obligatorio para el rol `recepcion` (ADR-105).
-- `operationId`: `getAvailability`, `createBooking`, `listBookings`, `cancelBooking`.
+- `operationId`: `getAvailability`, `createBooking`, `listBookings`, `getBooking`, `cancelBooking`.
 
 **Errores**: RFC 9457 (`application/problem+json`) con el campo `code` (ADR-001).
 
