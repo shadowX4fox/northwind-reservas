@@ -52,7 +52,7 @@ on:
 permissions: {}
 
 env:
-  SA_PLUGIN_REF: v10.14.0
+  SA_PLUGIN_REF: v10.17.0
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -88,6 +88,15 @@ jobs:
       auto: ${{ steps.key.outputs.auto }}
       keyed: ${{ steps.key.outputs.keyed }}
     steps:
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: The messages, in the architecture's language
+        run: |
+          git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" "$SA_PLUGIN_REPO" "$RUNNER_TEMP/sa"
+          # no checkout here: DOC_LANGUAGE is read from ARCHITECTURE.md through the API
+          mkdir -p "$RUNNER_TEMP/arch"
+          gh api "repos/$GITHUB_REPOSITORY/contents/ARCHITECTURE.md" --jq .content 2>/dev/null | base64 -d > "$RUNNER_TEMP/arch/ARCHITECTURE.md" || true
       - name: The label is the key
         id: key
         env:
@@ -102,10 +111,10 @@ jobs:
           # write access; an unattended build agent files its request without the label, and a person puts it (10.10.0).
           # A refused key says so on the issue and takes the label off — the request stands, so no tier0-refused (10.11.3);
           # -R, because this job has no checkout and gh finds no repository on disk (10.11.4)
+          t() { bun "$RUNNER_TEMP/sa/scripts/shared/ci-text.js" "$@" --project "$RUNNER_TEMP/arch"; }
           refuse() {
             echo "::error::$1"
-            { echo '### Tier 0 not started'; echo; echo "$1."; echo
-              echo 'Nothing was written and the request stands: a person who can triage or write here, and is not listed in `SA_TIER0_AGENTS`, applies `architecture-tier0`.'; } > "$RUNNER_TEMP/k.md"
+            { echo "### $(t t0_not_started)"; echo; echo "$1."; echo; t t0_not_started_tail; echo; } > "$RUNNER_TEMP/k.md"
             gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/k.md"
             gh issue edit "$N" -R "$GITHUB_REPOSITORY" --remove-label architecture-tier0 2>/dev/null || true
             exit 1
@@ -123,7 +132,7 @@ jobs:
             since=$(date -u -d '-1 day' +%Y-%m-%dT%H:%M:%SZ)
             used=$(gh issue list -R "$GITHUB_REPOSITORY" --author "$AUTHOR" --label tier0-auto --state all --limit 200 --json number,createdAt \
               --jq "[.[] | select(.createdAt >= \"$since\") | select(.number != $N)] | length")
-            [ "$used" -lt "${DAILY:-10}" ] || refuse "\`$AUTHOR\` keyed $used requests in the last 24 hours, the limit (SA_TIER0_AUTO_DAILY) is ${DAILY:-10}"
+            [ "$used" -lt "${DAILY:-10}" ] || refuse "$(t t0_key_daily author="$AUTHOR" used="$used" limit="${DAILY:-10}")"
           }
           marked() { jq -r '.body // ""' "$RUNNER_TEMP/issue.json" | grep -qF '<!-- sa-tier0 -->'; }
           # the request's kind against the architecture's tier0.auto (.sa-skills/project.json); prepare --auto checks it again
@@ -141,7 +150,7 @@ jobs:
             has architecture-tier0 && quiet "#$N was opened with architecture-tier0: its labeled run takes it"
             marked || quiet "#$N carries no sa-tier0 marker"
             if ! inauto; then
-              gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body "Tier 0: \`${kind:-no kind}\` is not in this architecture's \`tier0.auto\` — a person reviews this request and applies \`architecture-tier0\`."
+              gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body "$(t t0_key_not_auto_comment kind="${kind:-$(t no_kind)}")"
               quiet "#$N: ${kind:-no kind} is not in tier0.auto (${auto:-none})"
             fi
             daily
@@ -149,24 +158,24 @@ jobs:
             echo "keyed for the trusted agent $AUTHOR ($used in the last 24 hours)"; go "$AUTHOR" ;;
           workflow_dispatch)
             # a re-check: only a request this workflow keyed for a trusted agent and left waiting for its merge
-            has tier0-auto && has tier0-waiting || refuse "#$N is no request waiting for its merge (tier0-auto and tier0-waiting)"
+            has tier0-auto && has tier0-waiting || refuse "$(t t0_key_not_waiting n="$N")"
             echo "re-check of #$N, keyed for $AUTHOR"; go "$AUTHOR" ;;
           esac
           # labeled: a person's key — or a trusted agent's request filed with the label, as preview_tier0 renders a kind in
           # tier0.auto from Alia 0.5.0 (the opened run leaves it to this one); a kind not listed waits for a person (10.13.1)
           if listed "$TRUSTED" "$SENDER"; then
-            [ "$AUTHOR" = "$SENDER" ] || refuse "\`$SENDER\` is a trusted agent: it keys the requests it filed, and #$N was filed by \`$AUTHOR\`"
-            marked || refuse "#$N is not a Tier 0 request preview_tier0 rendered (no sa-tier0 marker): a trusted agent keys only those"
-            inauto || refuse "\`${kind:-no kind}\` is not in this architecture's \`tier0.auto\` (${auto:-none}): a trusted agent keys only those kinds"
+            [ "$AUTHOR" = "$SENDER" ] || refuse "$(t t0_key_other_author sender="$SENDER" n="$N" author="$AUTHOR")"
+            marked || refuse "$(t t0_key_no_marker n="$N")"
+            inauto || refuse "$(t t0_key_not_auto kind="${kind:-$(t no_kind)}" auto="${auto:-$(t none)}")"
             daily
             gh issue edit "$N" -R "$GITHUB_REPOSITORY" --add-label tier0-auto
             echo "keyed by the trusted agent $SENDER ($used in the last 24 hours)"; go "$SENDER"
           fi
           if [ "$SENDER_TYPE" = "Bot" ] || listed "$AGENTS" "$SENDER"; then
-            refuse "\`$SENDER\` is an automation account (a bot, or listed in \`SA_TIER0_AGENTS\`): a person applies architecture-tier0"; fi
+            refuse "$(t t0_key_automation sender="$SENDER")"; fi
           role=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$SENDER/permission" --jq .role_name 2>/dev/null || echo none)
           case "$role" in admin|maintain|write|triage) echo "labelled by $SENDER ($role)"; go "";;
-            *) refuse "\`$SENDER\` ($role) cannot start a Tier 0 write";; esac
+            *) refuse "$(t t0_key_role sender="$SENDER" role="$role")";; esac
   tier0:
     needs: key
     if: needs.key.outputs.go == 'true'
@@ -198,6 +207,8 @@ jobs:
           echo "SA_SKILLS_DIR=$RUNNER_TEMP/sa" >> "$GITHUB_ENV"
           echo "T0=bun $RUNNER_TEMP/sa/scripts/shared/tier0.js" >> "$GITHUB_ENV"
           echo "P=.cache/sa-skills/tier0/issue-$N.json" >> "$GITHUB_ENV"
+          # what a person reads — comments, the pull request — in the architecture's language (DOC_LANGUAGE)
+          echo "T=bun $RUNNER_TEMP/sa/scripts/shared/ci-text.js --project ." >> "$GITHUB_ENV"
       - name: Prepare — the policy, read here
         id: prepare
         env:
@@ -214,17 +225,16 @@ jobs:
             created=$(gh issue view "$N" --json createdAt --jq .createdAt)
             if [ "$(date -u -d "$created + ${WAIT_DAYS:-7} days" +%s)" -gt "$(date -u +%s)" ]; then
               if ! printf '%s\n' $labels | grep -qxF tier0-waiting; then
-                { echo '### Tier 0 waiting'; echo; sed 1d "$RUNNER_TEMP/prepare.txt"; echo
-                  echo "Nothing is written yet: the request is re-checked every 30 minutes and written once the change is merged, for ${WAIT_DAYS:-7} days."; } > "$RUNNER_TEMP/c.md"
+                { echo "### $($T t0_waiting)"; echo; sed 1d "$RUNNER_TEMP/prepare.txt"; echo
+                  $T t0_waiting_tail days="${WAIT_DAYS:-7}"; echo; } > "$RUNNER_TEMP/c.md"
                 gh issue comment "$N" --body-file "$RUNNER_TEMP/c.md"; gh issue edit "$N" --add-label tier0-waiting
               fi
               echo "refused=true" >> "$GITHUB_OUTPUT"; exit 0
             fi
-            echo "- waited ${WAIT_DAYS:-7} days without the merge" >> "$RUNNER_TEMP/prepare.txt"; code=1
+            { $T t0_waited days="${WAIT_DAYS:-7}"; echo; } >> "$RUNNER_TEMP/prepare.txt"; code=1
           fi
           if [ "$code" -ne 0 ]; then
-            { echo '### Tier 0 refused'; echo; sed 1d "$RUNNER_TEMP/prepare.txt"; echo
-              echo 'Nothing was written. Fix the request and label it again, or — when it is no Tier 0 write — escalate it (`preview_escalation`).'; } > "$RUNNER_TEMP/c.md"
+            { echo "### $($T t0_refused)"; echo; sed 1d "$RUNNER_TEMP/prepare.txt"; echo; $T t0_refused_tail; echo; } > "$RUNNER_TEMP/c.md"
             gh issue comment "$N" --body-file "$RUNNER_TEMP/c.md"
             gh issue edit "$N" --add-label tier0-refused --remove-label architecture-tier0
             printf '%s\n' $labels | grep -qxF tier0-waiting && gh issue edit "$N" --remove-label tier0-waiting
@@ -288,7 +298,7 @@ jobs:
         run: |
           if ! $T0 verify . "$P" > "$RUNNER_TEMP/verify.txt"; then
             cat "$RUNNER_TEMP/verify.txt"
-            { echo '### Tier 0 write refused'; echo; sed 1d "$RUNNER_TEMP/verify.txt"; echo; echo 'Nothing was committed.'; } > "$RUNNER_TEMP/c.md"
+            { echo "### $($T t0_write_refused)"; echo; sed 1d "$RUNNER_TEMP/verify.txt"; echo; $T t0_nothing_committed; echo; } > "$RUNNER_TEMP/c.md"
             gh issue comment "$N" --body-file "$RUNNER_TEMP/c.md"; gh issue edit "$N" --add-label tier0-refused --remove-label architecture-tier0
             exit 1
           fi
@@ -304,12 +314,12 @@ jobs:
           git add -A -- $(for p in tdr adr docs; do [ -e "$p" ] && echo "$p"; done)
           git commit -q -m "tier0: ${ID:-$KIND} — $title (#$N)"
           git push -u origin "$branch"
-          { echo "Tier 0 write \`$KIND\`${ID:+ — **$ID**}, requested in #$N and written by the Architecture Tier 0 workflow. No architect's approval: the policy allows it, and the gates below hold it."
-            [ -n "$KEYED" ] && { echo; echo "Keyed for the trusted agent \`$KEYED\` (\`tier0.auto\`): no person read the request before this write — review it here or in the release."; }
+          { $T t0_pr_intro kind="$KIND" id="${ID:+ — **$ID**}" n="$N"; echo
+            [ -n "$KEYED" ] && { echo; $T t0_pr_keyed agent="$KEYED"; echo; }
             echo; echo "Closes #$N"
             # the mentions of a closed record the write left (tier0.js verify, 10.10.10): whether one still calls it debt is a person's call
-            if [ "$(wc -l < "$RUNNER_TEMP/verify.txt")" -gt 1 ]; then echo; echo '### Mentions to review'; echo; sed 1d "$RUNNER_TEMP/verify.txt"; fi
-            echo; echo '### Gates'; echo; echo '```'; cat "$RUNNER_TEMP/gates.txt"; echo '```'; } > "$RUNNER_TEMP/pr.md"
+            if [ "$(wc -l < "$RUNNER_TEMP/verify.txt")" -gt 1 ]; then echo; echo "### $($T t0_mentions)"; echo; sed 1d "$RUNNER_TEMP/verify.txt"; fi
+            echo; echo "### $($T gates_heading)"; echo; echo '```'; cat "$RUNNER_TEMP/gates.txt"; echo '```'; } > "$RUNNER_TEMP/pr.md"
           url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "Tier 0: ${ID:-$KIND} — $title" --body-file "$RUNNER_TEMP/pr.md")
           [ -n "$ID" ] && gh issue edit "$N" --title "[$ID] $title"
           if [ "$AUTOMERGE" = "true" ] && [ "$gates" -eq 0 ]; then
@@ -322,13 +332,12 @@ jobs:
               sleep 5
             done
             # a merge by GITHUB_TOKEN does not run the PR's closing keywords: the issue is closed here
-            gh issue close "$N" --reason completed --comment "Written as ${ID:-a $KIND} in $url."
+            gh issue close "$N" --reason completed --comment "$($T t0_closed what="${ID:-$($T t0_a_kind kind="$KIND")}" url="$url")"
             # a merge by GITHUB_TOKEN starts no push workflow: the draft index is dispatched, so the IDE sees the write now
             if [ -f .github/workflows/architecture-index.yml ]; then
               gh workflow run architecture-index.yml -R "$GITHUB_REPOSITORY" --ref "${{ github.event.repository.default_branch }}" -f draft=true \
                 || echo "::warning::the draft index was not dispatched — run Architecture index with draft=true"
             fi
           else
-            why=$([ "$gates" -ne 0 ] && echo 'a release gate blocks' || echo 'SA_TIER0_AUTOMERGE is not true')
-            gh pr comment "$url" --body "Not merged automatically: $why. A member of the team merges it, then runs *Architecture index* with draft=true so the IDE sees it before the next release."
+            gh pr comment "$url" --body "$([ "$gates" -ne 0 ] && $T t0_not_merged_gates || $T t0_not_merged_off)"
           fi
