@@ -17,7 +17,7 @@ jobs:
   gates:
     runs-on: ubuntu-latest
     env:
-      SA_PLUGIN_REF: v10.14.0          # the plugin tag the gates are held to — move it on purpose, never track main
+      SA_PLUGIN_REF: v10.17.0          # the plugin tag the gates are held to — move it on purpose, never track main
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,11 +34,14 @@ jobs:
         run: |
           L="$RUNNER_TEMP/sa/skills/architecture-lifecycle/scripts/lifecycle.js"
           set +e
-          bun "$L" check . --undecided warn --no-render > "$RUNNER_TEMP/gates.txt"; echo "code=$?" >> "$GITHUB_OUTPUT"
+          bun "$L" check . --undecided warn --no-render > "$RUNNER_TEMP/gates.txt"; code=$?; echo "code=$code" >> "$GITHUB_OUTPUT"
           bun "$L" status . > "$RUNNER_TEMP/status.txt"
           set -e
-          { echo '### Architecture gates'; echo; echo '```'; cat "$RUNNER_TEMP/gates.txt"; echo '```'; echo
-            echo '### Status'; echo; echo '```'; cat "$RUNNER_TEMP/status.txt"; echo '```'
+          # the comment in the architecture's language (DOC_LANGUAGE); the receipts stay as the tools print them
+          t() { bun "$RUNNER_TEMP/sa/scripts/shared/ci-text.js" "$@" --project .; }
+          { echo "### $(t gates_heading)"; echo; [ "$code" -eq 0 ] && t gates_pass || t gates_fail; echo; echo; t log_note; echo
+            echo; echo '```'; cat "$RUNNER_TEMP/gates.txt"; echo '```'; echo
+            echo "### $(t status_heading)"; echo; echo '```'; cat "$RUNNER_TEMP/status.txt"; echo '```'
             echo; echo "<sub>sa-skills ${SA_PLUGIN_REF} · lifecycle.js check --undecided warn</sub>"; } > "$RUNNER_TEMP/comment.md"
           cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
       - name: Comment on the pull request
