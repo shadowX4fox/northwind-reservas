@@ -8,6 +8,12 @@
 # its photo-mode picture, captioned with the project, the version and the date, embedded in the PR body. Best effort — a
 # failure there warns and the kit's PR opens without it.
 #
+# Merged without a person (10.14.0): variable SA_HANDOFF_AUTOMERGE `true` merges the kit's PR here once the kit gate and the
+# drift gate (kit-drift.js — an operation, an operationId or a contract version the docs still state, dropped or moved)
+# pass, then dispatches architecture-index.yml on the default branch: a merge made with GITHUB_TOKEN starts no push
+# workflow, a workflow_dispatch it sends does. The default branch must accept a merge by GITHUB_TOKEN (no required review).
+# Unset, or a gate blocking, the PR waits for a reviewer, and merging it publishes the build packs.
+#
 # Secret: CLAUDE_CODE_OAUTH_TOKEN (or ANTHROPIC_API_KEY with anthropic_api_key below). Repository setting:
 # Actions → General → "Allow GitHub Actions to create and approve pull requests".
 name: Architecture handoff
@@ -27,7 +33,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.13.0
+  SA_PLUGIN_REF: v10.14.0
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -37,6 +43,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write               # SA_HANDOFF_AUTOMERGE: dispatches architecture-index.yml after the merge
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -96,9 +103,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
+          AUTOMERGE: ${{ vars.SA_HANDOFF_AUTOMERGE }}
         run: |
-          bun "$SA_SKILLS_DIR/plugins/sa-delivery/skills/architecture-dev-handoff/scripts/kit-check.js" handoffs --no-render
+          H="$SA_SKILLS_DIR/plugins/sa-delivery/skills/architecture-dev-handoff/scripts"
+          bun "$H/kit-check.js" handoffs --no-render
           [ -n "$(git status --porcelain -- handoffs)" ] || { echo "the kit did not change"; exit 0; }
+          # the regenerated kit against the committed one, before the commit: a regression blocks the merge, never the PR
+          drift=0; bun "$H/kit-drift.js" . || drift=$?
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           # the action pointed origin at its own token and revoked it when it finished
@@ -121,4 +132,15 @@ jobs:
           if [ -n "$evidence" ]; then
             body="$body"$'\n\n'"![${caption}](https://github.com/${GITHUB_REPOSITORY}/blob/$(git rev-parse HEAD)/${shot}?raw=true)"$'\n\n'"*${caption}* — \`visualizations/architecture-command-center.html\` opens the model."
           fi
-          gh pr create --base main --head "handoff/$TAG" --title "Handoff kit for $TAG" --body "$body"
+          url=$(gh pr create --base main --head "handoff/$TAG" --title "Handoff kit for $TAG" --body "$body")
+          echo "$url"
+          if [ "$AUTOMERGE" = "true" ] && [ "$drift" -eq 0 ]; then
+            gh pr merge "$url" --squash --delete-branch
+            # the merge was GITHUB_TOKEN's, so no push workflow runs: phase 2 of the index is dispatched here
+            if gh workflow run architecture-index.yml -R "$GITHUB_REPOSITORY" --ref main -f draft=false; then echo "merged; architecture-index.yml dispatched"
+            else echo "::warning::merged, but architecture-index.yml could not be dispatched: run it by hand (Actions → Architecture index)"; fi
+          else
+            why=$([ "$drift" -ne 0 ] && echo "the drift gate blocks (kit-drift.js, exit $drift)" || echo 'SA_HANDOFF_AUTOMERGE is not true')
+            echo "left open for a reviewer: $why"
+            [ "$drift" -ne 0 ] && gh pr comment "$url" --body "Not merged automatically: $why. The kit gate passed; see the run's log for the findings." || true
+          fi

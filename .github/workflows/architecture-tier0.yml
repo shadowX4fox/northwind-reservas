@@ -8,7 +8,8 @@
 #                 anyone may open an issue, and its text reaches Claude; a refused key is commented on the issue and the
 #                 label taken off, nothing written. An issue a trusted agent (SA_TIER0_TRUSTED_AGENTS) opens is keyed here,
 #                 on `opened`, when the architecture lists its kind in tier0.auto (support.js --declare-auto): labelled
-#                 tier0-auto, at most SA_TIER0_AUTO_DAILY a day (10.13.0; the agent never applies the label). A move to
+#                 tier0-auto, at most SA_TIER0_AUTO_DAILY a day (10.13.0; the agent never adds the label — an issue
+#                 preview_tier0 files with it, Alia 0.5.0, is keyed on its labeled run, its kind held to tier0.auto too). A move to
 #                 Resolved it keys waits for the service pull request it cites (tier0-waiting, the 30-minute schedule)
 #   2. prepare    tier0.js prepare re-reads the policy here (Tier 0 active, one of the four kinds, every component name
 #                 canonical, a TDR move along an arrow, a doc fix whose text is where it says); a refusal is commented on
@@ -51,7 +52,7 @@ on:
 permissions: {}
 
 env:
-  SA_PLUGIN_REF: v10.13.0
+  SA_PLUGIN_REF: v10.14.0
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -125,6 +126,13 @@ jobs:
             [ "$used" -lt "${DAILY:-10}" ] || refuse "\`$AUTHOR\` keyed $used requests in the last 24 hours, the limit (SA_TIER0_AUTO_DAILY) is ${DAILY:-10}"
           }
           marked() { jq -r '.body // ""' "$RUNNER_TEMP/issue.json" | grep -qF '<!-- sa-tier0 -->'; }
+          # the request's kind against the architecture's tier0.auto (.sa-skills/project.json); prepare --auto checks it again
+          inauto() {
+            kind=$(printf '%s\n' $LABELS | sed -n 's/^tier0:\([a-z-]*\)$/\1/p' | head -1)
+            auto=$(gh api "repos/$GITHUB_REPOSITORY/contents/.sa-skills/project.json" --jq .content 2>/dev/null | base64 -d 2>/dev/null \
+              | jq -r '(.tier0.auto // []) | if . == "all" then "tdr-workaround tdr-status adr-proposed doc-fix" else join(" ") end' 2>/dev/null)
+            printf '%s\n' $auto | grep -qxF -- "$kind"
+          }
           case "$EVENT" in
           opened)
             # the architecture repository keys a trusted agent's request itself (10.13.0) — the agent never applies the
@@ -132,10 +140,7 @@ jobs:
             listed "$TRUSTED" "$AUTHOR" || quiet "#$N was opened by $AUTHOR, not a trusted agent: a person applies architecture-tier0"
             has architecture-tier0 && quiet "#$N was opened with architecture-tier0: its labeled run takes it"
             marked || quiet "#$N carries no sa-tier0 marker"
-            kind=$(printf '%s\n' $LABELS | sed -n 's/^tier0:\([a-z-]*\)$/\1/p' | head -1)
-            auto=$(gh api "repos/$GITHUB_REPOSITORY/contents/.sa-skills/project.json" --jq .content 2>/dev/null | base64 -d 2>/dev/null \
-              | jq -r '(.tier0.auto // []) | if . == "all" then "tdr-workaround tdr-status adr-proposed doc-fix" else join(" ") end' 2>/dev/null)
-            if ! printf '%s\n' $auto | grep -qxF -- "$kind"; then
+            if ! inauto; then
               gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body "Tier 0: \`${kind:-no kind}\` is not in this architecture's \`tier0.auto\` — a person reviews this request and applies \`architecture-tier0\`."
               quiet "#$N: ${kind:-no kind} is not in tier0.auto (${auto:-none})"
             fi
@@ -147,10 +152,12 @@ jobs:
             has tier0-auto && has tier0-waiting || refuse "#$N is no request waiting for its merge (tier0-auto and tier0-waiting)"
             echo "re-check of #$N, keyed for $AUTHOR"; go "$AUTHOR" ;;
           esac
-          # labeled: a person's key — or, as 10.12.0 had it, a trusted agent keying the request it filed
+          # labeled: a person's key — or a trusted agent's request filed with the label, as preview_tier0 renders a kind in
+          # tier0.auto from Alia 0.5.0 (the opened run leaves it to this one); a kind not listed waits for a person (10.13.1)
           if listed "$TRUSTED" "$SENDER"; then
             [ "$AUTHOR" = "$SENDER" ] || refuse "\`$SENDER\` is a trusted agent: it keys the requests it filed, and #$N was filed by \`$AUTHOR\`"
             marked || refuse "#$N is not a Tier 0 request preview_tier0 rendered (no sa-tier0 marker): a trusted agent keys only those"
+            inauto || refuse "\`${kind:-no kind}\` is not in this architecture's \`tier0.auto\` (${auto:-none}): a trusted agent keys only those kinds"
             daily
             gh issue edit "$N" -R "$GITHUB_REPOSITORY" --add-label tier0-auto
             echo "keyed by the trusted agent $SENDER ($used in the last 24 hours)"; go "$SENDER"
