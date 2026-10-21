@@ -10,9 +10,9 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.7.0 |
-| Versión del componente | 1.3.0 |
-| Generado | 2026-10-20 |
+| Versión de la arquitectura | 1.8.0 |
+| Versión del componente | 1.4.0 |
+| Generado | 2026-10-21 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->
@@ -105,7 +105,7 @@ Contratos que este componente publica. Los esquemas viven en los assets enlazado
 
 | Contract | Version | Consumers | Asset |
 |----------|--------:|-----------|-------|
-| API REST de disponibilidad, reserva y cancelación (OpenAPI 3.1, ruta `/v1`) | 1.0.0 | Portal de Reservas | [openapi.yaml](assets/02-servicio-de-reservas/openapi.yaml) |
+| API REST de disponibilidad, reserva y cancelación (OpenAPI 3.1, ruta `/v1`) | 1.1.0 | Portal de Reservas | [openapi.yaml](assets/02-servicio-de-reservas/openapi.yaml) |
 
 ---
 
@@ -190,14 +190,6 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 - Acceso de otro servicio a las tablas del servicio — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md)
 - Tokens o datos personales completos en los logs — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md)
 
-### Deuda técnica <!-- LABEL: Technical Debt -->
-
-Registrada en este componente. El código mantiene cada atajo hasta que su registro pase a `Resolved`.
-
-| TDR | Title | Status |
-|---|---|---|
-| [TDR-004](../../tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md) | Zona horaria de las sedes leída de una variable de despliegue | In Progress |
-
 ---
 
 ## 8. Deliberadamente no especificado <!-- SECTION: Deliberately Unspecified -->
@@ -261,5 +253,5 @@ Vacíos detectados al generar la Especificación de Componente: valores ausentes
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-20*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-21*
 *Fuente: ARCHITECTURE.md*
