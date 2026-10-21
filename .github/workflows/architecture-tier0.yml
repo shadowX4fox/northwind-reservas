@@ -6,9 +6,10 @@
 # the format). Labelling the issue `architecture-tier0` runs this workflow:
 #   1. the key    the run goes on only when the user who put the label can triage or write here: on a public repository
 #                 anyone may open an issue, and its text reaches Claude; a refused key is commented on the issue and the
-#                 label taken off, nothing written. A trusted agent (SA_TIER0_TRUSTED_AGENTS) keys a request it filed itself
-#                 when the architecture lists its kind in tier0.auto (support.js --declare-auto): labelled tier0-auto, at
-#                 most SA_TIER0_AUTO_DAILY a day, a move to Resolved held to a commit merged in the service (10.12.0)
+#                 label taken off, nothing written. An issue a trusted agent (SA_TIER0_TRUSTED_AGENTS) opens is keyed here,
+#                 on `opened`, when the architecture lists its kind in tier0.auto (support.js --declare-auto): labelled
+#                 tier0-auto, at most SA_TIER0_AUTO_DAILY a day (10.13.0; the agent never applies the label). A move to
+#                 Resolved it keys waits for the service pull request it cites (tier0-waiting, the 30-minute schedule)
 #   2. prepare    tier0.js prepare re-reads the policy here (Tier 0 active, one of the four kinds, every component name
 #                 canonical, a TDR move along an arrow, a doc fix whose text is where it says); a refusal is commented on
 #                 the issue with its reasons, labelled tier0-refused, and nothing is written
@@ -25,10 +26,11 @@
 # Repository settings: secret CLAUDE_CODE_OAUTH_TOKEN; variable SA_TIER0_AUTOMERGE (`true` merges without a reviewer);
 # variable SA_TIER0_AGENTS — the automation accounts (unattended build agents, machine users), comma- or space-separated,
 # that may file a request but never put the label (a GitHub App's bot is refused by its type); variable
-# SA_TIER0_TRUSTED_AGENTS — the agents (a machine user's login, or an App's `name[bot]`) that key the requests they file
+# SA_TIER0_TRUSTED_AGENTS — the agents (a machine user's login, or an App's `name[bot]`) whose requests this workflow keys
 # for the kinds .sa-skills/project.json lists in tier0.auto; SA_TIER0_AUTO_DAILY (default 10) per agent per 24 hours;
-# secret SA_TIER0_EVIDENCE_TOKEN, optional — reads a private service repository to check a Resolved move's commit;
-# labels architecture-tier0, tier0-refused, tier0-auto and tier0:tdr-workaround · tier0:tdr-status · tier0:adr-proposed · tier0:doc-fix
+# SA_TIER0_WAIT_DAYS (default 7) a Resolved move waits for its merge; secret SA_TIER0_EVIDENCE_TOKEN, optional — reads a
+# private service repository to check a Resolved move's pull request or commit;
+# labels architecture-tier0, tier0-refused, tier0-auto, tier0-waiting and tier0:tdr-workaround · tier0:tdr-status · tier0:adr-proposed · tier0:doc-fix
 # (`gh issue create --label` fails outright on a label the repository lacks — the IDE's request would not be filed); Actions may create pull requests; the default branch accepts a merge by
 # GITHUB_TOKEN (no required review on it). A pull request opened with GITHUB_TOKEN starts no workflow — GitHub holds its
 # pull_request runs for approval, with no job — so the gates run here, before the merge; a merged one's held runs, which
@@ -37,23 +39,135 @@ name: Architecture Tier 0
 
 on:
   issues:
-    types: [labeled]
+    types: [opened, labeled]       # opened: a trusted agent's request, keyed here (10.13.0); labeled: a person's key
+  schedule:
+    - cron: '*/30 * * * *'         # the requests waiting for their service pull request's merge, re-checked
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: A waiting request to re-check (an issue labelled tier0-waiting and tier0-auto)
+        required: true
 
 permissions: {}
 
-concurrency:
-  group: architecture-tier0
-  cancel-in-progress: false
-
 env:
-  SA_PLUGIN_REF: v10.12.0
+  SA_PLUGIN_REF: v10.13.0
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
+  recheck:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      actions: write               # dispatches this workflow once per waiting request
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Re-check the requests waiting for a merge
+        run: |
+          wf=$(basename "${GITHUB_WORKFLOW_REF%@*}")
+          for n in $(gh issue list -R "$GITHUB_REPOSITORY" --label tier0-waiting --label tier0-auto --state open --limit 100 --json number --jq '.[].number'); do
+            gh workflow run "$wf" -R "$GITHUB_REPOSITORY" -f issue="$n"; echo "re-check #$n"
+          done
+  key:
+    if: >-
+      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'architecture-tier0') ||
+      (github.event_name == 'issues' && github.event.action == 'opened' && contains(github.event.issue.body, '<!-- sa-tier0 -->')) ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      N: ${{ github.event.issue.number || inputs.issue }}
+    outputs:
+      go: ${{ steps.key.outputs.go }}
+      auto: ${{ steps.key.outputs.auto }}
+      keyed: ${{ steps.key.outputs.keyed }}
+    steps:
+      - name: The label is the key
+        id: key
+        env:
+          EVENT: ${{ github.event_name == 'issues' && github.event.action || github.event_name }}
+          SENDER: ${{ github.event.sender.login }}
+          SENDER_TYPE: ${{ github.event.sender.type }}
+          AGENTS: ${{ vars.SA_TIER0_AGENTS }}
+          TRUSTED: ${{ vars.SA_TIER0_TRUSTED_AGENTS }}
+          DAILY: ${{ vars.SA_TIER0_AUTO_DAILY }}
+        run: |
+          # a person's key: never an automation account — a bot, or a machine user listed in SA_TIER0_AGENTS — even with
+          # write access; an unattended build agent files its request without the label, and a person puts it (10.10.0).
+          # A refused key says so on the issue and takes the label off — the request stands, so no tier0-refused (10.11.3);
+          # -R, because this job has no checkout and gh finds no repository on disk (10.11.4)
+          refuse() {
+            echo "::error::$1"
+            { echo '### Tier 0 not started'; echo; echo "$1."; echo
+              echo 'Nothing was written and the request stands: a person who can triage or write here, and is not listed in `SA_TIER0_AGENTS`, applies `architecture-tier0`.'; } > "$RUNNER_TEMP/k.md"
+            gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/k.md"
+            gh issue edit "$N" -R "$GITHUB_REPOSITORY" --remove-label architecture-tier0 2>/dev/null || true
+            exit 1
+          }
+          # nothing for this workflow to do: the run ends, green, and the request waits for a person's label
+          quiet() { echo "$1"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0; }
+          go() { { echo "go=true"; [ -n "$1" ] && echo "auto=true" && echo "keyed=$1"; } >> "$GITHUB_OUTPUT"; exit 0; }
+          listed() { printf '%s\n' $1 | tr ',' '\n' | grep -qixF -- "$2"; }
+          # the issue as it is now, never the event's copy
+          gh api "repos/$GITHUB_REPOSITORY/issues/$N" > "$RUNNER_TEMP/issue.json"
+          AUTHOR=$(jq -r .user.login "$RUNNER_TEMP/issue.json"); LABELS=$(jq -r '[.labels[].name] | join(" ")' "$RUNNER_TEMP/issue.json")
+          has() { printf '%s\n' $LABELS | grep -qxF -- "$1"; }
+          [ "$(jq -r .state "$RUNNER_TEMP/issue.json")" = open ] || quiet "#$N is closed"
+          daily() {   # a trusted agent's requests keyed without a person, per 24 hours
+            since=$(date -u -d '-1 day' +%Y-%m-%dT%H:%M:%SZ)
+            used=$(gh issue list -R "$GITHUB_REPOSITORY" --author "$AUTHOR" --label tier0-auto --state all --limit 200 --json number,createdAt \
+              --jq "[.[] | select(.createdAt >= \"$since\") | select(.number != $N)] | length")
+            [ "$used" -lt "${DAILY:-10}" ] || refuse "\`$AUTHOR\` keyed $used requests in the last 24 hours, the limit (SA_TIER0_AUTO_DAILY) is ${DAILY:-10}"
+          }
+          marked() { jq -r '.body // ""' "$RUNNER_TEMP/issue.json" | grep -qF '<!-- sa-tier0 -->'; }
+          case "$EVENT" in
+          opened)
+            # the architecture repository keys a trusted agent's request itself (10.13.0) — the agent never applies the
+            # label; the kinds are the architecture's (tier0.auto in .sa-skills/project.json), prepare --auto checks them again
+            listed "$TRUSTED" "$AUTHOR" || quiet "#$N was opened by $AUTHOR, not a trusted agent: a person applies architecture-tier0"
+            has architecture-tier0 && quiet "#$N was opened with architecture-tier0: its labeled run takes it"
+            marked || quiet "#$N carries no sa-tier0 marker"
+            kind=$(printf '%s\n' $LABELS | sed -n 's/^tier0:\([a-z-]*\)$/\1/p' | head -1)
+            auto=$(gh api "repos/$GITHUB_REPOSITORY/contents/.sa-skills/project.json" --jq .content 2>/dev/null | base64 -d 2>/dev/null \
+              | jq -r '(.tier0.auto // []) | if . == "all" then "tdr-workaround tdr-status adr-proposed doc-fix" else join(" ") end' 2>/dev/null)
+            if ! printf '%s\n' $auto | grep -qxF -- "$kind"; then
+              gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body "Tier 0: \`${kind:-no kind}\` is not in this architecture's \`tier0.auto\` — a person reviews this request and applies \`architecture-tier0\`."
+              quiet "#$N: ${kind:-no kind} is not in tier0.auto (${auto:-none})"
+            fi
+            daily
+            gh issue edit "$N" -R "$GITHUB_REPOSITORY" --add-label architecture-tier0 --add-label tier0-auto
+            echo "keyed for the trusted agent $AUTHOR ($used in the last 24 hours)"; go "$AUTHOR" ;;
+          workflow_dispatch)
+            # a re-check: only a request this workflow keyed for a trusted agent and left waiting for its merge
+            has tier0-auto && has tier0-waiting || refuse "#$N is no request waiting for its merge (tier0-auto and tier0-waiting)"
+            echo "re-check of #$N, keyed for $AUTHOR"; go "$AUTHOR" ;;
+          esac
+          # labeled: a person's key — or, as 10.12.0 had it, a trusted agent keying the request it filed
+          if listed "$TRUSTED" "$SENDER"; then
+            [ "$AUTHOR" = "$SENDER" ] || refuse "\`$SENDER\` is a trusted agent: it keys the requests it filed, and #$N was filed by \`$AUTHOR\`"
+            marked || refuse "#$N is not a Tier 0 request preview_tier0 rendered (no sa-tier0 marker): a trusted agent keys only those"
+            daily
+            gh issue edit "$N" -R "$GITHUB_REPOSITORY" --add-label tier0-auto
+            echo "keyed by the trusted agent $SENDER ($used in the last 24 hours)"; go "$SENDER"
+          fi
+          if [ "$SENDER_TYPE" = "Bot" ] || listed "$AGENTS" "$SENDER"; then
+            refuse "\`$SENDER\` is an automation account (a bot, or listed in \`SA_TIER0_AGENTS\`): a person applies architecture-tier0"; fi
+          role=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$SENDER/permission" --jq .role_name 2>/dev/null || echo none)
+          case "$role" in admin|maintain|write|triage) echo "labelled by $SENDER ($role)"; go "";;
+            *) refuse "\`$SENDER\` ($role) cannot start a Tier 0 write";; esac
   tier0:
-    if: github.event.label.name == 'architecture-tier0'
+    needs: key
+    if: needs.key.outputs.go == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    concurrency:                   # writes run one at a time, so two never take the same number
+      group: architecture-tier0
+      cancel-in-progress: false
     permissions:
       contents: write
       pull-requests: write
@@ -62,49 +176,8 @@ jobs:
       id-token: write
     env:
       GH_TOKEN: ${{ github.token }}
-      N: ${{ github.event.issue.number }}
+      N: ${{ github.event.issue.number || inputs.issue }}
     steps:
-      - name: The label is the key
-        id: key
-        env:
-          SENDER: ${{ github.event.sender.login }}
-          SENDER_TYPE: ${{ github.event.sender.type }}
-          AUTHOR: ${{ github.event.issue.user.login }}
-          BODY: ${{ github.event.issue.body }}
-          AGENTS: ${{ vars.SA_TIER0_AGENTS }}
-          TRUSTED: ${{ vars.SA_TIER0_TRUSTED_AGENTS }}
-          DAILY: ${{ vars.SA_TIER0_AUTO_DAILY }}
-        run: |
-          # a person's key: never an automation account — a bot, or a machine user listed in SA_TIER0_AGENTS — even with
-          # write access; an unattended build agent files its request without the label, and a person puts it (10.10.0).
-          # A refused key says so on the issue and takes the label off — the request stands, so no tier0-refused (10.11.3);
-          # -R, because this step runs before the checkout and gh finds no repository on disk (10.11.4)
-          refuse() {
-            echo "::error::$1"
-            { echo '### Tier 0 not started'; echo; echo "$1."; echo
-              echo 'Nothing was written and the request stands: a person who can triage or write here, and is not listed in `SA_TIER0_AGENTS`, applies `architecture-tier0`.'; } > "$RUNNER_TEMP/k.md"
-            gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/k.md"
-            gh issue edit "$N" -R "$GITHUB_REPOSITORY" --remove-label architecture-tier0
-            exit 1
-          }
-          listed() { printf '%s\n' $1 | tr ',' '\n' | grep -qixF -- "$SENDER"; }
-          # a trusted agent keys a request itself (10.12.0): only one it filed, carrying the request's marker, within the daily
-          # limit; prepare --auto then holds the kind to the architecture's tier0.auto and a move to Resolved to merged code
-          if listed "$TRUSTED"; then
-            [ "$AUTHOR" = "$SENDER" ] || refuse "\`$SENDER\` is a trusted agent: it keys the requests it filed, and #$N was filed by \`$AUTHOR\`"
-            printf '%s' "$BODY" | grep -qF '<!-- sa-tier0 -->' || refuse "#$N is not a Tier 0 request preview_tier0 rendered (no sa-tier0 marker): a trusted agent keys only those"
-            since=$(date -u -d '-1 day' +%Y-%m-%dT%H:%M:%SZ)
-            used=$(gh issue list -R "$GITHUB_REPOSITORY" --author "$SENDER" --label tier0-auto --state all --limit 200 --json number,createdAt \
-              --jq "[.[] | select(.createdAt >= \"$since\") | select(.number != $N)] | length")
-            [ "$used" -lt "${DAILY:-10}" ] || refuse "\`$SENDER\` keyed $used requests in the last 24 hours, the limit (SA_TIER0_AUTO_DAILY) is ${DAILY:-10}"
-            gh issue edit "$N" -R "$GITHUB_REPOSITORY" --add-label tier0-auto
-            echo "auto=true" >> "$GITHUB_OUTPUT"; echo "keyed by the trusted agent $SENDER ($used in the last 24 hours)"; exit 0
-          fi
-          if [ "$SENDER_TYPE" = "Bot" ] || listed "$AGENTS"; then
-            refuse "\`$SENDER\` is an automation account (a bot, or listed in \`SA_TIER0_AGENTS\`): a person applies architecture-tier0"; fi
-          role=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$SENDER/permission" --jq .role_name 2>/dev/null || echo none)
-          case "$role" in admin|maintain|write|triage) echo "labelled by $SENDER ($role)";;
-            *) refuse "\`$SENDER\` ($role) cannot start a Tier 0 write";; esac
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -121,18 +194,36 @@ jobs:
       - name: Prepare — the policy, read here
         id: prepare
         env:
-          AUTO: ${{ steps.key.outputs.auto == 'true' && 'true' || '' }}
+          AUTO: ${{ needs.key.outputs.auto }}
           SA_TIER0_EVIDENCE_TOKEN: ${{ secrets.SA_TIER0_EVIDENCE_TOKEN }}
+          WAIT_DAYS: ${{ vars.SA_TIER0_WAIT_DAYS }}
         run: |
           set +e; $T0 prepare . "$N" ${AUTO:+--auto} > "$RUNNER_TEMP/prepare.txt"; code=$?; set -e
           cat "$RUNNER_TEMP/prepare.txt"
+          labels=$(gh issue view "$N" --json labels --jq '[.labels[].name] | join(" ")')
+          # exit 3: a move to Resolved whose service pull request is not merged yet — it waits, re-checked every 30 minutes,
+          # until SA_TIER0_WAIT_DAYS (default 7) from the request; then it is refused (10.13.0)
+          if [ "$code" -eq 3 ]; then
+            created=$(gh issue view "$N" --json createdAt --jq .createdAt)
+            if [ "$(date -u -d "$created + ${WAIT_DAYS:-7} days" +%s)" -gt "$(date -u +%s)" ]; then
+              if ! printf '%s\n' $labels | grep -qxF tier0-waiting; then
+                { echo '### Tier 0 waiting'; echo; sed 1d "$RUNNER_TEMP/prepare.txt"; echo
+                  echo "Nothing is written yet: the request is re-checked every 30 minutes and written once the change is merged, for ${WAIT_DAYS:-7} days."; } > "$RUNNER_TEMP/c.md"
+                gh issue comment "$N" --body-file "$RUNNER_TEMP/c.md"; gh issue edit "$N" --add-label tier0-waiting
+              fi
+              echo "refused=true" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            echo "- waited ${WAIT_DAYS:-7} days without the merge" >> "$RUNNER_TEMP/prepare.txt"; code=1
+          fi
           if [ "$code" -ne 0 ]; then
             { echo '### Tier 0 refused'; echo; sed 1d "$RUNNER_TEMP/prepare.txt"; echo
               echo 'Nothing was written. Fix the request and label it again, or — when it is no Tier 0 write — escalate it (`preview_escalation`).'; } > "$RUNNER_TEMP/c.md"
             gh issue comment "$N" --body-file "$RUNNER_TEMP/c.md"
             gh issue edit "$N" --add-label tier0-refused --remove-label architecture-tier0
+            printf '%s\n' $labels | grep -qxF tier0-waiting && gh issue edit "$N" --remove-label tier0-waiting
             echo "refused=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
+          printf '%s\n' $labels | grep -qxF tier0-waiting && gh issue edit "$N" --remove-label tier0-waiting
           bun -e "const p=require('./$P');console.log('kind='+p.kind+'\nid='+(p.id||'')+'\nfile='+p.file)" >> "$GITHUB_OUTPUT"
       - name: Write the doc fix
         if: steps.prepare.outputs.refused != 'true' && steps.prepare.outputs.kind == 'doc-fix'
@@ -177,7 +268,7 @@ jobs:
         if: always() && steps.claude.outputs.execution_file != ''
         uses: actions/upload-artifact@v4
         with:
-          name: tier0-transcript-${{ github.event.issue.number }}
+          name: tier0-transcript-${{ github.event.issue.number || inputs.issue }}
           path: ${{ steps.claude.outputs.execution_file }}
           retention-days: 7
       - name: Verify, gate, open and merge the pull request
@@ -186,7 +277,7 @@ jobs:
           KIND: ${{ steps.prepare.outputs.kind }}
           ID: ${{ steps.prepare.outputs.id }}
           AUTOMERGE: ${{ vars.SA_TIER0_AUTOMERGE }}
-          KEYED: ${{ steps.key.outputs.auto == 'true' && github.event.sender.login || '' }}
+          KEYED: ${{ needs.key.outputs.keyed }}
         run: |
           if ! $T0 verify . "$P" > "$RUNNER_TEMP/verify.txt"; then
             cat "$RUNNER_TEMP/verify.txt"
@@ -207,7 +298,7 @@ jobs:
           git commit -q -m "tier0: ${ID:-$KIND} — $title (#$N)"
           git push -u origin "$branch"
           { echo "Tier 0 write \`$KIND\`${ID:+ — **$ID**}, requested in #$N and written by the Architecture Tier 0 workflow. No architect's approval: the policy allows it, and the gates below hold it."
-            [ -n "$KEYED" ] && { echo; echo "Keyed by the trusted agent \`$KEYED\` (\`tier0.auto\`): no person read the request before this write — review it here or in the release."; }
+            [ -n "$KEYED" ] && { echo; echo "Keyed for the trusted agent \`$KEYED\` (\`tier0.auto\`): no person read the request before this write — review it here or in the release."; }
             echo; echo "Closes #$N"
             # the mentions of a closed record the write left (tier0.js verify, 10.10.10): whether one still calls it debt is a person's call
             if [ "$(wc -l < "$RUNNER_TEMP/verify.txt")" -gt 1 ]; then echo; echo '### Mentions to review'; echo; sed 1d "$RUNNER_TEMP/verify.txt"; fi
