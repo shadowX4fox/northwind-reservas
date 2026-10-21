@@ -1,4 +1,4 @@
-<!-- ARCHITECTURE_VERSION: 1.7.0 -->
+<!-- ARCHITECTURE_VERSION: 1.8.0 -->
 <!-- ARCHITECTURE_STATUS: Released -->
 <!-- ARCHITECTURE_RELEASED: 2026-10-20 -->
 <!-- DOC_LANGUAGE: es -->
@@ -8,11 +8,11 @@
 
 > Portal web para que los miembros de Northwind Cowork consulten, reserven y cancelen salas en 3 sedes, sin reservas dobles confirmadas.
 
-**Version**: 1.7.0
+**Version**: 1.8.0
 **Status**: Released
 **Released**: 2026-10-20
 **Architect**: Equipo de Arquitectura Northwind
-**Supersedes**: v1.6.0
+**Supersedes**: v1.7.0
 
 ## Documentación
 
