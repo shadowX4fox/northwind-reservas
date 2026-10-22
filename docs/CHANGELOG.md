@@ -6,8 +6,14 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-10-22
+
 ### Added
 - Servicio de Reservas: error `ROOM_NOT_FOUND` (404) cuando `createBooking` recibe un `roomId` inexistente; contrato 1.2.0.
+
+### Changed
+- Contenedor: Servicio de Reservas — contenido
+- ESC-005 rejected: Sesión del Portal de Reservas tras recargar la pestaña: tokens en sessionStorage frente a ADR-104
 
 ## [1.8.0] - 2026-10-20
 
@@ -47,22 +53,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 - TDR: TDR-001 — estado: In Progress → Resolved (ADR-109 implementado en northwind-servicio-reservas@3238407)
 - Sección: Escalabilidad y Rendimiento (`docs/08-scalability-and-performance.md`) — la ventana de TDR-001 ya no aplica
 - Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-001 sale de 13.2 Deuda Técnica
-
-## [1.5.0] - 2026-10-20
-
-### Added
-- ADR: ADR-109 — Invalidación de la caché con LISTEN/NOTIFY (Accepted)
-
-### Changed
-- Contenedor: Servicio de Reservas — la caché se invalida en todas las réplicas con LISTEN/NOTIFY (ADR-109)
-- Contenedor: Base de Datos de Reservas — I-04 incluye el canal `disponibilidad`
-- ADR: ADR-108 — estado: Accepted → Superseded by ADR-109
-- TDR: TDR-001 — estado: Open → In Progress
-- Sección: Patrones de Flujo de Datos (`docs/04-data-flow-patterns.md`) — crear y cancelar emiten NOTIFY en el canal `disponibilidad`
-- Sección: Puntos de Integración (`docs/05-integration-points.md`) — I-04 añade NOTIFY y una conexión LISTEN por réplica
-- Sección: Stack Tecnológico (`docs/06-technology-stack.md`) — la fila de Caffeine cita ADR-109
-- Sección: Escalabilidad y Rendimiento (`docs/08-scalability-and-performance.md`) — invalidación en todas las réplicas; 5 minutos como red de seguridad
-- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-001 en In Progress
-- ESC-003 resolved by this release: TDR-001: invalidar la caché de disponibilidad en todas las réplicas con LISTEN/NOTIFY de PostgreSQL
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).
