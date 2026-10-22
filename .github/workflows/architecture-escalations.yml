@@ -1,6 +1,6 @@
 # Architecture escalations — GitHub Actions. Copy to .github/workflows/architecture-escalations.yml in the architecture's
 # repository (ci-setup.js architecture writes it, 10.18.0).
-# A service pull request whose architecture review passed because an open [ESC-…] issue here covered a departure stands on
+# A service pull request whose architecture review is held because an open [ESC-…] issue here covers a departure waits on
 # that issue. When it stops being an open escalation — closed (answered or refused), transferred, deleted, or retitled away
 # from [ESC-…] — every service repository in SA_SERVICE_REPOS is sent `architecture-escalation-closed`, which its
 # ci/service/architecture-review.yml answers by checking those pull requests again (review-check.js --recheck).
@@ -31,7 +31,10 @@ jobs:
           ACTION: ${{ github.event.action }}
         run: |
           [ -n "$GH_TOKEN" ] || { echo "::warning::SA_DISPATCH_TOKEN is not set: the service repositories re-check on their hourly sweep only"; exit 0; }
+          # a failed dispatch fails the run: the service's hourly sweep is then the only re-check, and GitHub may have disabled it
+          failed=0
           for r in $(printf '%s' "$REPOS" | tr ',' ' '); do
             if gh api "repos/$r/dispatches" -f event_type=architecture-escalation-closed -f "client_payload[ref]=$REF" -f "client_payload[action]=$ACTION" >/dev/null
-            then echo "architecture-escalation-closed $REF ($ACTION) → $r"; else echo "::warning::$r: the dispatch failed — the token cannot write there, or the repository does not exist"; fi
+            then echo "architecture-escalation-closed $REF ($ACTION) → $r"; else echo "::error::$r: the dispatch failed — the token cannot write there, or the repository does not exist; its pull requests re-check on the hourly sweep only"; failed=1; fi
           done
+          exit $failed
