@@ -10,9 +10,9 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.8.0 |
+| Versión de la arquitectura | 1.9.0 |
 | Versión del componente | 1.4.0 |
-| Generado | 2026-10-21 |
+| Generado | 2026-10-22 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->
@@ -105,7 +105,7 @@ Contratos que este componente publica. Los esquemas viven en los assets enlazado
 
 | Contract | Version | Consumers | Asset |
 |----------|--------:|-----------|-------|
-| API REST de disponibilidad, reserva y cancelación (OpenAPI 3.1, ruta `/v1`) | 1.1.0 | Portal de Reservas | [openapi.yaml](assets/02-servicio-de-reservas/openapi.yaml) |
+| API REST de disponibilidad, reserva y cancelación (OpenAPI 3.1, ruta `/v1`) | 1.2.0 | Portal de Reservas | [openapi.yaml](assets/02-servicio-de-reservas/openapi.yaml) |
 
 ---
 
@@ -243,15 +243,15 @@ Vacíos detectados al generar la Especificación de Componente: valores ausentes
 | Budgets | Throughput (pico) | `/sa-analysis:architecture-analysis latency-budget` | Dimensionar réplicas |
 | Budgets | Throughput (sostenido) | `/sa-analysis:architecture-analysis latency-budget` | Dimensionar réplicas |
 | Budgets | Techo de costo | `/sa-analysis:architecture-analysis latency-budget` | Validar el costo del servicio |
+| Assets — c4-descriptor.md | Responsable | agregar `**Owner:**` a docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md | escalamiento y propiedad en la CMDB |
+| Assets — c4-descriptor.md | Host · IP · SO · Dominio | docs/09-operational-considerations.md | registro en la CMDB y reglas de red |
+| Assets — security.md | Data Sensitivity | analysis/DATA-SENSITIVITY-*.md — run /sa-analysis:architecture-analysis data-sensitivity | se desconoce la clasificación de los datos que maneja el componente |
 | Assets — openapi.yaml | Host del servidor (URL base) | docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md | Solo se documenta la ruta base `/v1`. `servers` queda vacío y las rutas llevan `/v1`. El equipo no puede configurar los clientes sin el host. |
 | Assets — openapi.yaml | Obligatoriedad de los parámetros de consulta site, date, start y end (getAvailability) | docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md | El contrato no marca esos parámetros como requeridos. El equipo debe confirmar si lo son. |
 | Assets — openapi.yaml | Estructura de `equipment` en RoomAvailability | docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md | El contrato lo modela como lista de valores del enum (`screen`, `videoconference`, `whiteboard`). La documentación no dice si es lista o valor único. |
 | Assets — openapi.yaml | Tipo del campo `site` en Booking | docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md | La documentación nombra el campo pero no su tipo. Solo los parámetros de CU1 enumeran `centro`, `norte` y `puerto`. El campo queda sin `type`. |
-| Assets — c4-descriptor.md | Responsable | agregar `**Owner:**` a docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md | escalamiento y propiedad en la CMDB |
-| Assets — c4-descriptor.md | Host · IP · SO · Dominio | docs/09-operational-considerations.md | registro en la CMDB y reglas de red |
-| Assets — security.md | Data Sensitivity | analysis/DATA-SENSITIVITY-*.md — run /sa-analysis:architecture-analysis data-sensitivity | se desconoce la clasificación de los datos que maneja el componente |
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-21*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-22*
 *Fuente: ARCHITECTURE.md*
