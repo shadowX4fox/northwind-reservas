@@ -42,7 +42,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 
 **API Type**: REST sobre HTTPS con cuerpos JSON (ADR-001).
 **Contrato**: OpenAPI 3.1 versionado en el repositorio del servicio, escrito antes que el código (ADR-001).
-**Versión del contrato**: 1.1.0; la versión mayor va en la ruta, `/v1` (ADR-001).
+**Versión del contrato**: 1.2.0; la versión mayor va en la ruta, `/v1` (ADR-001).
 **URL base**: `/v1`, detrás del ingress del clúster de Plataforma Northwind (ADR-005); host: Not documented.
 **Autenticación**: JWT del Proveedor de Identidad Northwind en `Authorization: Bearer` (ADR-002); ver [Sección 9](../../07-security-architecture.md#93-controles-de-seguridad).
 
@@ -84,6 +84,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 | `FORBIDDEN` | 403 | "no autorizado": reserva ajena sin rol `recepcion` de la misma `sede` (ADR-105) |
 | `VALIDATION_FAILED` | 400 | Franja fuera de múltiplos de 30 minutos, de más de 8 horas o en el pasado; asunto de más de 80 caracteres; motivo de menos de 10 o más de 120 caracteres, o ausente para `recepcion` |
 | `BOOKING_NOT_FOUND` | 404 | Código de reserva inexistente |
+| `ROOM_NOT_FOUND` | 404 | `roomId` inexistente en la creación de la reserva (CU2) |
 | `ROOM_OCCUPIED` | 409 | "sala ocupada" (CU2, [ADR-102](../../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)) |
 | `DAILY_LIMIT_REACHED` | 409 | "límite diario": 3 reservas futuras ese día (CU2) |
 | `BOOKING_IN_PROGRESS` | 409 | "reserva en curso" (CU3, ADR-105) |

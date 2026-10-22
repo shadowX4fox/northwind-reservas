@@ -6,6 +6,9 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+- Servicio de Reservas: error `ROOM_NOT_FOUND` (404) cuando `createBooking` recibe un `roomId` inexistente; contrato 1.2.0.
+
 ## [1.8.0] - 2026-10-20
 
 ### Added
