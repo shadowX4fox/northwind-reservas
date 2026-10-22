@@ -1,0 +1,37 @@
+# Architecture escalations — GitHub Actions. Copy to .github/workflows/architecture-escalations.yml in the architecture's
+# repository (ci-setup.js architecture writes it, 10.18.0).
+# A service pull request whose architecture review passed because an open [ESC-…] issue here covered a departure stands on
+# that issue. When it stops being an open escalation — closed (answered or refused), transferred, deleted, or retitled away
+# from [ESC-…] — every service repository in SA_SERVICE_REPOS is sent `architecture-escalation-closed`, which its
+# ci/service/architecture-review.yml answers by checking those pull requests again (review-check.js --recheck).
+# Repository settings: variable SA_SERVICE_REPOS (owner/repo, comma- or space-separated) and secret SA_DISPATCH_TOKEN — the
+# same pair that sends `architecture-released`.
+name: Architecture escalations
+
+on:
+  issues:
+    types: [closed, edited, transferred, deleted]
+
+permissions: {}
+
+jobs:
+  tell:
+    # an escalation that stops being one: closed, transferred or deleted with an [ESC-…] title, or retitled away from it
+    if: >-
+      vars.SA_SERVICE_REPOS != '' && (
+        (github.event.action != 'edited' && startsWith(github.event.issue.title, '[ESC-')) ||
+        (github.event.action == 'edited' && startsWith(github.event.changes.title.from, '[ESC-') && !startsWith(github.event.issue.title, '[ESC-')))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tell the service repositories
+        env:
+          GH_TOKEN: ${{ secrets.SA_DISPATCH_TOKEN }}
+          REPOS: ${{ vars.SA_SERVICE_REPOS }}
+          REF: ${{ github.repository }}#${{ github.event.issue.number }}
+          ACTION: ${{ github.event.action }}
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo "::warning::SA_DISPATCH_TOKEN is not set: the service repositories re-check on their hourly sweep only"; exit 0; }
+          for r in $(printf '%s' "$REPOS" | tr ',' ' '); do
+            if gh api "repos/$r/dispatches" -f event_type=architecture-escalation-closed -f "client_payload[ref]=$REF" -f "client_payload[action]=$ACTION" >/dev/null
+            then echo "architecture-escalation-closed $REF ($ACTION) → $r"; else echo "::warning::$r: the dispatch failed — the token cannot write there, or the repository does not exist"; fi
+          done
