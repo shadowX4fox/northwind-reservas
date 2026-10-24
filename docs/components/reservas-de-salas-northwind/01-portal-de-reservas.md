@@ -8,7 +8,7 @@ technologies: React 18, TypeScript
 component_self: portal-de-reservas
 component_type: web-application
 scope: SPA de consulta, reserva y cancelación de salas; no contiene reglas de negocio ni datos persistentes
-related_adrs: ADR-001, ADR-002, ADR-004, ADR-104, ADR-110
+related_adrs: ADR-001, ADR-002, ADR-004, ADR-101, ADR-104, ADR-107, ADR-110
 -->
 
 > Portal de Reservas es la aplicación web por la que miembros y recepcionistas consultan, reservan y cancelan salas. Autentica con el Proveedor de Identidad Northwind y llama al Servicio de Reservas.
