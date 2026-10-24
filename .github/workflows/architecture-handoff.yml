@@ -33,7 +33,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.19.5
+  SA_PLUGIN_REF: v10.21.0
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -118,22 +118,35 @@ jobs:
           t() { bun "$SA_SKILLS_DIR/scripts/shared/ci-text.js" "$@" --project .; }
           git switch -c "handoff/$TAG"
           git add handoffs && git commit -q -m "$(t handoff_commit tag="$TAG")"
-          # the evidence: the command center of this version and its photo-mode picture (no institution pack on the runner)
+          # the evidence: the command center of this version and its photo-mode pictures (no institution pack on the runner) —
+          # one per component the release changed, on the plan page of its floor with it selected (10.21.0): a component changed
+          # when its payload_hash in the kit's manifest moved (the hash leaves out the version stamps); at most three. A release
+          # that changed no component: the whole model, as before
           V="$SA_SKILLS_DIR/plugins/sa-visualization/skills/architecture-command-center/scripts"
           lang=$(sed -n 's/.*DOC_LANGUAGE: *\([a-z][a-z]\).*/\1/p' ARCHITECTURE.md | head -n 1)
-          scene=visualizations/architecture-command-center.scene.json shot="visualizations/evidence/$TAG.png" evidence=
+          scene=visualizations/architecture-command-center.scene.json view=visualizations/architecture-command-center.html
+          changed=$(jq -n -r --argjson a "$(git show HEAD~1:handoffs/.manifest.json 2>/dev/null || echo '{}')" --argjson b "$(cat handoffs/.manifest.json 2>/dev/null || echo '{}')" \
+            '($a.cut_sheets // {}) as $o | ($b.cut_sheets // {}) | to_entries[] | select(.value.payload_hash != $o[.key].payload_hash) | .key' | head -n 3)
+          shots=() captions=()
           if bun "$V/scene-from-docs.js" . && bun "$V/dossier.js" . "$scene" --write \
-             && bun "$V/render.js" "$scene" visualizations/architecture-command-center.html --lang "${lang:-en}" \
-             && caption=$(bun "$V/snapshot.js" visualizations/architecture-command-center.html "$shot"); then
-            git add visualizations && git commit -q -m "$(t evidence_commit tag="$TAG")" && evidence=yes
+             && bun "$V/render.js" "$scene" "$view" --lang "${lang:-en}"; then
+            if [ -n "$changed" ]; then
+              for c in $changed; do f="visualizations/evidence/$TAG-$c.png"; cap=$(bun "$V/snapshot.js" "$view" "$f" --plan "$c") && { shots+=("$f"); captions+=("$cap"); }; done
+            else
+              f="visualizations/evidence/$TAG.png"; cap=$(bun "$V/snapshot.js" "$view" "$f") && { shots+=("$f"); captions+=("$cap"); }
+            fi
+          fi
+          if [ ${#shots[@]} -gt 0 ]; then
+            git add visualizations && git commit -q -m "$(t evidence_commit tag="$TAG")"
           else
             echo "::warning::the command-center evidence was not produced"; git checkout -q -- visualizations 2>/dev/null || true; git clean -fdq visualizations
           fi
           git push -u origin "handoff/$TAG"
           body=$(t handoff_body tag="$TAG")
-          if [ -n "$evidence" ]; then
-            body="$body"$'\n\n'"![${caption}](https://github.com/${GITHUB_REPOSITORY}/blob/$(git rev-parse HEAD)/${shot}?raw=true)"$'\n\n'"*${caption}* — $(t evidence_opens)"
-          fi
+          for i in "${!shots[@]}"; do
+            body="$body"$'\n\n'"![${captions[$i]}](https://github.com/${GITHUB_REPOSITORY}/blob/$(git rev-parse HEAD)/${shots[$i]}?raw=true)"$'\n\n'"*${captions[$i]}*"
+          done
+          [ ${#shots[@]} -gt 0 ] && body="$body — $(t evidence_opens)"
           url=$(gh pr create --base main --head "handoff/$TAG" --title "$(t handoff_title tag="$TAG")" --body "$body")
           echo "$url"
           if [ "$AUTOMERGE" = "true" ] && [ "$drift" -eq 0 ]; then
