@@ -1,19 +1,7 @@
 {
-  "extraKnownMarketplaces": {
-    "shadowx4fox-solution-architect-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "shadowX4fox/solutions-architect-skills"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "sa-skills@shadowx4fox-solution-architect-marketplace": true,
-    "sa-records@shadowx4fox-solution-architect-marketplace": true,
-    "sa-requirements@shadowx4fox-solution-architect-marketplace": true,
-    "sa-analysis@shadowx4fox-solution-architect-marketplace": true,
-    "sa-delivery@shadowx4fox-solution-architect-marketplace": true,
-    "sa-visualization@shadowx4fox-solution-architect-marketplace": true
+  "env": {
+    "USE_BUILTIN_RIPGREP": "0",
+    "SA_JUDGE": "agent"
   },
   "permissions": {
     "allow": [
@@ -56,8 +44,13 @@
     ],
     "defaultMode": "auto"
   },
-  "env": {
-    "USE_BUILTIN_RIPGREP": "0",
-    "SA_JUDGE": "agent"
+  "enabledPlugins": {},
+  "extraKnownMarketplaces": {
+    "shadowx4fox-solution-architect-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "shadowX4fox/solutions-architect-skills"
+      }
+    }
   }
 }
