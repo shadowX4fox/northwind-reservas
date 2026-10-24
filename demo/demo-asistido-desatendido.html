@@ -27,6 +27,11 @@ td.m { width: 26mm; color: var(--ink2); }
 .meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 0 0 4mm; }
 .meta div { background: var(--bg2); padding: 2.5mm 3mm; font-size: 9.5pt; } .meta b { display: block; font-size: 8pt; color: var(--ink2); text-transform: uppercase; letter-spacing: .5px; }
 .dia { display: block; width: 80%; height: auto; margin: 0 auto; }
+.page2 { break-before: page; }
+.dia2 { display: block; width: 100%; height: auto; margin: 1mm auto 2mm; }
+.why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+.why div { background: var(--bg2); border-left: 3px solid var(--acc); padding: 2.5mm 3mm; font-size: 9.3pt; }
+.why b { display: block; font-size: 10pt; margin-bottom: .8mm; }
 footer { margin-top: 2mm; font-size: 8.5pt; color: var(--ink2); border-top: 1px solid var(--line); padding-top: 2.5mm; }
 </style></head><body>
 <h1>De la arquitectura al código</h1>
@@ -111,6 +116,83 @@ footer { margin-top: 2mm; font-size: 8.5pt; color: var(--ink2); border-top: 1px 
 <tr><td class="n">—</td><td>Preguntas</td><td class="m"></td></tr>
 </table>
 
+<section class="page2">
+<h2>El paquete de construcción</h2>
+<p>Cada release publica, para cada componente, un paquete con todo lo que hace falta para construirlo. Persona o pipeline, el agente que escribe el código lee el mismo paquete a través de Alia, y nada más.</p>
+<svg class="dia2" viewBox="0 0 680 420" xmlns="http://www.w3.org/2000/svg" font-family="Inter, Segoe UI, Roboto, Arial, sans-serif">
+  <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#566273"/></marker></defs>
+  <!-- sources -->
+  <rect x="6" y="70" width="150" height="62" rx="6" fill="#fff" stroke="#1b2430" stroke-width="1.4"/>
+  <text x="81" y="96" text-anchor="middle" font-size="13" font-weight="700" fill="#1b2430">Release</text>
+  <text x="81" y="114" text-anchor="middle" font-size="10" fill="#566273">architecture-v1.9.0</text>
+  <line x1="81" y1="132" x2="81" y2="166" stroke="#566273" stroke-width="1.4" marker-end="url(#ar2)"/>
+  <text x="90" y="153" font-size="9.5" fill="#566273">genera, por código</text>
+  <rect x="6" y="168" width="150" height="62" rx="6" fill="#f4f6f9" stroke="#566273" stroke-width="1.2"/>
+  <text x="81" y="194" text-anchor="middle" font-size="13" font-weight="700" fill="#1b2430">Kit de handoff</text>
+  <text x="81" y="212" text-anchor="middle" font-size="10" fill="#566273">verificado contra la arquitectura</text>
+  <line x1="156" y1="199" x2="194" y2="199" stroke="#566273" stroke-width="1.4" marker-end="url(#ar2)"/>
+  <!-- the pack -->
+  <rect x="196" y="20" width="308" height="288" rx="7" fill="#fff" stroke="#1f4fa3" stroke-width="1.6"/>
+  <rect x="196" y="20" width="308" height="44" rx="7" fill="#1f4fa3"/>
+  <rect x="196" y="50" width="308" height="14" fill="#1f4fa3"/>
+  <text x="210" y="39" font-size="12.5" font-weight="700" fill="#fff">Paquete · Servicio de Reservas</text>
+  <text x="210" y="56" font-size="9.5" fill="#dbe6fb">v1.9.0 · pack_revision ba9811a9…</text>
+  <rect x="197" y="66" width="306" height="30" fill="#f4f6f9"/>
+  <text x="210" y="85" font-size="11" font-weight="700" fill="#1b2430">BUILD.md</text>
+  <text x="334" y="85" font-size="10" fill="#566273">las reglas y el plan (7 pasos)</text>
+  <rect x="197" y="96" width="306" height="30" fill="#fff"/>
+  <text x="210" y="115" font-size="11" font-weight="700" fill="#1b2430">Especificación</text>
+  <text x="334" y="115" font-size="10" fill="#566273">responsabilidad e invariantes</text>
+  <rect x="197" y="126" width="306" height="30" fill="#f4f6f9"/>
+  <text x="210" y="145" font-size="11" font-weight="700" fill="#1b2430">Seguridad</text>
+  <text x="334" y="145" font-size="10" fill="#566273">quién llama, cómo se autentica</text>
+  <rect x="197" y="156" width="306" height="30" fill="#fff"/>
+  <text x="210" y="175" font-size="11" font-weight="700" fill="#1b2430">Contratos</text>
+  <text x="334" y="175" font-size="10" fill="#566273">openapi.yaml, byte a byte</text>
+  <rect x="197" y="186" width="306" height="30" fill="#f4f6f9"/>
+  <text x="210" y="205" font-size="11" font-weight="700" fill="#1b2430">Interfaces</text>
+  <text x="334" y="205" font-size="10" fill="#566273">3 contratos, entrada y salida</text>
+  <rect x="197" y="216" width="306" height="30" fill="#fff"/>
+  <text x="210" y="235" font-size="11" font-weight="700" fill="#1b2430">Estándares y ADR</text>
+  <text x="334" y="235" font-size="10" fill="#566273">13 decisiones que aplican</text>
+  <rect x="197" y="246" width="306" height="30" fill="#f4f6f9"/>
+  <text x="210" y="265" font-size="11" font-weight="700" fill="#1b2430">Flujos</text>
+  <text x="334" y="265" font-size="10" fill="#566273">3, con presupuesto de latencia</text>
+  <rect x="197" y="276" width="306" height="30" fill="#fff"/>
+  <text x="210" y="295" font-size="11" font-weight="700" fill="#1b2430">Preguntas abiertas</text>
+  <text x="334" y="295" font-size="10" fill="#566273">41: nunca se rellenan</text>
+  <!-- consumers -->
+  <text x="607" y="40" text-anchor="middle" font-size="10" font-weight="700" fill="#566273">leen por Alia (MCP)</text>
+  <rect x="540" y="56" width="134" height="48" rx="6" fill="#fff" stroke="#1f4fa3" stroke-width="1.4"/>
+  <text x="551" y="76" font-size="11.5" font-weight="700" fill="#1f4fa3">IDE</text>
+  <text x="551" y="92" font-size="9" fill="#566273">un desarrollador · asistido</text>
+  <path d="M504,186 C522,186 518,80 538,80" fill="none" stroke="#566273" stroke-width="1.3" marker-end="url(#ar2)"/>
+  <rect x="540" y="120" width="134" height="48" rx="6" fill="#fff" stroke="#2e7d4f" stroke-width="1.4"/>
+  <text x="551" y="140" font-size="11.5" font-weight="700" fill="#2e7d4f">Build en CI</text>
+  <text x="551" y="156" font-size="9" fill="#566273">sin personas · desatendido</text>
+  <path d="M504,186 C522,186 518,144 538,144" fill="none" stroke="#566273" stroke-width="1.3" marker-end="url(#ar2)"/>
+  <rect x="540" y="184" width="134" height="48" rx="6" fill="#fff" stroke="#6b3fa0" stroke-width="1.4"/>
+  <text x="551" y="204" font-size="11.5" font-weight="700" fill="#6b3fa0">@alia en un issue</text>
+  <text x="551" y="220" font-size="9" fill="#566273">un pedido desde GitHub</text>
+  <path d="M504,186 C522,186 518,208 538,208" fill="none" stroke="#566273" stroke-width="1.3" marker-end="url(#ar2)"/>
+  <rect x="540" y="248" width="134" height="48" rx="6" fill="#fff" stroke="#1f4fa3" stroke-width="1.4"/>
+  <text x="551" y="268" font-size="11.5" font-weight="700" fill="#1f4fa3">Revisión del PR</text>
+  <text x="551" y="284" font-size="9" fill="#566273">el diff contra el paquete</text>
+  <path d="M504,186 C522,186 518,272 538,272" fill="none" stroke="#566273" stroke-width="1.3" marker-end="url(#ar2)"/>
+  <!-- the service repository -->
+  <rect x="6" y="326" width="668" height="86" rx="6" fill="#f4f6f9" stroke="#d9dee5"/>
+  <text x="20" y="348" font-size="11" font-weight="700" fill="#1b2430">En el repositorio del servicio</text>
+  <text x="20" y="368" font-size="10" fill="#566273"><tspan font-weight="700" fill="#1b2430">.architecture.json</tspan> — la versión y la revisión del paquete con que se construyó</text>
+  <text x="20" y="385" font-size="10" fill="#566273"><tspan font-weight="700" fill="#1b2430">architecture/</tspan> — copia exacta de los contratos; la revisión falla si cambia un byte</text>
+  <text x="20" y="402" font-size="10" fill="#566273"><tspan font-weight="700" fill="#1b2430">what_changed</tspan> — con una versión nueva, Alia dice qué cambió para este componente y qué hay que mover</text>
+</svg>
+
+<div class="why">
+  <div><b>Nadie adivina</b>Lo que la arquitectura no dice queda como pregunta abierta o escalación, nunca como una suposición en el código.</div>
+  <div><b>El mismo paquete para todos</b>El IDE, el pipeline, @alia y la revisión leen la misma versión: no hay un wiki aparte.</div>
+  <div><b>Versionado</b>Cada paquete nombra su release y su revisión. Un cambio de arquitectura dice exactamente qué código mover.</div>
+</div>
+</section>
 
 <footer>Northwind Reservas · proyecto de demostración con datos ficticios</footer>
 </body></html>
