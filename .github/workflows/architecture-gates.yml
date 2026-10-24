@@ -17,7 +17,7 @@ jobs:
   gates:
     runs-on: ubuntu-latest
     env:
-      SA_PLUGIN_REF: v10.21.1          # the plugin tag the gates are held to — move it on purpose, never track main
+      SA_PLUGIN_REF: v10.22.0          # the plugin tag the gates are held to — move it on purpose, never track main
     steps:
       - uses: actions/checkout@v4
         with:
