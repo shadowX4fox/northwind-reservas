@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Demo asistido y desatendido</title>
+<style>
+@page { size: A4; margin: 11mm 15mm 8mm; }
+:root { --ink:#1b2430; --ink2:#566273; --line:#d9dee5; --acc:#1f4fa3; --acc2:#2e7d4f; --bg2:#f4f6f9; }
+body { font: 10pt/1.4 "Inter","Segoe UI",Roboto,Arial,sans-serif; color: var(--ink); margin: 0; }
+h1 { font-size: 21pt; margin: 0 0 2mm; letter-spacing: -.3px; }
+.sub { color: var(--ink2); font-size: 11.5pt; margin: 0 0 4mm; }
+.bar { height: 3px; width: 34mm; background: var(--acc); margin-bottom: 4.5mm; }
+h2 { font-size: 12pt; margin: 4mm 0 2mm; color: var(--acc); }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.card { border: 1px solid var(--line); border-top: 3px solid var(--acc); padding: 3mm 4mm; background: #fff; }
+.card.u { border-top-color: var(--acc2); }
+.card h3 { margin: 0 0 1.5mm; font-size: 11.5pt; }
+.card .tag { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .6px; color: var(--ink2); }
+.card ul { margin: 1.5mm 0 0; padding-left: 4.5mm; } .card li { margin: .8mm 0; }
+.flow { display: flex; align-items: stretch; gap: 1.5mm; margin: 2mm 0 1mm; }
+.flow div { flex: 1; background: var(--bg2); border: 1px solid var(--line); padding: 2mm; font-size: 8.8pt; text-align: center; }
+.flow div b { display: block; font-size: 9.2pt; }
+.flow span { align-self: center; color: var(--ink2); }
+.note { font-size: 9pt; color: var(--ink2); }
+table { width: 100%; border-collapse: collapse; font-size: 9.8pt; }
+th, td { text-align: left; padding: 1.4mm 2mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .5px; color: var(--ink2); }
+td.n { width: 7mm; color: var(--acc); font-weight: 700; }
+td.m { width: 26mm; color: var(--ink2); }
+.meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 0 0 4mm; }
+.meta div { background: var(--bg2); padding: 2.5mm 3mm; font-size: 9.5pt; } .meta b { display: block; font-size: 8pt; color: var(--ink2); text-transform: uppercase; letter-spacing: .5px; }
+.dia { display: block; width: 80%; height: auto; margin: 0 auto; }
+footer { margin-top: 2mm; font-size: 8.5pt; color: var(--ink2); border-top: 1px solid var(--line); padding-top: 2.5mm; }
+</style></head><body>
+<h1>De la arquitectura al código</h1>
+<p class="sub">Demostración en vivo: con una persona en el medio, y sin ella</p>
+<div class="bar"></div>
+<div class="meta">
+  <div><b>Fecha</b>[día, fecha]</div>
+  <div><b>Hora</b>[hora, zona]</div>
+  <div><b>Lugar</b>[sala o enlace]</div>
+  <div><b>Duración</b>45 minutos</div>
+</div>
+
+
+<p>Seguiremos en vivo un cambio de arquitectura hasta el código, en sus dos modos de trabajo.</p>
+
+<h2>Dos modos, una misma arquitectura</h2>
+<div class="modes">
+  <div class="card"><span class="tag">Asistido</span><h3>Un desarrollador en su IDE</h3>
+    <ul><li>Pregunta a la arquitectura publicada mientras programa; cada PR se revisa contra ella.</li>
+    <li>Si el código se aparta de la arquitectura, el PR queda <b>retenido</b> hasta que el arquitecto responde.</li></ul></div>
+  <div class="card u"><span class="tag">Desatendido</span><h3>El pipeline, de punta a punta</h3>
+    <ul><li>El arquitecto aprueba un release; el servicio se construye solo desde su paquete.</li>
+    <li>Con las pruebas en verde, el cambio se mezcla. Última corrida: <b>8 minutos</b>.</li></ul></div>
+</div>
+
+<h2>Cómo se conectan</h2>
+<svg class="dia" viewBox="0 0 680 250" xmlns="http://www.w3.org/2000/svg" font-family="Inter, Segoe UI, Roboto, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#566273"/></marker>
+    <marker id="arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b3fa0"/></marker>
+    <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b5651d"/></marker>
+  </defs>
+  <!-- architect -->
+  <rect x="6" y="78" width="132" height="74" rx="6" fill="#fff" stroke="#1b2430" stroke-width="1.4"/>
+  <text x="72" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2430">Arquitecto</text>
+  <text x="72" y="125" text-anchor="middle" font-size="11" fill="#566273">cambia la arquitectura</text>
+  <text x="72" y="140" text-anchor="middle" font-size="11" fill="#566273">y aprueba el release</text>
+  <!-- kit + index -->
+  <rect x="198" y="78" width="158" height="74" rx="6" fill="#f4f6f9" stroke="#566273" stroke-width="1.2"/>
+  <text x="277" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#1b2430">Kit + índice</text>
+  <text x="277" y="121" text-anchor="middle" font-size="11" fill="#566273">un paquete por componente</text>
+  <text x="277" y="138" text-anchor="middle" font-size="11" fill="#566273">servido por Alia (MCP)</text>
+  <!-- @alia -->
+  <rect x="198" y="12" width="158" height="42" rx="6" fill="#fff" stroke="#6b3fa0" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <text x="277" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#6b3fa0">@alia en un issue</text>
+  <text x="277" y="46" text-anchor="middle" font-size="10.5" fill="#566273">un pedido desde GitHub, sin IDE</text>
+  <line x1="277" y1="54" x2="277" y2="76" stroke="#6b3fa0" stroke-width="1.5" marker-end="url(#arp)"/>
+  <!-- service -->
+  <rect x="424" y="8" width="250" height="88" rx="6" fill="#fff" stroke="#2e7d4f" stroke-width="1.4"/>
+  <rect x="424" y="8" width="250" height="5" rx="2" fill="#2e7d4f"/>
+  <text x="438" y="34" font-size="10" letter-spacing="1" fill="#2e7d4f" font-weight="700">DESATENDIDO</text>
+  <text x="438" y="53" font-size="14" font-weight="700" fill="#1b2430">Servicio de Reservas</text>
+  <text x="438" y="71" font-size="11" fill="#566273">build → pruebas → merge, sin personas</text>
+  <text x="438" y="87" font-size="11" fill="#566273">última corrida: 8 min desde el release</text>
+  <!-- portal -->
+  <rect x="424" y="134" width="250" height="88" rx="6" fill="#fff" stroke="#1f4fa3" stroke-width="1.4"/>
+  <rect x="424" y="134" width="250" height="5" rx="2" fill="#1f4fa3"/>
+  <text x="438" y="160" font-size="10" letter-spacing="1" fill="#1f4fa3" font-weight="700">ASISTIDO</text>
+  <text x="438" y="179" font-size="14" font-weight="700" fill="#1b2430">Portal de Reservas</text>
+  <text x="438" y="197" font-size="11" fill="#566273">un desarrollador en su IDE</text>
+  <text x="438" y="213" font-size="11" fill="#566273">revisión de arquitectura en cada PR</text>
+  <!-- arrows -->
+  <line x1="138" y1="115" x2="196" y2="115" stroke="#566273" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="167" y="108" text-anchor="middle" font-size="10" fill="#566273">release</text>
+  <path d="M356,100 C390,100 390,52 422,52" fill="none" stroke="#2e7d4f" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="380" y="66" text-anchor="end" font-size="10" fill="#2e7d4f">automático</text>
+  <path d="M356,130 C390,130 390,178 422,178" fill="none" stroke="#1f4fa3" stroke-width="1.6" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="380" y="172" text-anchor="end" font-size="10" fill="#1f4fa3">consulta</text>
+  <!-- escalation loop -->
+  <path d="M549,222 L549,244 L72,244 L72,154" fill="none" stroke="#b5651d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arw)"/>
+  <text x="84" y="238" font-size="10.5" fill="#b5651d">si el código se aparta: escalación — el PR queda en espera hasta que el arquitecto responde</text>
+</svg>
+
+<h2>Agenda</h2>
+<table>
+<tr><th></th><th>Caso</th><th>Modo</th></tr>
+<tr><td class="n">1</td><td><b>El IDE le pregunta a la arquitectura.</b> El desarrollador consulta un límite del contrato y obtiene la respuesta con su fuente.</td><td class="m">Asistido</td></tr>
+<tr><td class="n">2</td><td><b>Un release, dos caminos.</b> El arquitecto amplía el asunto de una reserva de 80 a 120 caracteres. El Servicio se construye y se mezcla solo; el Portal lo actualiza una persona, con revisión de arquitectura.</td><td class="m">Desatendido y asistido</td></tr>
+<tr><td class="n">3</td><td><b>Una desviación queda retenida.</b> El Portal intenta 150 caracteres. La revisión lo frena; el desarrollador escala desde el IDE y el PR queda en espera.</td><td class="m">Asistido</td></tr>
+<tr><td class="n">4</td><td><b>El arquitecto responde.</b> La decisión vuelve al PR, que se actualiza solo con la respuesta.</td><td class="m">Arquitecto</td></tr>
+<tr><td class="n">5</td><td><b>Un pedido desde un issue.</b> Alguien escribe <b>@alia</b> en un issue del Servicio. Alia lee el paquete y, si la arquitectura no lo permite, no escribe código: propone la escalación.</td><td class="m">Asistido</td></tr>
+<tr><td class="n">—</td><td>Preguntas</td><td class="m"></td></tr>
+</table>
+
+
+<footer>Northwind Reservas · proyecto de demostración con datos ficticios</footer>
+</body></html>
