@@ -8,7 +8,7 @@ technologies: Java 21, Spring Boot 3.3, Caffeine 3.2
 component_self: servicio-de-reservas
 component_type: api-service
 scope: API REST de disponibilidad, reserva y cancelación de salas; no cubre la autenticación ni la interfaz
-related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR-105, ADR-106, ADR-108, ADR-109, ADR-110
+related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR-105, ADR-106, ADR-109, ADR-110
 -->
 
 > Servicio de Reservas es el único microservicio del sistema: expone la API REST de disponibilidad, reserva y cancelación, valida los tokens y es dueño de la Base de Datos de Reservas.
