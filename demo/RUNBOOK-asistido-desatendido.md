@@ -41,6 +41,13 @@ PORTAL=~/Project/Personal/northwind-portal-reservas
    - Correr `bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js check $ARCH` en cada rama: sin bloqueos.
 3. **Grabar el respaldo.** Capturas o video de la corrida completa del 2026-10-22 (release #87 → kit #88 → servicio PR #8, 8,3 min). Se muestran si algo falla en vivo.
 4. **Pestañas del navegador**, en este orden: Actions del repositorio de arquitectura · PRs del servicio · PRs del Portal · issues de arquitectura.
+5. **Ensayo de la foto, sin release.** La foto del PR del kit en vista de plano llega con sa-skills 10.21.0 y todavía no corrió en un release real. Un release de ensayo cambiaría las versiones de todo el runbook, así que se ensaya en local con el mismo script que usa el workflow:
+   ```bash
+   V=$SA/plugins/sa-visualization/skills/architecture-command-center/scripts
+   bun $V/render.js $ARCH/visualizations/architecture-command-center.scene.json /tmp/cc.html --lang es
+   bun $V/snapshot.js /tmp/cc.html /tmp/ensayo.png --plan servicio-de-reservas   # imprime el pie de la foto
+   ```
+   Esperado: el piso L2 con el Servicio de Reservas seleccionado y sus tres puertos. Es la foto que trae el PR del kit en el caso 2, con la versión 1.10.0.
 
 ### Una hora antes
 
@@ -121,6 +128,13 @@ gh pr create -B main -H release/architecture-v1.10.0 --fill
 | Tests y merge automático | +8:30 | PR del servicio, mergeado por `github-actions` |
 
 **Decir sobre el kit:** "No regenera todo: edita solo lo que cambió. El diff es el contrato y la especificación del servicio."
+
+**Mostrar la foto en el PR del kit** (sa-skills 10.21.0): debajo del texto del PR va una imagen del centro de mando en **vista de plano**, en el piso **L2 · Servicios de negocio**, con el **Servicio de Reservas** seleccionado y sus puertos (hacia L3 Base de Datos, hacia L4 Proveedor de Identidad, desde L1 Portal). El pie dice la versión 1.10.0, el piso y el componente. Archivo: `visualizations/evidence/architecture-v1.10.0-servicio-de-reservas.png`.
+
+**Decir:** "El release trae su propia evidencia: una foto de cada componente que cambió, en su piso. Aquí cambió solo el Servicio de Reservas."
+
+- Hay una foto por componente cuyo paquete cambió, hasta tres. Si el Portal también cambiara, aparecería una segunda foto en L1.
+- **Si no hay foto**, el paso dejó un aviso (`the command-center evidence was not produced`) en el job `handoff`. El kit sigue siendo válido; seguir con la demo.
 
 ### 2a — Servicio de Reservas (desatendido)
 
