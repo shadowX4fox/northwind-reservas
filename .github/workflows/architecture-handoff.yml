@@ -33,7 +33,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v10.19.3
+  SA_PLUGIN_REF: v10.19.5
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -58,7 +58,7 @@ jobs:
           git diff --quiet "$TAG" HEAD -- $paths || { echo "the architecture moved past $TAG on this branch — release it, then regenerate the kit of the new tag"; exit 1; }
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
       - name: Plugin, pinned, with its contract validators
         run: |
           git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" "$SA_PLUGIN_REPO" "$RUNNER_TEMP/sa"

@@ -52,7 +52,7 @@ on:
 permissions: {}
 
 env:
-  SA_PLUGIN_REF: v10.19.3
+  SA_PLUGIN_REF: v10.19.5
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -90,7 +90,7 @@ jobs:
     steps:
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
       - name: The messages, in the architecture's language
         run: |
           git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" "$SA_PLUGIN_REPO" "$RUNNER_TEMP/sa"
@@ -199,7 +199,7 @@ jobs:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.4
       - name: Plugin, pinned
         run: |
           git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" "$SA_PLUGIN_REPO" "$RUNNER_TEMP/sa"
