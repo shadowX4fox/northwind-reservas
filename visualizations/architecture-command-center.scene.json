@@ -1,6 +1,6 @@
 {
  "project": "Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión",
- "version": "1.9.0",
+ "version": "1.9.1",
  "status": "Released",
  "architectureType": "MICROSERVICES",
  "language": "es",
@@ -52,7 +52,9 @@
     "ADR-001",
     "ADR-002",
     "ADR-004",
+    "ADR-101",
     "ADR-104",
+    "ADR-107",
     "ADR-110"
    ],
    "note": "Interfaz de autoservicio de reservas, responsiva para navegador y teléfono. Sustituye la solicitud por correo a recepción."
@@ -74,7 +76,6 @@
     "ADR-103",
     "ADR-105",
     "ADR-106",
-    "ADR-108",
     "ADR-109",
     "ADR-110"
    ],
@@ -496,6 +497,34 @@
      ]
     }
    },
+   "ADR-101": {
+    "id": "ADR-101",
+    "title": "SPA y un microservicio dueño de su base de datos",
+    "file": "adr/ADR-101-patron-de-arquitectura-spa-un-microservicio-dueno-de.md",
+    "status": "Accepted",
+    "date": "2026-10-18",
+    "scope": "User",
+    "summary": "La arquitectura se compone de la SPA Portal de Reservas y un único microservicio, Servicio de Reservas. Este es dueño exclusivo de la Base de Datos de Reservas. No hay API Gateway, service mesh ni event bus. Los tres casos de uso son síncronos y un solo servicio basta.",
+    "consequences": {
+     "positive": [
+      "Menos componentes que operar — el equipo de 4 personas mantiene tres contenedores.",
+      "Integridad centralizada — la superposición se declara en PostgreSQL 16, sin código de coordinación.",
+      "Réplicas sin estado compartido — añadir réplicas no requiere coordinación."
+     ],
+     "negative": [
+      "Un reporte de ocupación exige una operación nueva en la API — equipo backend. Severity: Medium. Mitigation: Not documented.",
+      "Todo cambio despliega el servicio completo — los 2 desarrolladores backend. Severity: Low. Mitigation: Not documented.",
+      "Un recordatorio asíncrono no tiene event bus — agregarlo exige infraestructura nueva. Severity: Low. Mitigation: Not documented."
+     ]
+    },
+    "related": [
+     "ADR-001",
+     "ADR-002",
+     "ADR-003",
+     "ADR-004",
+     "ADR-005"
+    ]
+   },
    "ADR-102": {
     "id": "ADR-102",
     "title": "Restricción de exclusión contra reservas dobles",
@@ -608,28 +637,28 @@
      "ADR-005"
     ]
    },
-   "ADR-108": {
-    "id": "ADR-108",
-    "title": "Caché en proceso con Caffeine para disponibilidad",
-    "file": "adr/ADR-108-cache-en-proceso-con-caffeine-para-disponibilidad.md",
-    "status": "Superseded by ADR-109",
-    "date": "2026-10-20",
+   "ADR-107": {
+    "id": "ADR-107",
+    "title": "Portal de Reservas como archivos estáticos en CDN",
+    "file": "adr/ADR-107-publicacion-del-portal-de-reservas-como-archivos-estaticos.md",
+    "status": "Accepted",
+    "date": "2026-10-18",
     "scope": "User",
-    "summary": "El Servicio de Reservas guarda la disponibilidad por sede y fecha en una caché Caffeine 3.2 dentro de cada réplica. Cada entrada expira a los 5 minutos.",
+    "summary": "El Portal de Reservas se publica como archivos estáticos desde el CDN de Plataforma Northwind, fuera del clúster Kubernetes. El portal no tiene réplicas propias. El tráfico de la API sigue por el Ingress del clúster (ADR-005).",
     "consequences": {
      "positive": [
-      "Menos carga en la Base de Datos de Reservas — la consulta más frecuente casi nunca llega a ella.",
-      "Sin dependencia nueva de Plataforma Northwind — la caché vive y muere con la réplica."
+      "Sin cómputo propio para el portal — el equipo no opera réplicas del frontend.",
+      "Caché fuera del clúster — la carga de archivos no llega al Ingress del backend."
      ],
      "negative": [
-      "Disponibilidad desactualizada — una sala reservada en otra réplica puede verse libre hasta 5 minutos; el miembro recibe \"sala ocupada\" al reservar. Severity: Medium. Mitigation: deuda registrada en TDR-001.",
-      "Memoria por réplica — sin tamaño máximo documentado. Severity: Low. Mitigation: Not documented."
+      "Dependencia de Plataforma Northwind — salir reescribe la publicación. Severity: Medium. Mitigation: Not documented.",
+      "Peso del paquete — el SDK de OpenTelemetry aumenta lo que descarga cada navegador. Severity: Low. Mitigation: Not documented."
      ]
     },
     "related": [
-     "ADR-003",
      "ADR-005",
-     "ADR-102"
+     "ADR-002",
+     "ADR-004"
     ]
    },
    "ADR-109": {
@@ -680,31 +709,6 @@
    }
   },
   "tdrs": {
-   "TDR-004": {
-    "id": "TDR-004",
-    "title": "Zona horaria de las sedes leída de una variable de despliegue",
-    "file": "tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md",
-    "status": "Resolved",
-    "date": "2026-10-20",
-    "components": [
-     {
-      "slug": "Servicio de Reservas",
-      "node": "servicio-de-reservas"
-     }
-    ],
-    "adrs": [
-     "ADR-105"
-    ],
-    "tags": [
-     "zona-horaria",
-     "despliegue",
-     "INV-01",
-     "INV-04"
-    ],
-    "summary": "La arquitectura 1.6.0 no documenta la zona horaria de las sedes (spec § 4, INV-01 e INV-04; escalado en #62). Mientras #62 no tenga respuesta, el Servicio de Reservas la lee de la variable de despliegue RESERVAS_ZONA_HORARIA (identificador IANA, una sola zona para las 3 sedes), sin valor por defecto: sin ella, o con un identificador inválido, el servicio no arranca. El reloj de negocio usa esa zona para INV-01, INV-04 y ADR-105.",
-    "impact": "Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan mal las franjas \"en el pasado\" (INV-01), las reservas \"futuras\" (INV-04) y las que \"ya iniciaron\" (ADR-105). Una sola zona para las 3 sedes: si las sedes tienen zonas distintas, la regla falla en alguna de ellas.",
-    "owner": "---"
-   },
    "TDR-002": {
     "id": "TDR-002",
     "title": "Las claves de idempotencia vencidas nunca se purgan",
@@ -758,6 +762,31 @@
     ],
     "summary": "Cuando se pierde la conexión LISTEN al canal disponibilidad, los avisos de ese intervalo se pierden: PostgreSQL no los guarda. La réplica del Servicio de Reservas registra el aviso, espera y reconecta, pero no vacía la caché; esa réplica sirve disponibilidad desactualizada hasta 5 minutos, la expiración de ADR-109.",
     "impact": "El Portal de Reservas puede mostrar libre una franja ya reservada. La reserva no se duplica, porque la Base de Datos de Reservas la rechaza (ADR-102), pero el usuario recibe un 409 inesperado (ROOM_OCCUPIED).",
+    "owner": "---"
+   },
+   "TDR-004": {
+    "id": "TDR-004",
+    "title": "Zona horaria de las sedes leída de una variable de despliegue",
+    "file": "tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md",
+    "status": "Resolved",
+    "date": "2026-10-20",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-105"
+    ],
+    "tags": [
+     "zona-horaria",
+     "despliegue",
+     "INV-01",
+     "INV-04"
+    ],
+    "summary": "La arquitectura 1.6.0 no documenta la zona horaria de las sedes (spec § 4, INV-01 e INV-04; escalado en #62). Mientras #62 no tenga respuesta, el Servicio de Reservas la lee de la variable de despliegue RESERVAS_ZONA_HORARIA (identificador IANA, una sola zona para las 3 sedes), sin valor por defecto: sin ella, o con un identificador inválido, el servicio no arranca. El reloj de negocio usa esa zona para INV-01, INV-04 y ADR-105.",
+    "impact": "Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan mal las franjas \"en el pasado\" (INV-01), las reservas \"futuras\" (INV-04) y las que \"ya iniciaron\" (ADR-105). Una sola zona para las 3 sedes: si las sedes tienen zonas distintas, la regla falla en alguna de ellas.",
     "owner": "---"
    },
    "TDR-001": {
