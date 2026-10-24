@@ -21,7 +21,7 @@ related_adrs: ADR-003, ADR-102, ADR-110
 **Description:** Base de Datos de Reservas guarda salas y reservas e impide dos reservas confirmadas superpuestas de una sala.
 
 **Component Version:** 1.0.2
-**Architecture Version:** 1.9.0
+**Architecture Version:** 1.9.1
 **Last Updated:** 2026-10-20
 
 ## Propósito <!-- LABEL: Purpose -->

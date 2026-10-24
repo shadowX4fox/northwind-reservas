@@ -6,6 +6,12 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-10-24
+
+### Changed
+- Contenedor: Portal de Reservas — cita ADR-101 y ADR-107, que rigen el portal
+- Contenedor: Servicio de Reservas — deja de citar ADR-108 (Superseded by ADR-109)
+
 ## [1.9.0] - 2026-10-22
 
 ### Added
@@ -45,13 +51,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 ### Changed
 - ADR: ADR-102 — enlaza TDR-003 en Notes
 - ADR: ADR-109 — cita TDR-003 en References
-
-## [1.5.1] - 2026-10-20
-
-### Changed
-- Contenedor: Servicio de Reservas — deja de nombrar TDR-001, resuelta
-- TDR: TDR-001 — estado: In Progress → Resolved (ADR-109 implementado en northwind-servicio-reservas@3238407)
-- Sección: Escalabilidad y Rendimiento (`docs/08-scalability-and-performance.md`) — la ventana de TDR-001 ya no aplica
-- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-001 sale de 13.2 Deuda Técnica
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).

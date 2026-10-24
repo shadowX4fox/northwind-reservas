@@ -2,6 +2,14 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.5.1] - 2026-10-20
+
+### Changed
+- Contenedor: Servicio de Reservas — deja de nombrar TDR-001, resuelta
+- TDR: TDR-001 — estado: In Progress → Resolved (ADR-109 implementado en northwind-servicio-reservas@3238407)
+- Sección: Escalabilidad y Rendimiento (`docs/08-scalability-and-performance.md`) — la ventana de TDR-001 ya no aplica
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-001 sale de 13.2 Deuda Técnica
+
 ## [1.5.0] - 2026-10-20
 
 ### Added
