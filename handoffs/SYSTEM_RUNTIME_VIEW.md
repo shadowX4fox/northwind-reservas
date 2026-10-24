@@ -7,7 +7,7 @@
 | Versión | 4.3.1 |
 | Responsable | Equipo de Arquitectura Northwind |
 | Estado | draft |
-| Versión de la arquitectura | 1.9.0 |
+| Versión de la arquitectura | 1.9.1 |
 | Generado | 2026-10-20 |
 | Proyecto | Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión |
 
