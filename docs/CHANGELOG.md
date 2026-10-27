@@ -6,6 +6,9 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Changed
+- Servicio de Reservas: el asunto de una reserva (`BookingRequest.subject`) admite hasta 120 caracteres (antes 80); contrato 1.3.0.
+
 ## [1.9.1] - 2026-10-24
 
 ### Changed
