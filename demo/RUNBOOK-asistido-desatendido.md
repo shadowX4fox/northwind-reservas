@@ -239,6 +239,8 @@ Empezar cuando el índice publicó (+4:45), no antes: el paquete 1.10.0 aún no 
 
 **Decir:** "La vez pasada el Servicio se construyó solo mientras mirábamos el Portal. Hoy lo vemos de punta a punta: un cambio de rutina en la arquitectura, y nadie toca el código."
 
+Deck: slide 15 (*Del merge al código, sin nadie*), con el resumen de 2a y 2b abajo a la izquierda.
+
 El cambio: negocio quiere contar las cancelaciones. Es una métrica nueva del Servicio de Reservas. No cambia ningún contrato ni el Portal, así que solo el paquete del Servicio cambia y solo el Servicio abre un PR.
 
 1. **El arquitecto cambia la arquitectura.** 👤 Arquitecto · 📍 `northwind-reservas` · terminal y Claude Code. **Crear la rama ahora**, en la terminal de `$ARCH`:
