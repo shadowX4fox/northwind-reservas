@@ -2,6 +2,15 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.6.0] - 2026-10-20
+
+### Added
+- TDR: TDR-003 — Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos (Resolved)
+
+### Changed
+- ADR: ADR-102 — enlaza TDR-003 en Notes
+- ADR: ADR-109 — cita TDR-003 en References
+
 ## [1.5.1] - 2026-10-20
 
 ### Changed

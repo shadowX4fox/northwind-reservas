@@ -6,6 +6,8 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-27
+
 ### Changed
 - Servicio de Reservas: el asunto de una reserva (`BookingRequest.subject`) admite hasta 120 caracteres (antes 80); contrato 1.3.0.
 
@@ -45,14 +47,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 - Contenedor: Base de Datos de Reservas — horas de las reservas en hora local de la sede (ADR-110)
 - Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-004 pasa a In Progress
 - ESC-004 resolved by this release: Zona horaria de las sedes no documentada (INV-01, INV-04, ADR-105)
-
-## [1.6.0] - 2026-10-20
-
-### Added
-- TDR: TDR-003 — Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos (Resolved)
-
-### Changed
-- ADR: ADR-102 — enlaza TDR-003 en Notes
-- ADR: ADR-109 — cita TDR-003 en References
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).
