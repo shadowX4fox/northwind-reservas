@@ -19,7 +19,21 @@ De la arquitectura al código, con y sin una persona en el medio. Unos 45 minuto
 | 5 | Un pedido desde un issue: `@alia` | Asistido, desde GitHub | 5 min |
 | 6 | Cierre: el arquitecto responde una pregunta del build (v1.10.1) | Desatendido | 10 min |
 
-Todo cambio de arquitectura se hace **en vivo**: no hay ramas preparadas. Punto de partida: arquitectura `architecture-v1.9.1`, Servicio y Portal ligados a 1.9.1.
+Todo se hace **en vivo, frente al público**: ninguna rama, commit, PR ni issue se prepara antes. Cada rama se crea en el paso del caso que la usa. Punto de partida: arquitectura `architecture-v1.9.1`, Servicio y Portal ligados a 1.9.1, los tres repositorios en su rama principal y sin PRs abiertos.
+
+### Quién ejecuta y dónde
+
+Cada paso empieza con **quién** lo hace y **dónde**: `👤 rol · 📍 repositorio · herramienta`.
+
+| Rol | Qué representa | Dónde trabaja |
+|---|---|---|
+| **Arquitecto** | Quien cambia y publica la arquitectura | `northwind-reservas` — terminal (`$ARCH`) y Claude Code |
+| **Desarrollador del Portal** | El equipo asistido | `northwind-portal-reservas` — Claude Code (`$PORTAL`) y GitHub |
+| **Alguien del equipo** | Cualquier persona con acceso al repositorio | `northwind-servicio-reservas` — un issue en GitHub |
+| **CI (nadie)** | Lo que corre solo | GitHub Actions de cada repositorio |
+| **Presentador** | Quien narra y prepara | Navegador, pestañas de Actions y PRs |
+
+Una misma persona puede hacer todos los roles en la demo; lo que importa es decir en voz alta qué rol está haciendo en cada paso.
 
 Variables de este runbook:
 
@@ -33,6 +47,8 @@ PORTAL=~/Project/Personal/northwind-portal-reservas
 ---
 
 ## 0. Preparación (el día anterior y una hora antes, fuera de cámara)
+
+👤 Presentador · 📍 su máquina, fuera de cámara. Solo se verifica que todo esté arriba y limpio: **no se crea ninguna rama ni se abre ningún PR o issue**.
 
 ### El día anterior
 
@@ -84,7 +100,9 @@ gh issue list -R shadowX4fox/northwind-servicio-reservas --state open   # el cas
 
 **Decir:** "El desarrollador no adivina ni busca en un wiki: le pregunta a la arquitectura publicada, desde su IDE."
 
-1. Claude Code en `$PORTAL`.
+👤 Desarrollador del Portal · 📍 `northwind-portal-reservas` · Claude Code. Sin rama: solo pregunta, no cambia nada.
+
+1. Abrir Claude Code en `$PORTAL` (rama `main`).
 2. Preguntar: *"¿Cuál es el límite de caracteres del asunto de una reserva?"*
 3. **Esperado:** 80 caracteres, citando el paquete del Portal de Reservas (contrato del Servicio de Reservas, `BookingRequest.subject`) en la versión 1.9.1.
 4. Mostrar `src/ui/SalasPage.tsx:220`: `maxLength={80}`. El código y la arquitectura coinciden.
@@ -99,11 +117,17 @@ gh issue list -R shadowX4fox/northwind-servicio-reservas --state open   # el cas
 
 ### El arquitecto publica
 
-1. `cd $ARCH && git checkout -b arch/asunto-120`, y Claude Code en `$ARCH`:
+👤 Arquitecto · 📍 `northwind-reservas` · terminal y Claude Code.
+
+1. **Crear la rama ahora, frente al público**, en la terminal de `$ARCH`:
+   ```bash
+   cd $ARCH && git checkout main && git pull -q && git checkout -b arch/asunto-120
+   ```
+   Luego, en Claude Code en `$ARCH`:
    > *"El asunto de una reserva pasa de 80 a 120 caracteres: actualiza el contrato del Servicio de Reservas."*
 2. **Esperado:** no edita sin preguntar. Muestra el cambio antes → después en `docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md`: `subject (80 caracteres o menos)` → `120`, la fila `VALIDATION_FAILED` (asunto de más de 120 caracteres) y la versión del contrato (`1.2.0` → `1.3.0`), más una línea en `docs/CHANGELOG.md` § [Unreleased]. **Aprobar.**
    - Si no sube la versión del contrato o no escribe la línea del changelog, pedírselo: *"sube la versión del contrato y anota el cambio en [Unreleased]"*.
-3. Commit y release:
+3. Commit y release, en la terminal de `$ARCH`:
 
 ```bash
 git add -A && git commit -m "docs(servicio-de-reservas): asunto de hasta 120 caracteres"
@@ -119,10 +143,12 @@ git push -u origin release/architecture-v1.10.0
 gh pr create -B main -H release/architecture-v1.10.0 --fill
 ```
 
-- Mostrar los gates en el PR (`architecture-gates`): verdes.
-- **Merge del PR** (la persona). Anotar la hora: es el **T0**.
+- 👤 Presentador · 📍 GitHub, PR de `northwind-reservas`: mostrar los gates (`architecture-gates`): verdes.
+- 👤 Arquitecto · 📍 GitHub: **merge del PR**. Anotar la hora: es el **T0**.
 
 ### Lo que pasa solo (narrar sobre Actions)
+
+👤 CI (nadie) · 📍 Actions de `northwind-reservas` y de `northwind-servicio-reservas`. El presentador solo narra.
 
 | Paso | Tiempo aproximado desde T0 | Dónde se ve |
 |---|---|---|
@@ -143,6 +169,8 @@ gh pr create -B main -H release/architecture-v1.10.0 --fill
 
 ### 2a — Servicio de Reservas (desatendido)
 
+👤 CI (nadie) escribe y mergea · 📍 `northwind-servicio-reservas` · GitHub. El presentador solo muestra; nadie crea la rama ni el PR: los crea el build.
+
 - Abrir el PR del servicio cuando aparezca. Mostrar:
   - el commit de contratos solo (`architecture/` byte a byte), y después el código;
   - la validación del asunto en 120 y su test;
@@ -151,12 +179,18 @@ gh pr create -B main -H release/architecture-v1.10.0 --fill
 
 ### 2b — Portal de Reservas (asistido), mientras 2a corre
 
+👤 Desarrollador del Portal · 📍 `northwind-portal-reservas` · terminal, Claude Code y GitHub.
+
 Empezar cuando el índice publicó (+4:45), no antes: el paquete 1.10.0 aún no existe.
 
-1. Claude Code en `$PORTAL`, rama nueva: *"actualiza el Portal a la versión 1.10.0 de la arquitectura"*.
+1. **Crear la rama ahora**, en la terminal de `$PORTAL`:
+   ```bash
+   cd $PORTAL && git checkout main && git pull -q && git checkout -b feat/arquitectura-1.10.0
+   ```
+   Luego, en Claude Code en `$PORTAL`: *"actualiza el Portal a la versión 1.10.0 de la arquitectura"*.
 2. **Esperado:** `what_changed` nombra el límite del asunto; copia los contratos en `architecture/` en un commit propio; cambia `maxLength={80}` → `120`; actualiza los tipos y los tests.
-3. Abrir el PR. El check **Architecture review** corre: **PASS**.
-4. Merge (la persona).
+3. Abrir el PR (Claude Code o `gh pr create --fill`). 👤 CI · 📍 Actions del Portal: el check **Architecture review** corre: **PASS**.
+4. 👤 Desarrollador del Portal · 📍 GitHub: **merge**.
 
 **Decir:** "Misma release, misma revisión contra el mismo paquete. Lo que cambia es quién escribe el código."
 
@@ -171,11 +205,17 @@ Empezar cuando el índice publicó (+4:45), no antes: el paquete 1.10.0 aún no 
 
 **Decir:** "¿Y si el desarrollador hace algo que la arquitectura no dice? La revisión lo frena, y la única salida es preguntarle al arquitecto."
 
-1. En `$PORTAL`, rama nueva `feat/asunto-150`: *"el equipo de producto pide 150 caracteres en el asunto; cámbialo en el formulario"*.
+👤 Desarrollador del Portal · 📍 `northwind-portal-reservas` · terminal, Claude Code y GitHub.
+
+1. **Crear la rama ahora**, en la terminal de `$PORTAL` (después del merge del caso 2b):
+   ```bash
+   cd $PORTAL && git checkout main && git pull -q && git checkout -b feat/asunto-150
+   ```
+   Luego, en Claude Code en `$PORTAL`: *"el equipo de producto pide 150 caracteres en el asunto; cámbialo en el formulario"*.
    - **Esperado:** el agente advierte que el contrato dice 120. Pedirle que lo haga igual para la demo.
-2. Abrir el PR → **Architecture review: FAIL**. Mostrar el comentario en español: el hallazgo bloqueante cita el contrato 1.3.0 y la regla de BUILD.md.
-3. En el IDE: *"escala esto a arquitectura"* → `preview_escalation` muestra la propuesta → **sí** → issue `[ESC-?]` en `northwind-reservas`. Anotar su número `#N`.
-4. Citar el issue en el cuerpo del PR: `shadowX4fox/northwind-reservas#N`. Se vuelve a correr la revisión.
+2. Abrir el PR. 👤 CI · 📍 Actions del Portal → **Architecture review: FAIL**. Mostrar el comentario en español: el hallazgo bloqueante cita el contrato 1.3.0 y la regla de BUILD.md.
+3. 👤 Desarrollador del Portal · 📍 Claude Code en `$PORTAL`: *"escala esto a arquitectura"* → `preview_escalation` muestra la propuesta → **sí** → issue `[ESC-?]` en `northwind-reservas`. Anotar su número `#N`.
+4. 👤 Desarrollador del Portal · 📍 GitHub, PR del Portal: citar el issue en el cuerpo del PR: `shadowX4fox/northwind-reservas#N`. La revisión vuelve a correr sola.
 5. **Esperado:** estado **pending**, encabezado ⏸ EN ESPERA ("en espera de …#N"). El botón de merge sigue bloqueado.
 
 **Decir:** "El código no se mezcla, pero tampoco se pierde: queda retenido hasta que el arquitecto decide."
@@ -186,6 +226,8 @@ Empezar cuando el índice publicó (+4:45), no antes: el paquete 1.10.0 aún no 
 
 **Decir:** "El arquitecto decide. Aquí dice que no: 120 es el límite del contrato."
 
+👤 Arquitecto · 📍 `northwind-reservas` · terminal (`$ARCH`, rama `main`; sin rama nueva).
+
 ```bash
 cd $ARCH && git checkout main && git pull -q
 bun $SA/scripts/shared/escalate.js import . N                    # el registro, numerado ESC-NNN
@@ -194,10 +236,10 @@ bun $SA/scripts/shared/escalate.js close . ESC-NNN --by architecture-v1.10.0 --r
 gh issue close N -R shadowX4fox/northwind-reservas --reason "not planned"
 ```
 
-- El cierre dispara `architecture-escalations` → `architecture-escalation-closed` al Portal → job `recheck`.
+- 👤 CI · 📍 Actions de `northwind-reservas` y del Portal: el cierre dispara `architecture-escalations` → `architecture-escalation-closed` al Portal → job `recheck`.
 - **Esperado** en el PR del Portal, en menos de un minuto: estado **failure**, "corrige el código".
 - El registro `escalations/ESC-NNN-*.md` va en un PR aparte; mergearlo después de la demo.
-- Cerrar el PR `feat/asunto-150` del Portal sin merge.
+- 👤 Desarrollador del Portal · 📍 GitHub: cerrar el PR `feat/asunto-150` sin merge.
 
 **Decir:** "Si el arquitecto hubiera dicho que sí, sería una release nueva, y el Portal pasaría por el caso 2 otra vez."
 
@@ -207,9 +249,11 @@ gh issue close N -R shadowX4fox/northwind-reservas --reason "not planned"
 
 **Decir:** "No hace falta un IDE. Cualquiera del equipo le pide un cambio a Alia en un issue, y Alia responde con la arquitectura: lee el paquete, aplica sus reglas, y si la arquitectura no lo permite, no lo inventa."
 
-1. Issue nuevo en el **servicio** (`northwind-servicio-reservas`), título *"Motivo en el log de cancelación"*, cuerpo:
+👤 Alguien del equipo · 📍 `northwind-servicio-reservas` · GitHub, en el navegador. Sin IDE, sin terminal y sin rama.
+
+1. Crear ahora un issue nuevo en el **servicio** (`northwind-servicio-reservas`), título *"Motivo en el log de cancelación"*, cuerpo:
    > @alia añade el motivo de la cancelación al log de aplicación cuando se cancela una reserva
-2. Mostrar Actions del servicio: el job `Architecture mention` corre en el runner `sa-index`, el que llega a Alia. Tarda menos de un minuto.
+2. 👤 CI · 📍 Actions del servicio: el job `Architecture mention` corre en el runner `sa-index`, el que llega a Alia. Tarda menos de un minuto.
 3. **Esperado:** Alia actualiza su comentario en español:
    - leyó el paquete del Servicio de Reservas (`get_build_pack`, BUILD.md, `security`, `cross-cutting-standards`, ADR-106);
    - **no cambió código**: los estándares de observabilidad (ADR-004) prohíben datos personales completos en los logs, y el motivo es texto libre que el paquete no clasifica (`security`: datos que maneja, `NOT DOCUMENTED`);
@@ -231,13 +275,17 @@ gh issue close N -R shadowX4fox/northwind-reservas --reason "not planned"
 
 **Decir:** "El build desatendido no inventa lo que la arquitectura no dice: lo deja anotado como pregunta. Cuando el arquitecto responde, el código se pone al día solo."
 
-1. **La pregunta.** Mostrar en el Servicio lo que dejó el build:
+1. **La pregunta.** 👤 Presentador · 📍 `northwind-servicio-reservas` · terminal (`$SVC`, solo lectura). Mostrar lo que dejó el build:
    ```bash
    git -C $SVC checkout -q master && git -C $SVC pull -q
    rg -n "TODO\(architecture\)" $SVC/src/main/resources/application.yaml
    ```
    La línea de `intervalo-purga-claves`: TDR-002 (opción B) pide purgar las claves de idempotencia vencidas "de forma periódica", pero no dice cada cuánto. Hoy el valor lo tiene que dar el despliegue (`RESERVAS_INTERVALO_PURGA_CLAVES`); sin él, el servicio no arranca.
-2. **El arquitecto responde.** `cd $ARCH && git checkout main && git pull -q && git checkout -b arch/purga-claves`, y Claude Code en `$ARCH`:
+2. **El arquitecto responde.** 👤 Arquitecto · 📍 `northwind-reservas` · terminal y Claude Code. **Crear la rama ahora**, en la terminal de `$ARCH`:
+   ```bash
+   cd $ARCH && git checkout main && git pull -q && git checkout -b arch/purga-claves
+   ```
+   Luego, en Claude Code en `$ARCH`:
    > *"Las claves de idempotencia vencidas se purgan cada hora (TDR-002, opción B). Documéntalo en el Servicio de Reservas."*
 3. **Esperado:** muestra el cambio antes → después en `docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md`: las claves de idempotencia, vencidas a las 24 horas, se purgan cada hora. Una línea en `docs/CHANGELOG.md` § [Unreleased]. **Aprobar.**
 4. Commit y release, igual que en el caso 2:
@@ -248,8 +296,8 @@ gh issue close N -R shadowX4fox/northwind-reservas --reason "not planned"
    git push -u origin release/architecture-v1.10.1
    gh pr create -B main -H release/architecture-v1.10.1 --fill
    ```
-   Gates verdes → **merge** (la persona). Anotar el **T0**.
-5. **Lo que pasa solo:** la misma cadena del caso 2: tag, kit editado en sitio, índice. Solo cambió el paquete del Servicio de Reservas, así que solo el Servicio abre un PR. El Portal no se toca.
+   Gates verdes → 👤 Arquitecto · 📍 GitHub: **merge**. Anotar el **T0**.
+5. **Lo que pasa solo** (👤 CI · 📍 Actions de `northwind-reservas` y del servicio; el presentador narra): la misma cadena del caso 2: tag, kit editado en sitio, índice. Solo cambió el paquete del Servicio de Reservas, así que solo el Servicio abre un PR. El Portal no se toca.
 6. **Esperado en el PR del servicio:**
    - `intervalo-purga-claves` con `PT1H` (una hora) en `application.yaml`, sin el `TODO(architecture)`. El comentario de `PropiedadesReservas.java` ya no dice que el intervalo no está documentado;
    - `.architecture.json` en 1.10.1;
@@ -268,7 +316,7 @@ gh issue close N -R shadowX4fox/northwind-reservas --reason "not planned"
 
 - Mergear el PR del registro de la escalación (caso 4).
 - Cerrar el issue del caso 5 en el servicio (o crear la escalación que Alia renderizó, si se quiere seguir el ciclo del caso 4).
-- Borrar las ramas locales `arch/asunto-120` y `arch/purga-claves` (ya mergeadas por sus releases).
+- Borrar las ramas que se crearon en vivo: `arch/asunto-120` y `arch/purga-claves` en `$ARCH`, `feat/arquitectura-1.10.0` y `feat/asunto-150` en `$PORTAL`.
 - Los runners siguen arriba hasta el próximo reinicio.
 
 ## Datos de la corrida de referencia (2026-10-22, v1.9.0)
