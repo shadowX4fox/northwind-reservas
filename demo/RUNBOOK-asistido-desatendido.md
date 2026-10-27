@@ -17,7 +17,9 @@ De la arquitectura al código, con y sin una persona en el medio. Unos 45 minuto
 | 3 | Una desviación queda retenida (HELD) | Asistido | 10 min |
 | 4 | El arquitecto responde | — | 5 min |
 | 5 | Un pedido desde un issue: `@alia` | Asistido, desde GitHub | 5 min |
-| 6 | Respaldo: métrica de cancelaciones (v1.11.0) | Desatendido | si sobra tiempo o falla 2a |
+| 6 | Cierre: el arquitecto responde una pregunta del build (v1.10.1) | Desatendido | 10 min |
+
+Todo cambio de arquitectura se hace **en vivo**: no hay ramas preparadas. Punto de partida: arquitectura `architecture-v1.9.1`, Servicio y Portal ligados a 1.9.1.
 
 Variables de este runbook:
 
@@ -34,14 +36,11 @@ PORTAL=~/Project/Personal/northwind-portal-reservas
 
 ### El día anterior
 
-1. **Portal al día en 1.9.0.** El Portal sigue ligado a 1.8.0. Actualizarlo antes para que el caso 2b muestre solo el cambio del asunto. En una sesión de Claude Code en `$PORTAL`: *"actualiza el Portal a la versión 1.9.0 de la arquitectura"*. PR → revisión PASS → merge.
-2. **Ramas de arquitectura listas, sin release.** Cada cambio en su rama, con commit, sin push:
-   - `arch/asunto-120`: en `docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md`, `subject (80 caracteres o menos)` → `120`, la fila `VALIDATION_FAILED` (asunto de más de 120 caracteres), versión del contrato `1.2.0` → `1.3.0`; una línea en `docs/CHANGELOG.md` § [Unreleased].
-   - `arch/metrica-cancelaciones` (respaldo): en `docs/09-operational-considerations.md` § Métricas, un contador de cancelaciones por `sede` y rol (miembro / `recepcion`), emitido por el Servicio de Reservas con OpenTelemetry; una línea en § [Unreleased].
-   - Correr `bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js check $ARCH` en cada rama: sin bloqueos.
+1. **Versiones al día.** Arquitectura `released` v1.9.1 (`lifecycle.js status $ARCH`); `.architecture.json` del Servicio y del Portal en 1.9.1. Verificado el 2026-10-26.
+2. **Gates limpios en main.** `bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js check $ARCH --no-render`: `RELEASE GATES (clear)`. Verificado el 2026-10-26. Así, lo único que puede bloquear en vivo es el cambio que se hace en la demo.
 3. **Grabar el respaldo.** Capturas o video de la corrida completa del 2026-10-22 (release #87 → kit #88 → servicio PR #8, 8,3 min). Se muestran si algo falla en vivo.
 4. **Pestañas del navegador**, en este orden: Actions del repositorio de arquitectura · PRs del servicio · PRs del Portal · issues de arquitectura.
-5. **Ensayo de la foto, sin release.** La foto del PR del kit en vista de plano llega con sa-skills 10.21.0 y todavía no corrió en un release real. Un release de ensayo cambiaría las versiones de todo el runbook, así que se ensaya en local con el mismo script que usa el workflow:
+5. **Ensayo de la foto, sin release.** Se ensaya en local con el mismo script que usa el workflow (ensayado el 2026-10-26: pie `v1.9.1 · Vista lógica · L2 Servicios de negocio · Servicio de Reservas`):
    ```bash
    V=$SA/plugins/sa-visualization/skills/architecture-command-center/scripts
    bun $V/render.js $ARCH/visualizations/architecture-command-center.scene.json /tmp/cc.html --lang es
@@ -87,7 +86,7 @@ gh issue list -R shadowX4fox/northwind-servicio-reservas --state open   # el cas
 
 1. Claude Code en `$PORTAL`.
 2. Preguntar: *"¿Cuál es el límite de caracteres del asunto de una reserva?"*
-3. **Esperado:** 80 caracteres, citando el paquete del Portal de Reservas (contrato del Servicio de Reservas, `BookingRequest.subject`) en la versión 1.9.0.
+3. **Esperado:** 80 caracteres, citando el paquete del Portal de Reservas (contrato del Servicio de Reservas, `BookingRequest.subject`) en la versión 1.9.1.
 4. Mostrar `src/ui/SalasPage.tsx:220`: `maxLength={80}`. El código y la arquitectura coinciden.
 
 **Si falla:** Alia caído → reiniciar con RUN.md y repetir. Si la respuesta no cita el paquete, preguntar *"¿de dónde sale ese dato?"*.
@@ -100,8 +99,14 @@ gh issue list -R shadowX4fox/northwind-servicio-reservas --state open   # el cas
 
 ### El arquitecto publica
 
+1. `cd $ARCH && git checkout -b arch/asunto-120`, y Claude Code en `$ARCH`:
+   > *"El asunto de una reserva pasa de 80 a 120 caracteres: actualiza el contrato del Servicio de Reservas."*
+2. **Esperado:** no edita sin preguntar. Muestra el cambio antes → después en `docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md`: `subject (80 caracteres o menos)` → `120`, la fila `VALIDATION_FAILED` (asunto de más de 120 caracteres) y la versión del contrato (`1.2.0` → `1.3.0`), más una línea en `docs/CHANGELOG.md` § [Unreleased]. **Aprobar.**
+   - Si no sube la versión del contrato o no escribe la línea del changelog, pedírselo: *"sube la versión del contrato y anota el cambio en [Unreleased]"*.
+3. Commit y release:
+
 ```bash
-cd $ARCH && git checkout arch/asunto-120
+git add -A && git commit -m "docs(servicio-de-reservas): asunto de hasta 120 caracteres"
 git diff main --stat                                  # mostrar: una fila del contrato, la versión 1.3.0
 bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js plan .        # el cambio y su bump: MINOR
 bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js apply . --bump minor
@@ -158,7 +163,7 @@ Empezar cuando el índice publicó (+4:45), no antes: el paquete 1.10.0 aún no 
 **Si falla:**
 - Un check queda en `in_progress` aunque su job terminó (fallo de GitHub): `gh run rerun <run-id> -R <repo>`.
 - El kit no se mergea solo: revisar `SA_HANDOFF_AUTOMERGE` y mergear el PR del kit a mano; el índice se despacha igual.
-- El build del servicio no arranca: runner offline. Pasar al video del respaldo y seguir con el caso 3.
+- El build del servicio no arranca: runner offline. Pasar al video del respaldo y seguir con el caso 3; el caso 6 vuelve a mostrar el modo desatendido al final.
 
 ---
 
@@ -222,11 +227,40 @@ gh issue close N -R shadowX4fox/northwind-reservas --reason "not planned"
 
 ---
 
-## Caso 6 — Respaldo: métrica de cancelaciones (desatendido)
+## Caso 6 — Cierre: el arquitecto responde una pregunta del build (desatendido, 10 min)
 
-Solo si sobra tiempo, o si el caso 2a falló y hay que mostrar el modo desatendido de punta a punta.
+**Decir:** "El build desatendido no inventa lo que la arquitectura no dice: lo deja anotado como pregunta. Cuando el arquitecto responde, el código se pone al día solo."
 
-Igual que el caso 2, con la rama `arch/metrica-cancelaciones`, release `v1.11.0` (MINOR). El Portal no cambia (la métrica es del Servicio de Reservas): solo el servicio abre su PR y se mergea solo.
+1. **La pregunta.** Mostrar en el Servicio lo que dejó el build:
+   ```bash
+   git -C $SVC checkout -q master && git -C $SVC pull -q
+   rg -n "TODO\(architecture\)" $SVC/src/main/resources/application.yaml
+   ```
+   La línea de `intervalo-purga-claves`: TDR-002 (opción B) pide purgar las claves de idempotencia vencidas "de forma periódica", pero no dice cada cuánto. Hoy el valor lo tiene que dar el despliegue (`RESERVAS_INTERVALO_PURGA_CLAVES`); sin él, el servicio no arranca.
+2. **El arquitecto responde.** `cd $ARCH && git checkout main && git pull -q && git checkout -b arch/purga-claves`, y Claude Code en `$ARCH`:
+   > *"Las claves de idempotencia vencidas se purgan cada hora (TDR-002, opción B). Documéntalo en el Servicio de Reservas."*
+3. **Esperado:** muestra el cambio antes → después en `docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md`: las claves de idempotencia, vencidas a las 24 horas, se purgan cada hora. Una línea en `docs/CHANGELOG.md` § [Unreleased]. **Aprobar.**
+4. Commit y release, igual que en el caso 2:
+   ```bash
+   git add -A && git commit -m "docs(servicio-de-reservas): purga de claves de idempotencia cada hora"
+   bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js plan .        # bump recomendado: PATCH
+   bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js apply . --bump patch
+   git push -u origin release/architecture-v1.10.1
+   gh pr create -B main -H release/architecture-v1.10.1 --fill
+   ```
+   Gates verdes → **merge** (la persona). Anotar el **T0**.
+5. **Lo que pasa solo:** la misma cadena del caso 2: tag, kit editado en sitio, índice. Solo cambió el paquete del Servicio de Reservas, así que solo el Servicio abre un PR. El Portal no se toca.
+6. **Esperado en el PR del servicio:**
+   - `intervalo-purga-claves` con `PT1H` (una hora) en `application.yaml`, sin el `TODO(architecture)`. El comentario de `PropiedadesReservas.java` ya no dice que el intervalo no está documentado;
+   - `.architecture.json` en 1.10.1;
+   - tests verdes y merge automático por `github-actions`, sin nadie.
+
+**Decir:** "Un PATCH de documentación también llega al código. La pregunta que dejó el build la respondió el arquitecto, no el desarrollador."
+
+**Si falla:**
+- El servicio no abre PR: revisar el job del build en Actions del servicio. Si el agente decidió que no había nada que cambiar, mostrar el `what_changed` del paquete 1.10.1, que nombra el cambio de la especificación.
+- Los tests fallan: el PR queda abierto sin merge. Así está diseñado (el merge automático exige tests verdes). Mostrarlo como tal.
+- **Corrida equivalente de referencia:** el PATCH 1.9.1 (2026-10-24): el PR #13 del servicio se abrió a las 17:01:04 y `github-actions` lo mergeó a las 17:02:04.
 
 ---
 
@@ -234,7 +268,7 @@ Igual que el caso 2, con la rama `arch/metrica-cancelaciones`, release `v1.11.0`
 
 - Mergear el PR del registro de la escalación (caso 4).
 - Cerrar el issue del caso 5 en el servicio (o crear la escalación que Alia renderizó, si se quiere seguir el ciclo del caso 4).
-- Si no se usó, borrar la rama `arch/metrica-cancelaciones` o dejarla para la próxima.
+- Borrar las ramas locales `arch/asunto-120` y `arch/purga-claves` (ya mergeadas por sus releases).
 - Los runners siguen arriba hasta el próximo reinicio.
 
 ## Datos de la corrida de referencia (2026-10-22, v1.9.0)
