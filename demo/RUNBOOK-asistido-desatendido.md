@@ -12,12 +12,23 @@ De la arquitectura al código, con y sin una persona en el medio. Unos 45 minuto
 |---|---|---|---|
 | 1 | El IDE le pregunta a la arquitectura | Asistido | 5 min |
 | 2 | Release A: asunto de 80 a 120 caracteres (v1.10.0) | Ambos | 15 min |
-| 2a | Servicio de Reservas: del release al merge sin nadie | Desatendido | (en paralelo) |
-| 2b | Portal de Reservas: el desarrollador actualiza en el IDE | Asistido | (en paralelo) |
+| 2a | Servicio de Reservas: del release al merge sin nadie | Desatendido | ✅ corrió el 2026-10-27, se muestra como evidencia |
+| 2b | Portal de Reservas: el desarrollador actualiza en el IDE | Asistido | ✅ corrió el 2026-10-27, se muestra como evidencia |
+| 2c | Retomar: un release solo desatendido (v1.10.1) | Desatendido | 10 min |
 | 3 | Una desviación queda retenida (HELD) | Asistido | 10 min |
 | 4 | El arquitecto responde | — | 5 min |
 | 5 | Un pedido desde un issue: `@alia` | Asistido, desde GitHub | 5 min |
-| 6 | Cierre: el arquitecto responde una pregunta del build (v1.10.1) | Desatendido | 10 min |
+| 6 | Cierre: el arquitecto responde una pregunta del build (v1.10.2) | Desatendido | 10 min |
+
+### Segunda sesión: se retoma en el caso 2c
+
+La primera sesión (2026-10-27) mostró el caso 1 y la parte del arquitecto del caso 2: el release `architecture-v1.10.0` (PR #103). Mientras tanto, 2a y 2b corrieron detrás de escena y no se vieron. La segunda sesión empieza así:
+
+1. **Recordar en 2 minutos** lo que pasó con la evidencia de 2a y 2b, sin repetirlo (tablas «Ya corrió» en el caso 2).
+2. **Caso 2c, en vivo:** un release nuevo que solo toca el Servicio, para ver el desatendido de punta a punta.
+3. Casos 3 a 6 como están. El caso 6 publica `architecture-v1.10.2`.
+
+Punto de partida de la segunda sesión: arquitectura `architecture-v1.10.0`, Servicio y Portal ligados a 1.10.0, los tres repositorios en su rama principal y sin PRs abiertos.
 
 Todo se hace **en vivo, frente al público**: ninguna rama, commit, PR ni issue se prepara antes. Cada rama se crea en el paso del caso que la usa. Punto de partida: arquitectura `architecture-v1.9.1`, Servicio y Portal ligados a 1.9.1, los tres repositorios en su rama principal y sin PRs abiertos.
 
@@ -169,6 +180,19 @@ gh pr create -B main -H release/architecture-v1.10.0 --fill
 
 ### 2a — Servicio de Reservas (desatendido)
 
+> **Ya corrió (2026-10-27).** Mostrarlo como evidencia; no se repite. Lo que se ve en vivo es el caso 2c.
+>
+> | Paso | Hora UTC | Δ desde el merge | Evidencia |
+> |---|---|---|---|
+> | Merge del release | 19:54:43 | 0:00 | `northwind-reservas` PR #103 |
+> | Kit mergeado solo por `github-actions` | 19:58:58 | 4:15 | `northwind-reservas` PR #104 |
+> | Build desatendido arranca | 19:59:17 | 4:34 | Actions del servicio · `Architecture build` |
+> | PR del servicio abierto | 20:00:50 | 6:07 | `northwind-servicio-reservas` PR #14 |
+> | Tests OK | 20:02:02 | 7:19 | Actions del servicio · `Tests` |
+> | Merge automático por `github-actions` | 20:02:12 | 7:29 | PR #14, *merged by github-actions* |
+>
+> En el PR #14, mostrar los dos commits (primero los contratos solos, después el código), la validación del asunto en 120 y `.architecture.json` en 1.10.0.
+
 👤 CI (nadie) escribe y mergea · 📍 `northwind-servicio-reservas` · GitHub. El presentador solo muestra; nadie crea la rama ni el PR: los crea el build.
 
 - Abrir el PR del servicio cuando aparezca. Mostrar:
@@ -178,6 +202,16 @@ gh pr create -B main -H release/architecture-v1.10.0 --fill
 - Esperar el merge automático. **Decir:** "Nadie aprobó este PR. Lo aprobó la arquitectura más los tests."
 
 ### 2b — Portal de Reservas (asistido), mientras 2a corre
+
+> **Ya corrió (2026-10-27).** Mostrarlo como evidencia; no se repite.
+>
+> | Paso | Hora UTC | Evidencia |
+> |---|---|---|
+> | PR del Portal abierto | 20:02:46 | `northwind-portal-reservas` PR #20 (rama `arquitectura-1.10.0`) |
+> | Architecture review: PASS | 20:03:53 | Actions del Portal · `Architecture review` |
+> | Merge por el desarrollador | 20:05:37 | PR #20 |
+>
+> En el PR #20, mostrar el commit de contratos solo, `maxLength` en 120 y el comentario de la revisión.
 
 👤 Desarrollador del Portal · 📍 `northwind-portal-reservas` · terminal, Claude Code y GitHub.
 
@@ -198,6 +232,50 @@ Empezar cuando el índice publicó (+4:45), no antes: el paquete 1.10.0 aún no 
 - Un check queda en `in_progress` aunque su job terminó (fallo de GitHub): `gh run rerun <run-id> -R <repo>`.
 - El kit no se mergea solo: revisar `SA_HANDOFF_AUTOMERGE` y mergear el PR del kit a mano; el índice se despacha igual.
 - El build del servicio no arranca: runner offline. Pasar al video del respaldo y seguir con el caso 3; el caso 6 vuelve a mostrar el modo desatendido al final.
+
+---
+
+## Caso 2c — Retomar: un release solo desatendido (v1.10.1, 10 min)
+
+**Decir:** "La vez pasada el Servicio se construyó solo mientras mirábamos el Portal. Hoy lo vemos de punta a punta: un cambio de rutina en la arquitectura, y nadie toca el código."
+
+Deck: slide 15 (*Del merge al código, sin nadie*), con el resumen de 2a y 2b abajo a la izquierda.
+
+El cambio: negocio quiere contar las cancelaciones. Es una métrica nueva del Servicio de Reservas. No cambia ningún contrato ni el Portal, así que solo el paquete del Servicio cambia y solo el Servicio abre un PR.
+
+1. **El arquitecto cambia la arquitectura.** 👤 Arquitecto · 📍 `northwind-reservas` · terminal y Claude Code. **Crear la rama ahora**, en la terminal de `$ARCH`:
+   ```bash
+   cd $ARCH && git checkout main && git pull -q && git checkout -b arch/metrica-cancelaciones
+   ```
+   Luego, en Claude Code en `$ARCH`:
+   > *"Negocio quiere contar las cancelaciones: agrega al Servicio de Reservas una métrica de negocio con las reservas canceladas, por sede y por rol de quien cancela."*
+2. **Esperado:** muestra el cambio antes → después en `docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md` § Observabilidad: una línea nueva junto a la del tiempo de confirmación, con un contador de reservas canceladas por sede y por rol (miembro o `recepcion`). Una línea en `docs/CHANGELOG.md` § [Unreleased]. Ningún contrato cambia. **Aprobar.**
+   - Si propone cambiar el contrato OpenAPI o el Portal, decirle que no: *"es solo una métrica interna del servicio; no cambia la API"*.
+3. Commit y release, en la terminal de `$ARCH`:
+   ```bash
+   git add -A && git commit -m "docs(servicio-de-reservas): métrica de cancelaciones por sede y rol"
+   bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js plan .        # bump recomendado (lo decide el código): PATCH
+   bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js apply . --bump patch
+   git push -u origin release/architecture-v1.10.1
+   gh pr create -B main -H release/architecture-v1.10.1 --fill
+   ```
+   - Si `plan` recomienda MINOR, usar `--bump minor` y la rama `release/architecture-v1.11.0`. Desde ahí, el caso 6 sería 1.11.1.
+   - 👤 Presentador · 📍 GitHub: gates verdes. 👤 Arquitecto · 📍 GitHub: **merge**. Anotar el **T0**.
+4. **Lo que pasa solo.** 👤 CI (nadie) · 📍 Actions de `northwind-reservas` y del servicio. El presentador narra con la tabla del caso 2: tag, kit editado en sitio y mergeado solo (unos 4 min), índice y despacho, build del servicio, tests y merge. Total: unos 7 a 8 minutos.
+   - Mientras espera, mostrar el slide 14 (*El camino al desatendido*): este cambio es justo la rutina que el Servicio ya puede hacer sin nadie.
+5. **Esperado en el PR del servicio** (👤 CI · 📍 `northwind-servicio-reservas`):
+   - `.architecture.json` en 1.10.1;
+   - el contador de cancelaciones con Micrometer (que ya exporta por OTLP, ADR-004), con etiquetas de sede y rol, sumado en la cancelación;
+   - un test que lo cubre;
+   - tests verdes y merge automático por `github-actions`, sin nadie.
+   - El Portal no recibe PR: su paquete no cambió.
+
+**Decir:** "Nadie escribió este código ni aprobó el PR. La arquitectura cambió y el servicio la siguió, con sus tests como única puerta."
+
+**Si falla:**
+- El build del servicio no arranca: runner offline. Levantarlo (`~/actions-runner/northwind-servicio-reservas`) y re-despachar con `gh run rerun` del job `architecture-index`; si no hay tiempo, mostrar la evidencia de 2a.
+- Los tests fallan: el PR queda abierto sin merge. Así está diseñado; mostrarlo como tal.
+- El agente no cambia nada: mostrar el `what_changed` del paquete 1.10.1, que nombra el cambio de la especificación.
 
 ---
 
@@ -293,20 +371,20 @@ gh issue close N -R shadowX4fox/northwind-reservas --reason "not planned"
    git add -A && git commit -m "docs(servicio-de-reservas): purga de claves de idempotencia cada hora"
    bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js plan .        # bump recomendado: PATCH
    bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js apply . --bump patch
-   git push -u origin release/architecture-v1.10.1
-   gh pr create -B main -H release/architecture-v1.10.1 --fill
+   git push -u origin release/architecture-v1.10.2
+   gh pr create -B main -H release/architecture-v1.10.2 --fill
    ```
    Gates verdes → 👤 Arquitecto · 📍 GitHub: **merge**. Anotar el **T0**.
 5. **Lo que pasa solo** (👤 CI · 📍 Actions de `northwind-reservas` y del servicio; el presentador narra): la misma cadena del caso 2: tag, kit editado en sitio, índice. Solo cambió el paquete del Servicio de Reservas, así que solo el Servicio abre un PR. El Portal no se toca.
 6. **Esperado en el PR del servicio:**
    - `intervalo-purga-claves` con `PT1H` (una hora) en `application.yaml`, sin el `TODO(architecture)`. El comentario de `PropiedadesReservas.java` ya no dice que el intervalo no está documentado;
-   - `.architecture.json` en 1.10.1;
+   - `.architecture.json` en 1.10.2;
    - tests verdes y merge automático por `github-actions`, sin nadie.
 
 **Decir:** "Un PATCH de documentación también llega al código. La pregunta que dejó el build la respondió el arquitecto, no el desarrollador."
 
 **Si falla:**
-- El servicio no abre PR: revisar el job del build en Actions del servicio. Si el agente decidió que no había nada que cambiar, mostrar el `what_changed` del paquete 1.10.1, que nombra el cambio de la especificación.
+- El servicio no abre PR: revisar el job del build en Actions del servicio. Si el agente decidió que no había nada que cambiar, mostrar el `what_changed` del paquete 1.10.2, que nombra el cambio de la especificación.
 - Los tests fallan: el PR queda abierto sin merge. Así está diseñado (el merge automático exige tests verdes). Mostrarlo como tal.
 - **Corrida equivalente de referencia:** el PATCH 1.9.1 (2026-10-24): el PR #13 del servicio se abrió a las 17:01:04 y `github-actions` lo mergeó a las 17:02:04.
 
@@ -316,7 +394,7 @@ gh issue close N -R shadowX4fox/northwind-reservas --reason "not planned"
 
 - Mergear el PR del registro de la escalación (caso 4).
 - Cerrar el issue del caso 5 en el servicio (o crear la escalación que Alia renderizó, si se quiere seguir el ciclo del caso 4).
-- Borrar las ramas que se crearon en vivo: `arch/asunto-120` y `arch/purga-claves` en `$ARCH`, `feat/arquitectura-1.10.0` y `feat/asunto-150` en `$PORTAL`.
+- Borrar las ramas que se crearon en vivo: `arch/asunto-120`, `arch/metrica-cancelaciones` y `arch/purga-claves` en `$ARCH`, `feat/arquitectura-1.10.0` y `feat/asunto-150` en `$PORTAL`.
 - Los runners siguen arriba hasta el próximo reinicio.
 
 ## Datos de la corrida de referencia (2026-10-22, v1.9.0)
