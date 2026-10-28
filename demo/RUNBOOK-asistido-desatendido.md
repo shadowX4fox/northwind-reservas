@@ -14,12 +14,12 @@ De la arquitectura al código, con y sin una persona en el medio. Unos 45 minuto
 | 2 | Release A: asunto de 80 a 120 caracteres (v1.10.0) | Ambos | 15 min |
 | 2a | Servicio de Reservas: del release al merge sin nadie | Desatendido | ✅ corrió el 2026-10-27, se muestra como evidencia |
 | 2b | Portal de Reservas: el desarrollador actualiza en el IDE | Asistido | ✅ corrió el 2026-10-27, se muestra como evidencia |
-| 2c | Retomar: un release solo desatendido (v1.10.1) | Desatendido | 10 min |
+| 2c | Retomar: un release solo desatendido (v1.10.2) | Desatendido | 10 min |
 | 3 | Una desviación queda retenida (HELD) | Asistido | 10 min |
 | 4 | El arquitecto responde | — | 5 min |
 | 5 | Un pedido desde un issue: `@alia` | Asistido, desde GitHub | 5 min |
-| 6 | Cierre: el arquitecto responde una pregunta del build (v1.10.2) | Desatendido | 10 min |
-| 7 | Grabado para video: el Portal se actualiza en el IDE (v1.10.3) | Asistido | fuera de la demo, ~20 min |
+| 6 | Cierre: el arquitecto responde una pregunta del build (v1.10.3) | Desatendido | 10 min |
+| 7 | Grabado para video: el Portal se actualiza en el IDE (v1.10.1) | Asistido | ✅ grabado el 2026-10-27, antes de la sesión 2 |
 
 ### Segunda sesión: se retoma en el caso 2c
 
@@ -27,9 +27,9 @@ La primera sesión (2026-10-27) mostró el caso 1 y la parte del arquitecto del 
 
 1. **Recordar en 2 minutos** lo que pasó con la evidencia de 2a y 2b, sin repetirlo (tablas «Ya corrió» en el caso 2).
 2. **Caso 2c, en vivo:** un release nuevo que solo toca el Servicio, para ver el desatendido de punta a punta.
-3. Casos 3 a 6 como están. El caso 6 publica `architecture-v1.10.2`.
+3. Casos 3 a 6 como están. El caso 6 publica `architecture-v1.10.3`.
 
-Punto de partida de la segunda sesión: arquitectura `architecture-v1.10.0`, Servicio y Portal ligados a 1.10.0, los tres repositorios en su rama principal y sin PRs abiertos.
+Punto de partida de la segunda sesión: arquitectura `architecture-v1.10.1` (la del caso 7, grabado antes), el Servicio ligado a 1.10.0 (su paquete no cambió en 1.10.1) y el Portal a 1.10.1, los tres repositorios en su rama principal y sin PRs abiertos.
 
 Todo se hace **en vivo, frente al público**: ninguna rama, commit, PR ni issue se prepara antes. Cada rama se crea en el paso del caso que la usa. Punto de partida: arquitectura `architecture-v1.9.1`, Servicio y Portal ligados a 1.9.1, los tres repositorios en su rama principal y sin PRs abiertos.
 
@@ -236,7 +236,7 @@ Empezar cuando el índice publicó (+4:45), no antes: el paquete 1.10.0 aún no 
 
 ---
 
-## Caso 2c — Retomar: un release solo desatendido (v1.10.1, 10 min)
+## Caso 2c — Retomar: un release solo desatendido (v1.10.2, 10 min)
 
 **Decir:** "La vez pasada el Servicio se construyó solo mientras mirábamos el Portal. Hoy lo vemos de punta a punta: un cambio de rutina en la arquitectura, y nadie toca el código."
 
@@ -257,15 +257,15 @@ El cambio: negocio quiere contar las cancelaciones. Es una métrica nueva del Se
    git add -A && git commit -m "docs(servicio-de-reservas): métrica de cancelaciones por sede y rol"
    bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js plan .        # bump recomendado (lo decide el código): PATCH
    bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js apply . --bump patch
-   git push -u origin release/architecture-v1.10.1
-   gh pr create -B main -H release/architecture-v1.10.1 --fill
+   git push -u origin release/architecture-v1.10.2
+   gh pr create -B main -H release/architecture-v1.10.2 --fill
    ```
    - Si `plan` recomienda MINOR, usar `--bump minor` y la rama `release/architecture-v1.11.0`. Desde ahí, el caso 6 sería 1.11.1.
    - 👤 Presentador · 📍 GitHub: gates verdes. 👤 Arquitecto · 📍 GitHub: **merge**. Anotar el **T0**.
 4. **Lo que pasa solo.** 👤 CI (nadie) · 📍 Actions de `northwind-reservas` y del servicio. El presentador narra con la tabla del caso 2: tag, kit editado en sitio y mergeado solo (unos 4 min), índice y despacho, build del servicio, tests y merge. Total: unos 7 a 8 minutos.
    - Mientras espera, mostrar el slide 14 (*El camino al desatendido*): este cambio es justo la rutina que el Servicio ya puede hacer sin nadie.
 5. **Esperado en el PR del servicio** (👤 CI · 📍 `northwind-servicio-reservas`):
-   - `.architecture.json` en 1.10.1;
+   - `.architecture.json` en 1.10.2;
    - el contador de cancelaciones con Micrometer (que ya exporta por OTLP, ADR-004), con etiquetas de sede y rol, sumado en la cancelación;
    - un test que lo cubre;
    - tests verdes y merge automático por `github-actions`, sin nadie.
@@ -276,7 +276,7 @@ El cambio: negocio quiere contar las cancelaciones. Es una métrica nueva del Se
 **Si falla:**
 - El build del servicio no arranca: runner offline. Levantarlo (`~/actions-runner/northwind-servicio-reservas`) y re-despachar con `gh run rerun` del job `architecture-index`; si no hay tiempo, mostrar la evidencia de 2a.
 - Los tests fallan: el PR queda abierto sin merge. Así está diseñado; mostrarlo como tal.
-- El agente no cambia nada: mostrar el `what_changed` del paquete 1.10.1, que nombra el cambio de la especificación.
+- El agente no cambia nada: mostrar el `what_changed` del paquete 1.10.2, que nombra el cambio de la especificación.
 
 ---
 
@@ -372,48 +372,68 @@ gh issue close N -R shadowX4fox/northwind-reservas --reason "not planned"
    git add -A && git commit -m "docs(servicio-de-reservas): purga de claves de idempotencia cada hora"
    bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js plan .        # bump recomendado: PATCH
    bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js apply . --bump patch
-   git push -u origin release/architecture-v1.10.2
-   gh pr create -B main -H release/architecture-v1.10.2 --fill
+   git push -u origin release/architecture-v1.10.3
+   gh pr create -B main -H release/architecture-v1.10.3 --fill
    ```
    Gates verdes → 👤 Arquitecto · 📍 GitHub: **merge**. Anotar el **T0**.
 5. **Lo que pasa solo** (👤 CI · 📍 Actions de `northwind-reservas` y del servicio; el presentador narra): la misma cadena del caso 2: tag, kit editado en sitio, índice. Solo cambió el paquete del Servicio de Reservas, así que solo el Servicio abre un PR. El Portal no se toca.
 6. **Esperado en el PR del servicio:**
    - `intervalo-purga-claves` con `PT1H` (una hora) en `application.yaml`, sin el `TODO(architecture)`. El comentario de `PropiedadesReservas.java` ya no dice que el intervalo no está documentado;
-   - `.architecture.json` en 1.10.2;
+   - `.architecture.json` en 1.10.3;
    - tests verdes y merge automático por `github-actions`, sin nadie.
 
 **Decir:** "Un PATCH de documentación también llega al código. La pregunta que dejó el build la respondió el arquitecto, no el desarrollador."
 
 **Si falla:**
-- El servicio no abre PR: revisar el job del build en Actions del servicio. Si el agente decidió que no había nada que cambiar, mostrar el `what_changed` del paquete 1.10.2, que nombra el cambio de la especificación.
+- El servicio no abre PR: revisar el job del build en Actions del servicio. Si el agente decidió que no había nada que cambiar, mostrar el `what_changed` del paquete 1.10.3, que nombra el cambio de la especificación.
 - Los tests fallan: el PR queda abierto sin merge. Así está diseñado (el merge automático exige tests verdes). Mostrarlo como tal.
 - **Corrida equivalente de referencia:** el PATCH 1.9.1 (2026-10-24): el PR #13 del servicio se abrió a las 17:01:04 y `github-actions` lo mergeó a las 17:02:04.
 
 ---
 
-## Caso 7 — Grabado para video: el Portal se actualiza en el IDE (asistido, v1.10.3)
+## Caso 7 — Grabado para video: el Portal se actualiza en el IDE (asistido, v1.10.1)
 
-No se hace frente al público: se graba **después de la sesión 2**, para armar un video del modo asistido de punta a punta que el equipo revisa por su cuenta. Es el mismo recorrido de 2b, pero esta vez con un cambio que **solo toca el Portal de Reservas**: el Servicio no recibe nada, así que no hay un build desatendido en paralelo que distraiga.
+No se hace frente al público: se graba para armar un video del modo asistido de punta a punta que el equipo revisa por su cuenta. Es el mismo recorrido de 2b, pero esta vez con un cambio que **solo toca el Portal de Reservas**: el Servicio no recibe nada, así que no hay un build desatendido en paralelo que distraiga.
 
 El cambio: hoy una reserva cancelada se ve en el listado del Portal solo como «cancelada». Negocio quiere que muestre **el motivo y la fecha de la cancelación**. Los dos datos ya vienen en el contrato (`cancellationReason`, `cancelledAt` de `Booking`), así que ningún contrato cambia: cambia la descripción del Portal y, por lo tanto, solo su paquete.
 
-**Antes de grabar:**
-- La sesión 2 terminó: la arquitectura está en `architecture-v1.10.2`, el Servicio y el Portal en su rama principal y sin PRs abiertos. Si la versión no es esa, la de este caso es la que proponga `plan`, y donde dice 1.10.3 va esa.
-- Los tres runners y Alia en :18080 están arriba.
-- **Pantalla:** 1920×1080; terminal y Claude Code con letra grande (18 px o más); notificaciones apagadas; navegador sin sesión de otros sitios a la vista. Los repositorios son públicos, así que las capturas de GitHub las saco yo y no hace falta grabarlas en detalle.
-- Grabar cada toma como un archivo aparte (`toma-1.mp4`, `toma-2.mp4`…) en una carpeta. Un corte por toma facilita el armado.
+**Se grabó el 2026-10-27, antes de la sesión 2**, sobre la arquitectura de ese momento: por eso publicó **`architecture-v1.10.1`** y no la 1.10.3 que se había planeado. Las tomas, arregladas (1920×1080, un cuadro clave por segundo para que el video se pueda adelantar), están en `~/Downloads/DemoVideo/arreglados/`.
+
+### Lo que pasó (mejor de lo planeado)
+
+La primera revisión del PR del Portal **falló**, y la corrección la pasó. El video muestra la revisión haciendo su trabajo, no solo un PASS.
+
+| Paso | Hora UTC | Evidencia |
+|---|---|---|
+| PR del release abierto | 02:18:20 | `northwind-reservas` PR #107 |
+| Merge del release (T0) | 02:18:54 | PR #107 |
+| Kit mergeado solo por `github-actions` | 02:23:05 | PR #108 (+4:11) |
+| Índice publicado, paquete del Portal 1.10.1 | 02:23:08 | Actions · `architecture-index` |
+| PR del Portal abierto | 02:30:57 | `northwind-portal-reservas` PR #21 |
+| **Architecture review: ⛔ FAIL** | 02:32:02 | Comentario del PR #21 (primera versión) |
+| Corrección empujada | 02:38:16 | Dos commits nuevos en el PR #21 |
+| **Architecture review: ✅ PASS** | 02:39:26 | El mismo comentario, actualizado |
+| Merge del desarrollador | 02:40:47 | PR #21 |
+
+**Qué marcó la revisión en el primer intento:**
+- ⛔ **Bloqueante `assets-mixed`:** el commit de contratos (`architecture: contracts 1.10.1`) cambiaba `architecture/c4-descriptor.md` junto con otro archivo. Los contratos se comitean solos, para que el diff muestre qué cambió del contrato.
+- ⚠ **Advertencia, regla 3:** el código convertía `cancelledAt` a hora de America/Bogota con formato `YYYY-MM-DD HH:mm` citando ADR-110. Pero ADR-110 deja las marcas técnicas como `cancelledAt` en ISO 8601, e INV-11 no fija zona ni formato de presentación. Lo que corresponde es un `TODO(architecture)` o una escalación, no inventar.
+
+**La corrección:** el commit de contratos quedó solo, y el formato inventado se cambió por un `TODO(architecture)` que deja la pregunta al arquitecto. La revisión pasó con 0 bloqueantes, 0 advertencias y 1 nota (`todo-added`: la pregunta queda registrada).
+
+**Decir en el video:** "La revisión no es un sello. Encontró un commit mezclado y una regla inventada, el desarrollador corrigió en el IDE, y lo que la arquitectura no dice quedó como pregunta para el arquitecto."
 
 ### Tomas
 
-| Toma | 👤 Rol · 📍 Dónde | Qué se graba | Duración aprox. |
-|---|---|---|---|
-| 1 | Arquitecto · `northwind-reservas` · terminal + Claude Code | Rama, pedido, antes → después aprobado | 2 min |
-| 2 | Arquitecto · terminal | Commit, `plan` (PATCH), `apply`, push, PR contra main | 1 min |
-| 3 | Arquitecto · GitHub | Gates verdes y merge (T0) | 30 s |
-| — | CI (nadie) | Kit e índice, unos 5 min | no se graba: lo cubren mis capturas |
-| 4 | Desarrollador del Portal · `northwind-portal-reservas` · terminal + Claude Code | Rama y pedido de actualización; `what_changed`; el agente trabaja | 4 min |
-| 5 | Desarrollador del Portal · Claude Code | Commits: contratos solos, después el código y el test; la vista en el navegador si se levanta el Portal | 2 min |
-| 6 | Desarrollador del Portal · GitHub | PR abierto, check **Architecture review**: PASS, merge | 1 min |
+| Toma | Archivo | 👤 Rol · 📍 Dónde | Qué se ve | Duración |
+|---|---|---|---|---|
+| 1 | `toma-1.mp4` | Arquitecto · `northwind-reservas` · terminal + Claude Code | Rama, pedido, antes → después aprobado | 2:35 |
+| 2 | `toma-2.mp4` | Arquitecto · terminal | Commit, `plan` (PATCH), `apply`, push, PR contra main | 0:57 |
+| 3 | `toma-3.mp4` | Arquitecto · GitHub | Gates verdes, merge (T0) y la cadena del kit y el índice | 4:02 |
+| 4 | `toma-4.mp4` | Desarrollador del Portal · `northwind-portal-reservas` · Claude Code | Rama, pedido de actualización, `what_changed`, el agente trabaja | 3:35 |
+| 5a | `toma-5a-review-falla.mp4` | Desarrollador del Portal · GitHub | PR #21, la revisión corre y da **FAIL**: el comentario con el bloqueante y la advertencia | 1:19 |
+| 5b | `toma-5b-correccion.mp4` | Desarrollador del Portal · Claude Code | Le pasa el resultado de la revisión al agente, que separa el commit de contratos y cambia el formato por un `TODO(architecture)` | 2:00 |
+| 5c + 6 | `toma-5c-pass-y-toma-6.mp4` | Desarrollador del Portal · GitHub | La revisión vuelve a correr: **PASS** con una nota; merge | 3:05 |
 
 1. **Toma 1.** 👤 Arquitecto · 📍 `northwind-reservas`. En la terminal de `$ARCH`:
    ```bash
@@ -429,30 +449,30 @@ El cambio: hoy una reserva cancelada se ve en el listado del Portal solo como «
    git add -A && git commit -m "docs(portal-de-reservas): motivo y fecha de una reserva cancelada en el listado"
    bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js plan .        # bump recomendado: PATCH
    bun $SA/skills/architecture-lifecycle/scripts/lifecycle.js apply . --bump patch
-   git push -u origin release/architecture-v1.10.3
-   gh pr create -B main -H release/architecture-v1.10.3 --fill
+   git push -u origin release/architecture-v1.10.1
+   gh pr create -B main -H release/architecture-v1.10.1 --fill
    ```
 3. **Toma 3.** 👤 Arquitecto · 📍 GitHub: gates verdes → **merge**. Anotar la hora (T0). Esperar a que el índice publique (unos 5 min; Actions · `architecture-index` en verde). El Servicio no abre PR: su paquete no cambió.
 4. **Toma 4.** 👤 Desarrollador del Portal · 📍 `northwind-portal-reservas`. En la terminal de `$PORTAL`:
    ```bash
-   cd $PORTAL && git checkout main && git pull -q && git checkout -b feat/arquitectura-1.10.3
+   cd $PORTAL && git checkout main && git pull -q && git checkout -b feat/arquitectura-1.10.1
    ```
    En Claude Code en `$PORTAL`:
-   > *"Actualiza el Portal a la versión 1.10.3 de la arquitectura."*
+   > *"Actualiza el Portal a la versión 1.10.1 de la arquitectura."*
 
    **Esperado:** `what_changed` nombra solo el Portal de Reservas y la responsabilidad nueva; ningún contrato cambió.
-5. **Toma 5.** **Esperado:** `.architecture.json` en 1.10.3 (y los contratos en `architecture/` si el paquete los reescribe, en su propio commit); en `ReservasPage.tsx`, una reserva cancelada muestra el motivo y la fecha; un test nuevo. Si el Portal se puede levantar en local, mostrar una reserva cancelada en el navegador.
-6. **Toma 6.** Abrir el PR (Claude Code o `gh pr create --fill`). 👤 CI · 📍 Actions del Portal: **Architecture review: PASS**. 👤 Desarrollador del Portal · 📍 GitHub: **merge**.
+5. **Toma 5.** **Esperado:** `.architecture.json` en 1.10.1 (y los contratos en `architecture/` si el paquete los reescribe, en su propio commit); en `ReservasPage.tsx`, una reserva cancelada muestra el motivo y la fecha; un test nuevo. Si el Portal se puede levantar en local, mostrar una reserva cancelada en el navegador.
+6. **Tomas 5a a 6.** Abrir el PR (Claude Code o `gh pr create --fill`). 👤 CI · 📍 Actions del Portal: **Architecture review: PASS**. 👤 Desarrollador del Portal · 📍 GitHub: **merge**.
 
 **Si falla:**
-- La review da FAIL: grabarlo igual, es material para el video, y seguir con el comentario. Si el hallazgo es legítimo, pedirle al agente que lo corrija y volver a empujar.
-- `what_changed` no muestra nada: el índice todavía no publicó la 1.10.3. Esperar al job `architecture-index`.
+- La review da FAIL: grabarlo igual, es material para el video. Pasarle al agente el comentario (*"revisa el resultado de la revisión de arquitectura del PR y corrígelo"*) y volver a empujar. Así fue la grabación.
+- `what_changed` no muestra nada: el índice todavía no publicó la 1.10.1. Esperar al job `architecture-index`.
 
 ### Lo que armo yo con la grabación
 
-Al terminar, pásame la carpeta de las tomas y los números de los tres PRs (release, kit y Portal). Con eso:
-1. Saco capturas en 1920×1080 de GitHub: el PR del release con los gates, el kit mergeado solo y su foto del centro de mando, la corrida de `architecture-index`, el PR del Portal (commits, archivos, el check y el comentario de la revisión) y el merge.
-2. Armo el video con las tomas y las capturas, con subtítulos en español y la línea de tiempo real (T0 → índice → PR → review → merge).
+Con las tomas arregladas y los PRs #107 (release), #108 (kit) y #21 del Portal:
+1. Saco capturas en 1920×1080 de GitHub: el PR del release con los gates, el kit mergeado solo y su foto del centro de mando, la corrida de `architecture-index`, el PR del Portal (commits, archivos, las dos versiones del comentario de la revisión, FAIL y PASS) y el merge.
+2. Armo el video con las tomas y las capturas, con subtítulos en español y la línea de tiempo real (T0 → índice → PR → FAIL → corrección → PASS → merge).
 3. Te paso un primer corte para revisarlo antes de compartirlo.
 
 ---
@@ -461,7 +481,7 @@ Al terminar, pásame la carpeta de las tomas y los números de los tres PRs (rel
 
 - Mergear el PR del registro de la escalación (caso 4).
 - Cerrar el issue del caso 5 en el servicio (o crear la escalación que Alia renderizó, si se quiere seguir el ciclo del caso 4).
-- Borrar las ramas que se crearon en vivo: `arch/asunto-120`, `arch/metrica-cancelaciones` y `arch/purga-claves` en `$ARCH`, `feat/arquitectura-1.10.0` y `feat/asunto-150` en `$PORTAL`. Después de grabar el caso 7: `arch/motivo-cancelacion` en `$ARCH` y `feat/arquitectura-1.10.3` en `$PORTAL`.
+- Borrar las ramas que se crearon en vivo: `arch/asunto-120`, `arch/metrica-cancelaciones` y `arch/purga-claves` en `$ARCH`, `feat/arquitectura-1.10.0` y `feat/asunto-150` en `$PORTAL`. Del caso 7: `arch/motivo-cancelacion` en `$ARCH` y `feat/arquitectura-1.10.1` en `$PORTAL`.
 - Los runners siguen arriba hasta el próximo reinicio.
 
 ## Datos de la corrida de referencia (2026-10-22, v1.9.0)
