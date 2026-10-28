@@ -6,6 +6,9 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+- Portal de Reservas: en el listado, una reserva cancelada muestra la fecha y, si lo hay, el motivo de la cancelación.
+
 ## [1.10.0] - 2026-10-27
 
 ### Changed
