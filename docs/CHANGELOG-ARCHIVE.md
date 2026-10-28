@@ -2,6 +2,19 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.7.0] - 2026-10-20
+
+### Added
+- ADR: ADR-110 — Hora local de sede con zona única America/Bogota (Accepted)
+- TDR: TDR-004 — Zona horaria de las sedes leída de una variable de despliegue (In Progress)
+
+### Changed
+- Contenedor: Portal de Reservas — no deja elegir franjas anteriores a la hora actual de la sede (ADR-110)
+- Contenedor: Servicio de Reservas — `start`/`end` en hora local de la sede y reloj de negocio en America/Bogota (ADR-110)
+- Contenedor: Base de Datos de Reservas — horas de las reservas en hora local de la sede (ADR-110)
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — TDR-004 pasa a In Progress
+- ESC-004 resolved by this release: Zona horaria de las sedes no documentada (INV-01, INV-04, ADR-105)
+
 ## [1.6.0] - 2026-10-20
 
 ### Added

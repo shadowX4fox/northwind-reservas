@@ -21,7 +21,7 @@ related_adrs: ADR-001, ADR-002, ADR-004, ADR-101, ADR-104, ADR-107, ADR-110
 **Description:** Portal de Reservas es la SPA donde miembros y recepción consultan disponibilidad, reservan y cancelan salas.
 
 **Component Version:** 1.0.2
-**Architecture Version:** 1.10.0
+**Architecture Version:** 1.10.1
 **Last Updated:** 2026-10-20
 
 **Team Owner**: Not documented <!-- TODO: Add source reference -->
@@ -36,6 +36,7 @@ Interfaz de autoservicio de reservas, responsiva para navegador y teléfono. Sus
 - No dejar elegir una franja anterior a la hora actual de la sede (America/Bogota), no la del navegador ([ADR-110](../../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md)).
 - Enviar la reserva de una sala libre y mostrar la confirmación con el código de reserva.
 - Listar las reservas futuras del miembro y permitir su cancelación.
+- En el listado de reservas, mostrar en una reserva cancelada la fecha de la cancelación (`cancelledAt`) y, cuando lo hay, su motivo (`cancellationReason`). Los dos datos vienen en `Booking` del Servicio de Reservas.
 - Permitir al recepcionista cancelar cualquier reserva de su sede.
 - Autenticar al usuario con el Proveedor de Identidad Northwind.
 
