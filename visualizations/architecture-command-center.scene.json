@@ -1,6 +1,6 @@
 {
  "project": "Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión",
- "version": "1.10.0",
+ "version": "1.10.1",
  "status": "Released",
  "architectureType": "MICROSERVICES",
  "language": "es",
@@ -709,31 +709,6 @@
    }
   },
   "tdrs": {
-   "TDR-004": {
-    "id": "TDR-004",
-    "title": "Zona horaria de las sedes leída de una variable de despliegue",
-    "file": "tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md",
-    "status": "Resolved",
-    "date": "2026-10-20",
-    "components": [
-     {
-      "slug": "Servicio de Reservas",
-      "node": "servicio-de-reservas"
-     }
-    ],
-    "adrs": [
-     "ADR-105"
-    ],
-    "tags": [
-     "zona-horaria",
-     "despliegue",
-     "INV-01",
-     "INV-04"
-    ],
-    "summary": "La arquitectura 1.6.0 no documenta la zona horaria de las sedes (spec § 4, INV-01 e INV-04; escalado en #62). Mientras #62 no tenga respuesta, el Servicio de Reservas la lee de la variable de despliegue RESERVAS_ZONA_HORARIA (identificador IANA, una sola zona para las 3 sedes), sin valor por defecto: sin ella, o con un identificador inválido, el servicio no arranca. El reloj de negocio usa esa zona para INV-01, INV-04 y ADR-105.",
-    "impact": "Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan mal las franjas \"en el pasado\" (INV-01), las reservas \"futuras\" (INV-04) y las que \"ya iniciaron\" (ADR-105). Una sola zona para las 3 sedes: si las sedes tienen zonas distintas, la regla falla en alguna de ellas.",
-    "owner": "---"
-   },
    "TDR-002": {
     "id": "TDR-002",
     "title": "Las claves de idempotencia vencidas nunca se purgan",
@@ -787,6 +762,31 @@
     ],
     "summary": "Cuando se pierde la conexión LISTEN al canal disponibilidad, los avisos de ese intervalo se pierden: PostgreSQL no los guarda. La réplica del Servicio de Reservas registra el aviso, espera y reconecta, pero no vacía la caché; esa réplica sirve disponibilidad desactualizada hasta 5 minutos, la expiración de ADR-109.",
     "impact": "El Portal de Reservas puede mostrar libre una franja ya reservada. La reserva no se duplica, porque la Base de Datos de Reservas la rechaza (ADR-102), pero el usuario recibe un 409 inesperado (ROOM_OCCUPIED).",
+    "owner": "---"
+   },
+   "TDR-004": {
+    "id": "TDR-004",
+    "title": "Zona horaria de las sedes leída de una variable de despliegue",
+    "file": "tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md",
+    "status": "Resolved",
+    "date": "2026-10-20",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-105"
+    ],
+    "tags": [
+     "zona-horaria",
+     "despliegue",
+     "INV-01",
+     "INV-04"
+    ],
+    "summary": "La arquitectura 1.6.0 no documenta la zona horaria de las sedes (spec § 4, INV-01 e INV-04; escalado en #62). Mientras #62 no tenga respuesta, el Servicio de Reservas la lee de la variable de despliegue RESERVAS_ZONA_HORARIA (identificador IANA, una sola zona para las 3 sedes), sin valor por defecto: sin ella, o con un identificador inválido, el servicio no arranca. El reloj de negocio usa esa zona para INV-01, INV-04 y ADR-105.",
+    "impact": "Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan mal las franjas \"en el pasado\" (INV-01), las reservas \"futuras\" (INV-04) y las que \"ya iniciaron\" (ADR-105). Una sola zona para las 3 sedes: si las sedes tienen zonas distintas, la regla falla en alguna de ellas.",
     "owner": "---"
    },
    "TDR-001": {
