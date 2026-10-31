@@ -10,7 +10,7 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.10.1 |
+| Versión de la arquitectura | 1.10.2 |
 | Versión del componente | 1.4.0 |
 | Generado | 2026-10-27 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
