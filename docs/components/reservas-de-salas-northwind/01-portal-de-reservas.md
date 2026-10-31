@@ -63,6 +63,7 @@ Interfaz de autoservicio de reservas, responsiva para navegador y teléfono. Sus
 - Trazas, métricas y logs con OpenTelemetry hacia el colector de Plataforma Northwind (ADR-004).
 - Propagación W3C Trace Context (`traceparent`) en cada llamada al Servicio de Reservas (ADR-004).
 - Métrica de experiencia: tiempo desde "Confirmar" hasta ver el código de reserva, meta p95 ≤ 2 s (PO Spec §8).
+- Métrica de experiencia: tiempo hasta ver la disponibilidad, desde que el miembro abre "Salas" o cambia sede, fecha o franja. Meta p95 ≤ 1 s (flujo Consultar disponibilidad, [Sección 6](../../04-data-flow-patterns.md)).
 
 ## Capacidad <!-- LABEL: Capacity -->
 
