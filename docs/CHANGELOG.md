@@ -6,6 +6,11 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.10.2] - 2026-10-31
+
+### Added
+- Portal de Reservas: métrica de experiencia de la consulta de disponibilidad, con meta p95 ≤ 1 s.
+
 ## [1.10.1] - 2026-10-27
 
 ### Added
@@ -30,14 +35,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 ### Changed
 - Contenedor: Servicio de Reservas — contenido
 - ESC-005 rejected: Sesión del Portal de Reservas tras recargar la pestaña: tokens en sessionStorage frente a ADR-104
-
-## [1.8.0] - 2026-10-20
-
-### Added
-- Servicio de Reservas: operación `getBooking` (`GET /v1/bookings/{code}`) para el paso 1 de CU3; contrato 1.1.0.
-
-### Changed
-- TDR: TDR-004 — estado: In Progress → Resolved
-- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — fila de TDR-004 resuelta
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).

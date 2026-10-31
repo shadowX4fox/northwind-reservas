@@ -2,6 +2,15 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.8.0] - 2026-10-20
+
+### Added
+- Servicio de Reservas: operación `getBooking` (`GET /v1/bookings/{code}`) para el paso 1 de CU3; contrato 1.1.0.
+
+### Changed
+- TDR: TDR-004 — estado: In Progress → Resolved
+- Sección: Riesgos y Deuda Técnica (`docs/10-risks-and-technical-debt.md`) — fila de TDR-004 resuelta
+
 ## [1.7.0] - 2026-10-20
 
 ### Added
