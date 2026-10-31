@@ -1,6 +1,6 @@
 {
  "project": "Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión",
- "version": "1.10.1",
+ "version": "1.10.2",
  "status": "Released",
  "architectureType": "MICROSERVICES",
  "language": "es",
@@ -187,12 +187,7 @@
    "name": "Consulta de disponibilidad",
    "budget": "≤ 1 s",
    "kind": "online",
-   "path": [
-    [
-     "servicio-de-reservas",
-     "base-de-datos-de-reservas"
-    ]
-   ],
+   "path": [],
    "extra": []
   },
   "4": {
@@ -739,6 +734,56 @@
     "impact": "Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan mal las franjas \"en el pasado\" (INV-01), las reservas \"futuras\" (INV-04) y las que \"ya iniciaron\" (ADR-105). Una sola zona para las 3 sedes: si las sedes tienen zonas distintas, la regla falla en alguna de ellas.",
     "owner": "---"
    },
+   "TDR-001": {
+    "id": "TDR-001",
+    "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
+    "file": "tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md",
+    "status": "Resolved",
+    "date": "2026-10-19",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-108",
+     "ADR-109"
+    ],
+    "tags": [
+     "disponibilidad",
+     "cache",
+     "CU1"
+    ],
+    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha (ADR-108). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.",
+    "impact": "Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
+    "owner": "---"
+   },
+   "TDR-003": {
+    "id": "TDR-003",
+    "title": "Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos",
+    "file": "tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md",
+    "status": "Resolved",
+    "date": "2026-10-20",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-109",
+     "ADR-102"
+    ],
+    "tags": [
+     "disponibilidad",
+     "cache",
+     "listen-notify"
+    ],
+    "summary": "Cuando se pierde la conexión LISTEN al canal disponibilidad, los avisos de ese intervalo se pierden: PostgreSQL no los guarda. La réplica del Servicio de Reservas registra el aviso, espera y reconecta, pero no vacía la caché; esa réplica sirve disponibilidad desactualizada hasta 5 minutos, la expiración de ADR-109.",
+    "impact": "El Portal de Reservas puede mostrar libre una franja ya reservada. La reserva no se duplica, porque la Base de Datos de Reservas la rechaza (ADR-102), pero el usuario recibe un 409 inesperado (ROOM_OCCUPIED).",
+    "owner": "---"
+   },
    "TDR-002": {
     "id": "TDR-002",
     "title": "Las claves de idempotencia vencidas nunca se purgan",
@@ -767,56 +812,6 @@
     ],
     "summary": "El Servicio de Reservas guarda cada Idempotency-Key con su respuesta en la tabla clave_idempotencia de la Base de Datos de Reservas (ADR-103), pero ninguna purga elimina las claves de más de 24 horas. La búsqueda las ignora al vencer, así que la idempotencia funciona; las filas se quedan para siempre.",
     "impact": "La tabla crece sin límite, una fila por cada creación de reserva, y con ella el almacenamiento y los respaldos de la Base de Datos de Reservas. Cada fila guarda la respuesta de la creación (el sub del miembro y el asunto de la reserva), que permanece más allá de las 24 horas de ADR-103 y del plazo de 24 meses de ADR-106.",
-    "owner": "---"
-   },
-   "TDR-003": {
-    "id": "TDR-003",
-    "title": "Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos",
-    "file": "tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md",
-    "status": "Resolved",
-    "date": "2026-10-20",
-    "components": [
-     {
-      "slug": "Servicio de Reservas",
-      "node": "servicio-de-reservas"
-     }
-    ],
-    "adrs": [
-     "ADR-109",
-     "ADR-102"
-    ],
-    "tags": [
-     "disponibilidad",
-     "cache",
-     "listen-notify"
-    ],
-    "summary": "Cuando se pierde la conexión LISTEN al canal disponibilidad, los avisos de ese intervalo se pierden: PostgreSQL no los guarda. La réplica del Servicio de Reservas registra el aviso, espera y reconecta, pero no vacía la caché; esa réplica sirve disponibilidad desactualizada hasta 5 minutos, la expiración de ADR-109.",
-    "impact": "El Portal de Reservas puede mostrar libre una franja ya reservada. La reserva no se duplica, porque la Base de Datos de Reservas la rechaza (ADR-102), pero el usuario recibe un 409 inesperado (ROOM_OCCUPIED).",
-    "owner": "---"
-   },
-   "TDR-001": {
-    "id": "TDR-001",
-    "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
-    "file": "tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md",
-    "status": "Resolved",
-    "date": "2026-10-19",
-    "components": [
-     {
-      "slug": "Servicio de Reservas",
-      "node": "servicio-de-reservas"
-     }
-    ],
-    "adrs": [
-     "ADR-108",
-     "ADR-109"
-    ],
-    "tags": [
-     "disponibilidad",
-     "cache",
-     "CU1"
-    ],
-    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha (ADR-108). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.",
-    "impact": "Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
     "owner": "---"
    }
   },
@@ -1658,9 +1653,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "edges": [
        [
@@ -1699,9 +1692,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "edges": [
        [
@@ -1733,9 +1724,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "nodes": [
        "servicio-de-reservas"
@@ -1758,9 +1747,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "nodes": [
        "portal-de-reservas",
@@ -1794,9 +1781,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "nodes": [
        "portal-de-reservas",
@@ -1830,9 +1815,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "nodes": [
        "portal-de-reservas",
@@ -1866,9 +1849,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "edges": [
        [
@@ -1902,9 +1883,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "nodes": [
        "base-de-datos-de-reservas"
@@ -1927,9 +1906,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "nodes": [
        "servicio-de-reservas",
@@ -1963,9 +1940,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "nodes": [
        "servicio-de-reservas",
@@ -1999,9 +1974,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "edges": [
        [
@@ -2035,9 +2008,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "nodes": [
        "servicio-de-reservas",
@@ -2071,9 +2042,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "nodes": [
        "portal-de-reservas"
@@ -2097,9 +2066,7 @@
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
-       "state": "none",
-       "by": "agent",
-       "p": 0
+       "state": "none"
       },
       "nodes": [
        "portal-de-reservas"
