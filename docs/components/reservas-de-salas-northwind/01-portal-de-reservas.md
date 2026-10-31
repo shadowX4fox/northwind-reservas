@@ -21,7 +21,7 @@ related_adrs: ADR-001, ADR-002, ADR-004, ADR-101, ADR-104, ADR-107, ADR-110
 **Description:** Portal de Reservas es la SPA donde miembros y recepción consultan disponibilidad, reservan y cancelan salas.
 
 **Component Version:** 1.0.2
-**Architecture Version:** 1.10.1
+**Architecture Version:** 1.10.2
 **Last Updated:** 2026-10-20
 
 **Team Owner**: Not documented <!-- TODO: Add source reference -->
@@ -63,6 +63,7 @@ Interfaz de autoservicio de reservas, responsiva para navegador y teléfono. Sus
 - Trazas, métricas y logs con OpenTelemetry hacia el colector de Plataforma Northwind (ADR-004).
 - Propagación W3C Trace Context (`traceparent`) en cada llamada al Servicio de Reservas (ADR-004).
 - Métrica de experiencia: tiempo desde "Confirmar" hasta ver el código de reserva, meta p95 ≤ 2 s (PO Spec §8).
+- Métrica de experiencia: tiempo hasta ver la disponibilidad, desde que el miembro abre "Salas" o cambia sede, fecha o franja. Meta p95 ≤ 1 s (flujo Consultar disponibilidad, [Sección 6](../../04-data-flow-patterns.md)).
 
 ## Capacidad <!-- LABEL: Capacity -->
 
