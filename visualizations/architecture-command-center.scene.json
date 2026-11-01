@@ -1,6 +1,6 @@
 {
  "project": "Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión",
- "version": "1.10.2",
+ "version": "1.10.3",
  "status": "Released",
  "architectureType": "MICROSERVICES",
  "language": "es",
@@ -734,6 +734,56 @@
     "impact": "Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan mal las franjas \"en el pasado\" (INV-01), las reservas \"futuras\" (INV-04) y las que \"ya iniciaron\" (ADR-105). Una sola zona para las 3 sedes: si las sedes tienen zonas distintas, la regla falla en alguna de ellas.",
     "owner": "---"
    },
+   "TDR-001": {
+    "id": "TDR-001",
+    "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
+    "file": "tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md",
+    "status": "Resolved",
+    "date": "2026-10-19",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-108",
+     "ADR-109"
+    ],
+    "tags": [
+     "disponibilidad",
+     "cache",
+     "CU1"
+    ],
+    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha (ADR-108). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.",
+    "impact": "Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
+    "owner": "---"
+   },
+   "TDR-003": {
+    "id": "TDR-003",
+    "title": "Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos",
+    "file": "tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md",
+    "status": "Resolved",
+    "date": "2026-10-20",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-109",
+     "ADR-102"
+    ],
+    "tags": [
+     "disponibilidad",
+     "cache",
+     "listen-notify"
+    ],
+    "summary": "Cuando se pierde la conexión LISTEN al canal disponibilidad, los avisos de ese intervalo se pierden: PostgreSQL no los guarda. La réplica del Servicio de Reservas registra el aviso, espera y reconecta, pero no vacía la caché; esa réplica sirve disponibilidad desactualizada hasta 5 minutos, la expiración de ADR-109.",
+    "impact": "El Portal de Reservas puede mostrar libre una franja ya reservada. La reserva no se duplica, porque la Base de Datos de Reservas la rechaza (ADR-102), pero el usuario recibe un 409 inesperado (ROOM_OCCUPIED).",
+    "owner": "---"
+   },
    "TDR-002": {
     "id": "TDR-002",
     "title": "Las claves de idempotencia vencidas nunca se purgan",
@@ -762,56 +812,6 @@
     ],
     "summary": "El Servicio de Reservas guarda cada Idempotency-Key con su respuesta en la tabla clave_idempotencia de la Base de Datos de Reservas (ADR-103), pero ninguna purga elimina las claves de más de 24 horas. La búsqueda las ignora al vencer, así que la idempotencia funciona; las filas se quedan para siempre.",
     "impact": "La tabla crece sin límite, una fila por cada creación de reserva, y con ella el almacenamiento y los respaldos de la Base de Datos de Reservas. Cada fila guarda la respuesta de la creación (el sub del miembro y el asunto de la reserva), que permanece más allá de las 24 horas de ADR-103 y del plazo de 24 meses de ADR-106.",
-    "owner": "---"
-   },
-   "TDR-003": {
-    "id": "TDR-003",
-    "title": "Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos",
-    "file": "tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md",
-    "status": "Resolved",
-    "date": "2026-10-20",
-    "components": [
-     {
-      "slug": "Servicio de Reservas",
-      "node": "servicio-de-reservas"
-     }
-    ],
-    "adrs": [
-     "ADR-109",
-     "ADR-102"
-    ],
-    "tags": [
-     "disponibilidad",
-     "cache",
-     "listen-notify"
-    ],
-    "summary": "Cuando se pierde la conexión LISTEN al canal disponibilidad, los avisos de ese intervalo se pierden: PostgreSQL no los guarda. La réplica del Servicio de Reservas registra el aviso, espera y reconecta, pero no vacía la caché; esa réplica sirve disponibilidad desactualizada hasta 5 minutos, la expiración de ADR-109.",
-    "impact": "El Portal de Reservas puede mostrar libre una franja ya reservada. La reserva no se duplica, porque la Base de Datos de Reservas la rechaza (ADR-102), pero el usuario recibe un 409 inesperado (ROOM_OCCUPIED).",
-    "owner": "---"
-   },
-   "TDR-001": {
-    "id": "TDR-001",
-    "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
-    "file": "tdr/TDR-001-la-consulta-de-disponibilidad-se-sirve-de-una-cache-de-5-min.md",
-    "status": "Resolved",
-    "date": "2026-10-19",
-    "components": [
-     {
-      "slug": "Servicio de Reservas",
-      "node": "servicio-de-reservas"
-     }
-    ],
-    "adrs": [
-     "ADR-108",
-     "ADR-109"
-    ],
-    "tags": [
-     "disponibilidad",
-     "cache",
-     "CU1"
-    ],
-    "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha (ADR-108). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.",
-    "impact": "Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
     "owner": "---"
    }
   },
@@ -1506,525 +1506,47 @@
   ],
   "findings": [
    {
-    "analysis": "BOTTLENECK",
-    "file": "analysis/BOTTLENECK-2026-10-31.md",
-    "date": "2026-10-31",
-    "items": [
-     {
-      "id": "B2-01",
-      "label": "Proveedor de Identidad Northwind",
-      "fields": {
-       "Tier": "B2",
-       "Component": "Proveedor de Identidad Northwind",
-       "Max RPS / Limit": "[NOT DOCUMENTED]",
-       "Current HPA": "[NOT DOCUMENTED]",
-       "Fan-in Count": "2",
-       "Bottleneck Reason": "Dependencia externa (Keycloak 25) de I-01 e I-03 sin límite de tasa ni capacidad documentados; el inicio de sesión no usa caché y el JWKS tiene caché local solo en el servicio (docs/05 § 7, I-03). STRIDE registra T5-D y T7-D.",
-       "ADR Reference": "ADR-002"
-      },
-      "severity": "high",
-      "tier": "2.1 Cuellos de Botella Principales",
-      "what": "Dependencia externa (Keycloak 25) de I-01 e I-03 sin límite de tasa ni capacidad documentados; el inicio de sesión no usa caché y el JWKS tiene caché local solo en el servicio (docs/05 § 7, I-03). STRIDE registra T5-D y T7-D.",
-      "edges": [
-       [
-        "portal-de-reservas",
-        "proveedor-de-identidad-northwind"
-       ],
-       [
-        "proveedor-de-identidad-northwind",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-01",
-       "I-03"
-      ],
-      "nodes": [
-       "proveedor-de-identidad-northwind"
-      ],
-      "phys": []
-     },
-     {
-      "id": "B2-02",
-      "label": "Base de Datos de Reservas",
-      "fields": {
-       "Tier": "B2",
-       "Component": "Base de Datos de Reservas",
-       "Max RPS / Limit": "[NOT DOCUMENTED]",
-       "Current HPA": "[NOT DOCUMENTED]",
-       "Fan-in Count": "1",
-       "Bottleneck Reason": "Único camino de persistencia (I-04) de los 3 flujos; pool JDBC no documentado, réplicas de lectura no documentadas y cada réplica del servicio agrega conexiones JDBC más una conexión LISTEN fuera del pool (docs/08 § 10.4). STRIDE registra T11-D.",
-       "ADR Reference": "ADR-003, ADR-102, ADR-109"
-      },
-      "severity": "high",
-      "tier": "2.1 Cuellos de Botella Principales",
-      "what": "Único camino de persistencia (I-04) de los 3 flujos; pool JDBC no documentado, réplicas de lectura no documentadas y cada réplica del servicio agrega conexiones JDBC más una conexión LISTEN fuera del pool (docs/08 § 10.4). STRIDE registra T11-D.",
-      "edges": [
-       [
-        "base-de-datos-de-reservas",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-04"
-      ],
-      "nodes": [
-       "base-de-datos-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "B2-03",
-      "label": "Servicio de Reservas",
-      "fields": {
-       "Tier": "B2",
-       "Component": "Servicio de Reservas",
-       "Max RPS / Limit": "[NOT DOCUMENTED]",
-       "Current HPA": "HPA por CPU, mínimo 2, máximo [NOT DOCUMENTED]",
-       "Fan-in Count": "1",
-       "Bottleneck Reason": "Recibe todo el tráfico de cliente (I-02) sin máximo de réplicas ni solicitudes y límites de CPU y memoria documentados (docs/08 § 10.1); sin límite de tasa, la inundación sin autenticar (T2-D) llega a las réplicas.",
-       "ADR Reference": "ADR-005, ADR-109"
-      },
-      "severity": "high",
-      "tier": "2.1 Cuellos de Botella Principales",
-      "what": "Recibe todo el tráfico de cliente (I-02) sin máximo de réplicas ni solicitudes y límites de CPU y memoria documentados (docs/08 § 10.1); sin límite de tasa, la inundación sin autenticar (T2-D) llega a las réplicas.",
-      "edges": [
-       [
-        "portal-de-reservas",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-02"
-      ],
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "B3-01",
-      "label": "Servicio de Reservas",
-      "fields": {
-       "Tier": "B3",
-       "Component": "Servicio de Reservas",
-       "Scale Blocker": "Escala horizontalmente (sin estado, ADR-005) pero cada réplica abre sus conexiones JDBC y una LISTEN contra la misma Base de Datos de Reservas; el pool y el máximo de conexiones no están documentados (docs/08 § 10.4).",
-       "Fan-in Count": "1",
-       "Recommendation": "Fijar máximo de réplicas × tamaño de pool menor que el límite de conexiones de PostgreSQL y documentarlo en docs/08 § 10.1."
-      },
-      "severity": "medium",
-      "tier": "2.2 Componentes con Riesgo de Escalado",
-      "what": "Escala horizontalmente (sin estado, ADR-005) pero cada réplica abre sus conexiones JDBC y una LISTEN contra la misma Base de Datos de Reservas; el pool y el máximo de conexiones no están documentados (docs/08 § 10.4).",
-      "nodes": [
-       "servicio-de-reservas",
-       "base-de-datos-de-reservas"
-      ],
-      "phys": []
-     }
-    ]
-   },
-   {
-    "analysis": "COST-HOTSPOTS",
-    "file": "analysis/COST-HOTSPOTS-2026-10-31.md",
-    "date": "2026-10-31",
-    "items": [
-     {
-      "id": "P-01",
-      "label": "Servicio de Reservas (2 réplicas permanentes, ADR-005)",
-      "fields": {
-       "Component / Service": "Servicio de Reservas (2 réplicas permanentes, ADR-005)",
-       "Monthly Cost": "Not documented",
-       "Data Quality": "Q4",
-       "Vendor": "Not documented",
-       "Cumulative %": "Not documented",
-       "Category": "P"
-      },
-      "severity": "medium",
-      "tier": "2.1 Tabla de Pareto de Costo",
-      "what": "P",
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "Q-01",
-      "label": "Servicio de Reservas",
-      "fields": {
-       "Component": "Servicio de Reservas",
-       "Cost Mention": "Costo fijo: dos réplicas permanentes, sin cifra",
-       "Source": "docs/09-operational-considerations.md § 11.5",
-       "Recommended Action": "Documentar el costo mensual por réplica y el costo compartido del clúster Kubernetes de Plataforma Northwind"
-      },
-      "severity": "info",
-      "tier": "2.2 Menciones Cualitativas de Costo",
-      "what": "Documentar el costo mensual por réplica y el costo compartido del clúster Kubernetes de Plataforma Northwind",
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     }
-    ]
-   },
-   {
-    "analysis": "DATA-SENSITIVITY",
-    "file": "analysis/DATA-SENSITIVITY-2026-10-31.md",
-    "date": "2026-10-31",
-    "items": [
-     {
-      "id": "G1-01",
-      "label": "Flujos 1, 2 y 3: ingress del clúster → Servicio de Reservas (tramo interno de I-02)",
-      "fields": {
-       "Gap": "G1",
-       "Data Store / Flow": "Flujos 1, 2 y 3: ingress del clúster → Servicio de Reservas (tramo interno de I-02)",
-       "Sensitivity": "S1",
-       "Protocol / Storage": "HTTPS TLS 1.2+ termina en el ingress; protocolo del tramo interno Not documented",
-       "Missing Control": "TLS o mTLS del ingress al pod del Servicio de Reservas: Not documented; el tramo lleva JWT, reservas y motivos",
-       "Source": "docs/07 § 9.1, § 9.3; docs/05 § 7 I-02"
-      },
-      "severity": "critical",
-      "tier": "5. Brechas de Cifrado (G1 + G2)",
-      "what": "TLS o mTLS del ingress al pod del Servicio de Reservas: Not documented; el tramo lleva JWT, reservas y motivos",
-      "edges": [
-       [
-        "portal-de-reservas",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-02"
-      ],
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "G2-01",
-      "label": "Base de Datos de Reservas",
-      "fields": {
-       "Gap": "G2",
-       "Data Store / Flow": "Base de Datos de Reservas",
-       "Sensitivity": "S1",
-       "Protocol / Storage": "PostgreSQL 16 gestionado por Plataforma Northwind",
-       "Missing Control": "Cifrado en reposo (TDE o cifrado de volumen) y gestión de claves: Not documented",
-       "Source": "docs/07 § 9.3 (Datos); ADR-003"
-      },
-      "severity": "critical",
-      "tier": "5. Brechas de Cifrado (G1 + G2)",
-      "what": "Cifrado en reposo (TDE o cifrado de volumen) y gestión de claves: Not documented",
-      "nodes": [
-       "base-de-datos-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "G2-02",
-      "label": "Respaldos de la Base de Datos de Reservas",
-      "fields": {
-       "Gap": "G2",
-       "Data Store / Flow": "Respaldos de la Base de Datos de Reservas",
-       "Sensitivity": "S1",
-       "Protocol / Storage": "Respaldo diario, 30 días, PITR de 7 días; ubicación Not documented",
-       "Missing Control": "Cifrado en reposo, cifrado en tránsito hacia el destino y ubicación del respaldo: Not documented",
-       "Source": "docs/09 § 11.3; docs/07 § 9.3"
-      },
-      "severity": "critical",
-      "tier": "5. Brechas de Cifrado (G1 + G2)",
-      "what": "Cifrado en reposo, cifrado en tránsito hacia el destino y ubicación del respaldo: Not documented",
-      "nodes": [
-       "base-de-datos-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "G3-01",
-      "label": "Respaldos de la Base de Datos de Reservas",
-      "fields": {
-       "Data Store": "Respaldos de la Base de Datos de Reservas",
-       "Documented Retention": "30 días de respaldo (PITR de 7 días) después de la purga de 24 meses",
-       "Retention Limit": "24 meses para reservas y auditoría (ADR-106; docs/07 § 9.4)",
-       "Overage": "Hasta 30 días; aceptado como costo en docs/07 § 9.4",
-       "Source": "docs/07 § 9.4; docs/09 § 11.3; ADR-106"
-      },
-      "severity": "high",
-      "tier": "6. Brechas de Retención (G3)",
-      "what": "Hasta 30 días; aceptado como costo en docs/07 § 9.4",
-      "nodes": [
-       "base-de-datos-de-reservas"
-      ],
-      "phys": []
-     }
-    ]
-   },
-   {
-    "analysis": "SPOF",
-    "file": "analysis/SPOF-2026-10-31.md",
-    "date": "2026-10-31",
-    "items": [
-     {
-      "id": "C1",
-      "label": "Base de Datos de Reservas",
-      "fields": {
-       "Component": "Base de Datos de Reservas",
-       "Failure Scenario": "Falla de la instancia PostgreSQL 16 o pérdida de conexión JDBC en I-04",
-       "Impact": "100 % de consultas, reservas y cancelaciones fallan: es el único almacén y la solicitud responde error de servicio (docs/05 § 7, I-04)",
-       "Current Mitigation": "Respaldo diario, retención de 30 días y PITR de 7 días (docs/09 § 11.3). Alta disponibilidad y conmutación por error: Not documented"
-      },
-      "severity": "critical",
-      "tier": "2.1 SPOF Críticos — Interrupción Total",
-      "what": "Falla de la instancia PostgreSQL 16 o pérdida de conexión JDBC en I-04",
-      "mitigation": {
-       "column": "Current Mitigation",
-       "text": "Respaldo diario, retención de 30 días y PITR de 7 días (docs/09 § 11.3). Alta disponibilidad y conmutación por error: Not documented",
-       "state": "present"
-      },
-      "residual": "high",
-      "edges": [
-       [
-        "base-de-datos-de-reservas",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-04"
-      ],
-      "nodes": [
-       "base-de-datos-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "C2",
-      "label": "Proveedor de Identidad Northwind",
-      "fields": {
-       "Component": "Proveedor de Identidad Northwind",
-       "Failure Scenario": "Indisponibilidad de Keycloak 25: falla el inicio de sesión OIDC (I-01) y la obtención de claves JWKS (I-03)",
-       "Impact": "100 % de los inicios de sesión nuevos fallan; sin claves JWKS en caché, el Servicio de Reservas rechaza toda solicitud (deny by default, docs/05 § 7, I-03)",
-       "Current Mitigation": "Caché local de claves JWKS en el Servicio de Reservas (docs/05 § 7, I-03). Emisor alternativo, alta disponibilidad de Keycloak y vida del token: Not documented"
-      },
-      "severity": "critical",
-      "tier": "2.1 SPOF Críticos — Interrupción Total",
-      "what": "Indisponibilidad de Keycloak 25: falla el inicio de sesión OIDC (I-01) y la obtención de claves JWKS (I-03)",
-      "mitigation": {
-       "column": "Current Mitigation",
-       "text": "Caché local de claves JWKS en el Servicio de Reservas (docs/05 § 7, I-03). Emisor alternativo, alta disponibilidad de Keycloak y vida del token: Not documented",
-       "state": "present"
-      },
-      "residual": "high",
-      "edges": [
-       [
-        "portal-de-reservas",
-        "proveedor-de-identidad-northwind"
-       ],
-       [
-        "proveedor-de-identidad-northwind",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-01",
-       "I-03"
-      ],
-      "nodes": [
-       "servicio-de-reservas",
-       "proveedor-de-identidad-northwind"
-      ],
-      "phys": []
-     },
-     {
-      "id": "C3",
-      "label": "Clúster Kubernetes de Plataforma Northwind (aloja el Servicio de Reservas)",
-      "fields": {
-       "Component": "Clúster Kubernetes de Plataforma Northwind (aloja el Servicio de Reservas)",
-       "Failure Scenario": "Falla del clúster, de su plano de control o de su ingress",
-       "Impact": "100 % de las llamadas I-02 fallan: el Servicio de Reservas corre en un único clúster (ADR-005, docs/09 § 11.1)",
-       "Current Mitigation": "2 réplicas en zonas distintas protegen ante la caída de una zona, no del clúster. Clúster secundario o región alterna: Not documented"
-      },
-      "severity": "critical",
-      "tier": "2.1 SPOF Críticos — Interrupción Total",
-      "what": "Falla del clúster, de su plano de control o de su ingress",
-      "mitigation": {
-       "column": "Current Mitigation",
-       "text": "2 réplicas en zonas distintas protegen ante la caída de una zona, no del clúster. Clúster secundario o región alterna: Not documented",
-       "state": "present"
-      },
-      "residual": "high",
-      "edges": [
-       [
-        "portal-de-reservas",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-02"
-      ],
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "C4",
-      "label": "CDN de Plataforma Northwind (publica el Portal de Reservas)",
-      "fields": {
-       "Component": "CDN de Plataforma Northwind (publica el Portal de Reservas)",
-       "Failure Scenario": "Interrupción del CDN o publicación de un bundle defectuoso",
-       "Impact": "100 % de los usuarios no cargan el Portal de Reservas: es la única interfaz para miembros y recepción (ADR-107, docs/09 § 11.1)",
-       "Current Mitigation": "None. Origen alterno, SLA del CDN y método de reversión: Not documented (docs/09 § 11.1)"
-      },
-      "severity": "critical",
-      "tier": "2.1 SPOF Críticos — Interrupción Total",
-      "what": "Interrupción del CDN o publicación de un bundle defectuoso",
-      "mitigation": {
-       "column": "Current Mitigation",
-       "text": "None. Origen alterno, SLA del CDN y método de reversión: Not documented (docs/09 § 11.1)",
-       "state": "none"
-      },
-      "nodes": [
-       "portal-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "D1",
-      "label": "Servicio de Reservas",
-      "fields": {
-       "Component": "Servicio de Reservas",
-       "Failure Scenario": "Caída de una zona deja 1 de 2 réplicas; el HPA por CPU escala sin max_replicas documentado",
-       "Impact": "Riesgo de incumplir p95 ≤ 1 s en disponibilidad y p95 ≤ 2 s en reserva (docs/09 § 11.2); la capacidad por réplica es Not documented",
-       "Current Mitigation": "Al menos 2 réplicas en zonas distintas (ADR-005); HPA por CPU (docs/08); alertas de latencia p95 sin severidad ni guardia (docs/09 § 11.2)"
-      },
-      "severity": "medium",
-      "tier": "2.2 SPOF de Degradación — Fallas Parciales o Silenciosas",
-      "what": "Caída de una zona deja 1 de 2 réplicas; el HPA por CPU escala sin max_replicas documentado",
-      "mitigation": {
-       "column": "Current Mitigation",
-       "text": "Al menos 2 réplicas en zonas distintas (ADR-005); HPA por CPU (docs/08); alertas de latencia p95 sin severidad ni guardia (docs/09 § 11.2)",
-       "state": "present"
-      },
-      "residual": "low",
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "D2",
-      "label": "Base de Datos de Reservas",
-      "fields": {
-       "Component": "Base de Datos de Reservas",
-       "Failure Scenario": "Agotamiento del pool de conexiones JDBC de I-04, más la conexión LISTEN fuera del pool por réplica (ADR-109)",
-       "Impact": "Solicitudes en espera o con error de servicio; incumplimiento de las metas p95 sin caída total (STRIDE T11-D)",
-       "Current Mitigation": "Tamaño del pool y límite de conexiones de PostgreSQL 16: Not documented (docs/05 § 7, I-04)"
-      },
-      "severity": "medium",
-      "tier": "2.2 SPOF de Degradación — Fallas Parciales o Silenciosas",
-      "what": "Agotamiento del pool de conexiones JDBC de I-04, más la conexión LISTEN fuera del pool por réplica (ADR-109)",
-      "mitigation": {
-       "column": "Current Mitigation",
-       "text": "Tamaño del pool y límite de conexiones de PostgreSQL 16: Not documented (docs/05 § 7, I-04)",
-       "state": "present"
-      },
-      "residual": "low",
-      "edges": [
-       [
-        "base-de-datos-de-reservas",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-04"
-      ],
-      "nodes": [
-       "base-de-datos-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "O1",
-      "label": "Colector OpenTelemetry de Plataforma Northwind",
-      "fields": {
-       "Component": "Colector OpenTelemetry de Plataforma Northwind",
-       "Failure Scenario": "Falla del colector, destino único de trazas, métricas y logs (ADR-004)",
-       "Impact": "Sin visibilidad del Portal de Reservas ni del Servicio de Reservas; las 3 alertas de docs/09 § 11.2 dejan de evaluarse. Telemetría secundaria: Not documented"
-      },
-      "severity": "low",
-      "tier": "2.3 SPOF Operativos — Despliegue y Observabilidad",
-      "what": "Falla del colector, destino único de trazas, métricas y logs (ADR-004)",
-      "nodes": [
-       "portal-de-reservas",
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "O2",
-      "label": "Guardia y alertas del Servicio de Reservas",
-      "fields": {
-       "Component": "Guardia y alertas del Servicio de Reservas",
-       "Failure Scenario": "Falla fuera del horario de soporte (lunes a viernes 08:00–19:00); severidad y guardia de las alertas: Not documented",
-       "Impact": "La recuperación queda manual y sin responsable fuera del horario hábil (docs/09 § 11.2)"
-      },
-      "severity": "low",
-      "tier": "2.3 SPOF Operativos — Despliegue y Observabilidad",
-      "what": "Falla fuera del horario de soporte (lunes a viernes 08:00–19:00); severidad y guardia de las alertas: Not documented",
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "O3",
-      "label": "Respaldos de la Base de Datos de Reservas",
-      "fields": {
-       "Component": "Respaldos de la Base de Datos de Reservas",
-       "Failure Scenario": "Pérdida de respaldos en el mismo dominio de falla que la base; ubicación: Not documented",
-       "Impact": "Restauración imposible o fuera de plazo; RTO y RPO: Not documented (docs/09 § 11.3)"
-      },
-      "severity": "low",
-      "tier": "2.3 SPOF Operativos — Despliegue y Observabilidad",
-      "what": "Pérdida de respaldos en el mismo dominio de falla que la base; ubicación: Not documented",
-      "nodes": [
-       "base-de-datos-de-reservas"
-      ],
-      "phys": []
-     }
-    ]
-   },
-   {
     "analysis": "STRIDE",
-    "file": "analysis/STRIDE-2026-10-31.md",
-    "date": "2026-10-31",
+    "file": "analysis/STRIDE-2026-10-18.md",
+    "date": "2026-10-18",
     "items": [
      {
       "id": "TB-01",
-      "label": "Navegador → Portal de Reservas (CDN)",
+      "label": "Navegador → Servicio de Reservas (I-02, vía ingress)",
       "fields": {
-       "Name": "Navegador → Portal de Reservas (CDN)",
+       "Name": "Navegador → Servicio de Reservas (I-02, vía ingress)",
        "From Zone": "Internet (navegador del miembro)",
-       "To Zone": "CDN de Plataforma Northwind",
-       "Auth Mechanism": "None (archivos estáticos públicos)",
-       "Data Classification": "Public",
-       "Source": "docs/09-operational-considerations.md § 11.1; ADR-107"
+       "To Zone": "Interna (clúster Kubernetes de Plataforma Northwind)",
+       "Auth Mechanism": "JWT RS256 en Authorization: Bearer, validado con JWKS en cada solicitud",
+       "Data Classification": "Confidencial (nombre, correo y reservas del miembro)",
+       "Source": "docs/07-security-architecture.md § 9.3; docs/05-integration-points.md § 7 (I-02)"
       },
       "severity": "info",
       "tier": "2. Inventario de Fronteras de Confianza",
+      "edges": [
+       [
+        "portal-de-reservas",
+        "servicio-de-reservas"
+       ]
+      ],
+      "ints": [
+       "I-02"
+      ],
       "nodes": [
-       "portal-de-reservas"
+       "servicio-de-reservas"
       ],
       "phys": []
      },
      {
       "id": "TB-02",
-      "label": "Navegador → Proveedor de Identidad Northwind (I-01)",
+      "label": "Portal de Reservas → Proveedor de Identidad Northwind (I-01)",
       "fields": {
-       "Name": "Navegador → Proveedor de Identidad Northwind (I-01)",
-       "From Zone": "Internet (Portal de Reservas en el navegador)",
-       "To Zone": "Externo — Proveedor de Identidad Northwind (Keycloak 25)",
-       "Auth Mechanism": "OIDC código de autorización con PKCE",
-       "Data Classification": "Confidential (credenciales, tokens con recepcion y sede)",
-       "Source": "docs/07-security-architecture.md § 9.3; docs/05-integration-points.md § 7 (I-01); ADR-002"
+       "Name": "Portal de Reservas → Proveedor de Identidad Northwind (I-01)",
+       "From Zone": "Internet (navegador del miembro)",
+       "To Zone": "Externa (Keycloak 25 de Northwind)",
+       "Auth Mechanism": "Código de autorización OIDC con PKCE",
+       "Data Classification": "Restringida (credenciales y tokens de acceso)",
+       "Source": "docs/07-security-architecture.md § 9.3; docs/05-integration-points.md § 7 (I-01)"
       },
       "severity": "info",
       "tier": "2. Inventario de Fronteras de Confianza",
@@ -2045,41 +1567,13 @@
      },
      {
       "id": "TB-03",
-      "label": "Navegador → ingress → Servicio de Reservas (I-02)",
+      "label": "Servicio de Reservas → Proveedor de Identidad Northwind (I-03, JWKS)",
       "fields": {
-       "Name": "Navegador → ingress → Servicio de Reservas (I-02)",
-       "From Zone": "Internet (Portal de Reservas en el navegador)",
-       "To Zone": "Interno — clúster Kubernetes de Plataforma Northwind",
-       "Auth Mechanism": "JWT RS256 en Authorization: Bearer, validado con JWKS; TLS 1.2+ en el ingress",
-       "Data Classification": "Confidential (nombre, correo y reservas del miembro)",
-       "Source": "docs/07-security-architecture.md § 9.3; docs/05-integration-points.md § 7 (I-02); ADR-002, ADR-005"
-      },
-      "severity": "info",
-      "tier": "2. Inventario de Fronteras de Confianza",
-      "edges": [
-       [
-        "portal-de-reservas",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-02"
-      ],
-      "nodes": [
-       "portal-de-reservas",
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "TB-04",
-      "label": "Servicio de Reservas → Proveedor de Identidad Northwind (I-03)",
-      "fields": {
-       "Name": "Servicio de Reservas → Proveedor de Identidad Northwind (I-03)",
-       "From Zone": "Interno — clúster Kubernetes",
-       "To Zone": "Externo — Proveedor de Identidad Northwind",
-       "Auth Mechanism": "None (endpoint JWKS público por HTTPS, verificación del certificado del proveedor)",
-       "Data Classification": "Public (claves públicas JWKS)",
+       "Name": "Servicio de Reservas → Proveedor de Identidad Northwind (I-03, JWKS)",
+       "From Zone": "Interna (clúster Kubernetes)",
+       "To Zone": "Externa (Keycloak 25 de Northwind)",
+       "Auth Mechanism": "Sin credencial de cliente; HTTPS con verificación del certificado del proveedor",
+       "Data Classification": "Pública (claves públicas JWKS)",
        "Source": "docs/07-security-architecture.md § 9.3; docs/05-integration-points.md § 7 (I-03)"
       },
       "severity": "info",
@@ -2100,15 +1594,15 @@
       "phys": []
      },
      {
-      "id": "TB-05",
+      "id": "TB-04",
       "label": "Servicio de Reservas → Base de Datos de Reservas (I-04)",
       "fields": {
        "Name": "Servicio de Reservas → Base de Datos de Reservas (I-04)",
-       "From Zone": "Interno — clúster Kubernetes",
-       "To Zone": "Datos — PostgreSQL 16 gestionado por Plataforma Northwind",
-       "Auth Mechanism": "Usuario PostgreSQL propio, credenciales del gestor de secretos del clúster; JDBC con TLS",
-       "Data Classification": "Confidential (datos personales y registro de auditoría)",
-       "Source": "docs/07-security-architecture.md § 9.3; docs/05-integration-points.md § 7 (I-04); ADR-003, ADR-005"
+       "From Zone": "Interna (clúster Kubernetes)",
+       "To Zone": "Datos (PostgreSQL 16 gestionado por Plataforma Northwind)",
+       "Auth Mechanism": "Usuario PostgreSQL propio con credenciales del gestor de secretos del clúster; JDBC con TLS",
+       "Data Classification": "Confidencial (datos personales y registro de auditoría)",
+       "Source": "docs/07-security-architecture.md § 9.3; docs/05-integration-points.md § 7 (I-04)"
       },
       "severity": "info",
       "tier": "2. Inventario de Fronteras de Confianza",
@@ -2128,143 +1622,80 @@
       "phys": []
      },
      {
-      "id": "T1-S",
-      "label": "Suplantación del origen del Portal de Reservas (sitio falso que captura el inicio de sesión)",
+      "id": "TB-05",
+      "label": "Navegador → CDN de Plataforma Northwind (archivos estáticos del Portal de Reservas)",
       "fields": {
-       "Threat": "Suplantación del origen del Portal de Reservas (sitio falso que captura el inicio de sesión)",
-       "Category": "Spoofing",
-       "Severity": "Low",
-       "Status": "⚠️ Finding",
-       "Control / Gap": "§ 9.1 cita TLS 1.2+ solo en el ingress; TLS del CDN: Not documented"
+       "Name": "Navegador → CDN de Plataforma Northwind (archivos estáticos del Portal de Reservas)",
+       "From Zone": "Internet (navegador del miembro)",
+       "To Zone": "CDN de Plataforma Northwind",
+       "Auth Mechanism": "None (contenido estático público)",
+       "Data Classification": "Pública (bundle de la SPA)",
+       "Source": "docs/09-operational-considerations.md § 11.1; adr/ADR-107"
       },
-      "severity": "low",
-      "tier": "TB-01 — TB-01 — Navegador → Portal de Reservas (CDN)",
-      "what": "§ 9.1 cita TLS 1.2+ solo en el ingress; TLS del CDN: Not documented",
-      "mitigation": {
-       "column": "Status",
-       "text": "⚠️ Finding",
-       "state": "none"
-      },
+      "severity": "info",
+      "tier": "2. Inventario de Fronteras de Confianza",
       "nodes": [
        "portal-de-reservas"
       ],
       "phys": []
      },
      {
-      "id": "T2-T",
-      "label": "Bundle JavaScript alterado en el CDN o en la publicación lee los tokens en memoria",
+      "id": "T1-R",
+      "label": "Un miembro niega haber creado una reserva",
       "fields": {
-       "Threat": "Bundle JavaScript alterado en el CDN o en la publicación lee los tokens en memoria",
-       "Category": "Tampering",
+       "Threat": "Un miembro niega haber creado una reserva",
+       "Category": "R — Repudio",
        "Severity": "Medium",
        "Status": "⚠️ Finding",
-       "Control / Gap": "Integridad de la publicación (CSP, SRI, firma de artefactos): Not documented; ADR-104 protege el almacenamiento, no la ejecución"
+       "Control / Gap": "Solo la cancelación escribe auditoría; la creación de reservas por I-02 no tiene registro con usuario, hora y recurso documentado (docs/07 § 9.4)"
       },
       "severity": "medium",
-      "tier": "TB-01 — TB-01 — Navegador → Portal de Reservas (CDN)",
-      "what": "Integridad de la publicación (CSP, SRI, firma de artefactos): Not documented; ADR-104 protege el almacenamiento, no la ejecución",
+      "tier": "TB-01 — TB-01 — Navegador → Servicio de Reservas (I-02)",
+      "what": "Solo la cancelación escribe auditoría; la creación de reservas por I-02 no tiene registro con usuario, hora y recurso documentado (docs/07 § 9.4)",
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
        "state": "none"
       },
-      "nodes": [
-       "portal-de-reservas"
-      ],
-      "phys": [],
-      "via": "section"
-     },
-     {
-      "id": "T3-R",
-      "label": "Inicio de sesión o desactivación de cuenta sin rastro",
-      "fields": {
-       "Threat": "Inicio de sesión o desactivación de cuenta sin rastro",
-       "Category": "Repudiation",
-       "Severity": "Low",
-       "Status": "⚠️ Finding",
-       "Control / Gap": "Auditoría de eventos de autenticación en Keycloak 25: Not documented"
-      },
-      "severity": "low",
-      "tier": "TB-02 — TB-02 — Navegador → Proveedor de Identidad Northwind (I-01)",
-      "what": "Auditoría de eventos de autenticación en Keycloak 25: Not documented",
-      "mitigation": {
-       "column": "Status",
-       "text": "⚠️ Finding",
-       "state": "none"
-      },
-      "nodes": [
-       "proveedor-de-identidad-northwind",
-       "portal-de-reservas"
-      ],
-      "phys": [],
       "edges": [
        [
         "portal-de-reservas",
-        "proveedor-de-identidad-northwind"
+        "servicio-de-reservas"
        ]
       ],
       "ints": [
-       "I-01"
+       "I-02"
       ],
-      "via": "section"
-     },
-     {
-      "id": "T4-D",
-      "label": "Fuerza bruta o inundación del inicio de sesión deja a todos sin sesión",
-      "fields": {
-       "Threat": "Fuerza bruta o inundación del inicio de sesión deja a todos sin sesión",
-       "Category": "DoS",
-       "Severity": "Medium",
-       "Status": "⚠️ Finding",
-       "Control / Gap": "Sin el proveedor no hay operación (docs/04 Catálogo de Fases); límite de tasa y bloqueo de cuenta: Not documented"
-      },
-      "severity": "medium",
-      "tier": "TB-02 — TB-02 — Navegador → Proveedor de Identidad Northwind (I-01)",
-      "what": "Sin el proveedor no hay operación (docs/04 Catálogo de Fases); límite de tasa y bloqueo de cuenta: Not documented",
-      "mitigation": {
-       "column": "Status",
-       "text": "⚠️ Finding",
-       "state": "none"
-      },
-      "nodes": [
-       "proveedor-de-identidad-northwind",
-       "portal-de-reservas"
-      ],
-      "phys": [],
-      "edges": [
-       [
-        "portal-de-reservas",
-        "proveedor-de-identidad-northwind"
-       ]
-      ],
-      "ints": [
-       "I-01"
-      ],
-      "via": "section"
-     },
-     {
-      "id": "T5-R",
-      "label": "Miembro niega haber creado una reserva",
-      "fields": {
-       "Threat": "Miembro niega haber creado una reserva",
-       "Category": "Repudiation",
-       "Severity": "Low",
-       "Status": "⚠️ Finding",
-       "Control / Gap": "Auditoría solo por cancelación (§ 9.4); auditoría de la creación: Not documented"
-      },
-      "severity": "low",
-      "tier": "TB-03 — TB-03 — Navegador → ingress → Servicio de Reservas (I-02)",
-      "what": "Auditoría solo por cancelación (§ 9.4); auditoría de la creación: Not documented",
-      "mitigation": {
-       "column": "Status",
-       "text": "⚠️ Finding",
-       "state": "none"
-      },
       "nodes": [
        "servicio-de-reservas",
        "portal-de-reservas"
       ],
       "phys": [],
+      "via": "section"
+     },
+     {
+      "id": "T2-D",
+      "label": "Inundación de solicitudes sin autenticar contra la API pública",
+      "fields": {
+       "Threat": "Inundación de solicitudes sin autenticar contra la API pública",
+       "Category": "D — Denegación de servicio",
+       "Severity": "High",
+       "Status": "⚠️ Finding",
+       "Control / Gap": "Sin límite de tasa documentado en el ingress ni en el Servicio de Reservas; 2 réplicas fijas (docs/07 § 9.3; docs/09 § 11.5)",
+       "Trust Boundary": "TB-01 — Navegador → Servicio de Reservas (I-02)",
+       "STRIDE Category": "D — Denegación de servicio",
+       "Threat Description": "Un atacante sin autenticar inunda la API pública; las 2 réplicas del Servicio de Reservas responden 401 pero consumen CPU y conexiones hasta degradar el servicio para todos los miembros.",
+       "Recommended Mitigation": "Límite de tasa por IP y por cliente en el ingress (anotaciones de rate limit del Ingress Controller) y límite por usuario en el servicio; HPA con máximo de réplicas documentado.",
+       "ADR Reference": "Not documented — sin ADR de límite de tasa; relacionado con ADR-005"
+      },
+      "severity": "high",
+      "tier": "TB-01 — TB-01 — Navegador → Servicio de Reservas (I-02)",
+      "what": "Sin límite de tasa documentado en el ingress ni en el Servicio de Reservas; 2 réplicas fijas (docs/07 § 9.3; docs/09 § 11.5)",
+      "mitigation": {
+       "column": "Status",
+       "text": "⚠️ Finding",
+       "state": "none"
+      },
       "edges": [
        [
         "portal-de-reservas",
@@ -2273,82 +1704,150 @@
       ],
       "ints": [
        "I-02"
+      ],
+      "nodes": [
+       "servicio-de-reservas"
+      ],
+      "phys": []
+     },
+     {
+      "id": "T3-E",
+      "label": "Escalada desde un contenedor comprometido del Servicio de Reservas",
+      "fields": {
+       "Threat": "Escalada desde un contenedor comprometido del Servicio de Reservas",
+       "Category": "E — Elevación de privilegios",
+       "Severity": "Medium",
+       "Status": "⚠️ Finding",
+       "Control / Gap": "Autorización por rol recepcion y sede (ADR-105, Proposed) e imagen firmada; ejecución sin root y NetworkPolicy no documentadas (docs/07 § 9.3; docs/09 § 11.1)"
+      },
+      "severity": "medium",
+      "tier": "TB-01 — TB-01 — Navegador → Servicio de Reservas (I-02)",
+      "what": "Autorización por rol recepcion y sede (ADR-105, Proposed) e imagen firmada; ejecución sin root y NetworkPolicy no documentadas (docs/07 § 9.3; docs/09 § 11.1)",
+      "mitigation": {
+       "column": "Status",
+       "text": "⚠️ Finding",
+       "state": "none"
+      },
+      "nodes": [
+       "servicio-de-reservas"
+      ],
+      "phys": []
+     },
+     {
+      "id": "T4-R",
+      "label": "Inicio de sesión sin rastro verificable",
+      "fields": {
+       "Threat": "Inicio de sesión sin rastro verificable",
+       "Category": "R — Repudio",
+       "Severity": "Low",
+       "Status": "⚠️ Finding",
+       "Control / Gap": "Registro de eventos de inicio de sesión en Keycloak 25 no documentado (docs/07 § 9.5)"
+      },
+      "severity": "low",
+      "tier": "TB-02 — TB-02 — Portal de Reservas → Proveedor de Identidad Northwind (I-01)",
+      "what": "Registro de eventos de inicio de sesión en Keycloak 25 no documentado (docs/07 § 9.5)",
+      "mitigation": {
+       "column": "Status",
+       "text": "⚠️ Finding",
+       "state": "none"
+      },
+      "nodes": [
+       "portal-de-reservas",
+       "proveedor-de-identidad-northwind"
+      ],
+      "phys": [],
+      "edges": [
+       [
+        "portal-de-reservas",
+        "proveedor-de-identidad-northwind"
+       ]
+      ],
+      "ints": [
+       "I-01"
       ],
       "via": "section"
      },
      {
-      "id": "T6-I",
-      "label": "Tráfico en claro entre el ingress y los pods del Servicio de Reservas",
+      "id": "T5-D",
+      "label": "Fuerza bruta o inundación del endpoint de inicio de sesión",
       "fields": {
-       "Threat": "Tráfico en claro entre el ingress y los pods del Servicio de Reservas",
-       "Category": "Information Disclosure",
-       "Severity": "Low",
+       "Threat": "Fuerza bruta o inundación del endpoint de inicio de sesión",
+       "Category": "D — Denegación de servicio",
+       "Severity": "Medium",
        "Status": "⚠️ Finding",
-       "Control / Gap": "TLS termina en el ingress (§ 9.3); cifrado o mTLS ingress → pod: Not documented"
+       "Control / Gap": "Protección contra fuerza bruta y límite de tasa de Keycloak no documentados; sin sesión no hay operación (docs/07 § 9.3; docs/04 Catálogo de Fases)"
       },
-      "severity": "low",
-      "tier": "TB-03 — TB-03 — Navegador → ingress → Servicio de Reservas (I-02)",
-      "what": "TLS termina en el ingress (§ 9.3); cifrado o mTLS ingress → pod: Not documented",
+      "severity": "medium",
+      "tier": "TB-02 — TB-02 — Portal de Reservas → Proveedor de Identidad Northwind (I-01)",
+      "what": "Protección contra fuerza bruta y límite de tasa de Keycloak no documentados; sin sesión no hay operación (docs/07 § 9.3; docs/04 Catálogo de Fases)",
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
        "state": "none"
       },
       "nodes": [
-       "servicio-de-reservas"
+       "portal-de-reservas",
+       "proveedor-de-identidad-northwind"
       ],
-      "phys": []
-     },
-     {
-      "id": "T7-D",
-      "label": "Inundación sin autenticar del ingress público satura las 2 réplicas",
-      "fields": {
-       "Threat": "Inundación sin autenticar del ingress público satura las 2 réplicas",
-       "Category": "DoS",
-       "Severity": "High",
-       "Status": "⚠️ Finding",
-       "Control / Gap": "HPA documentado en docs/02 § 3; límite de tasa (RPS) en el ingress o el servicio: Not documented",
-       "Trust Boundary": "TB-03 — Navegador → ingress → Servicio de Reservas (I-02)",
-       "STRIDE Category": "DoS",
-       "Threat Description": "El ingress público no documenta límite de tasa; una inundación sin autenticar alcanza las 2 réplicas del Servicio de Reservas y deja sin servicio a las 3 sedes.",
-       "Recommended Mitigation": "Límite de tasa por IP y por sub del token en el ingress del clúster, con valor RPS documentado en docs/08; techo del HPA documentado.",
-       "ADR Reference": "ADR-005"
-      },
-      "severity": "high",
-      "tier": "TB-03 — TB-03 — Navegador → ingress → Servicio de Reservas (I-02)",
-      "what": "HPA documentado en docs/02 § 3; límite de tasa (RPS) en el ingress o el servicio: Not documented",
-      "mitigation": {
-       "column": "Status",
-       "text": "⚠️ Finding",
-       "state": "none"
-      },
+      "phys": [],
       "edges": [
        [
         "portal-de-reservas",
-        "servicio-de-reservas"
+        "proveedor-de-identidad-northwind"
        ]
       ],
       "ints": [
-       "I-02"
+       "I-01"
       ],
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
+      "via": "section"
      },
      {
-      "id": "T8-D",
-      "label": "Caída del JWKS con la caché vencida rechaza todas las solicitudes",
+      "id": "T6-E",
+      "label": "Asignación indebida del rol recepcion o del atributo sede",
       "fields": {
-       "Threat": "Caída del JWKS con la caché vencida rechaza todas las solicitudes",
-       "Category": "DoS",
+       "Threat": "Asignación indebida del rol recepcion o del atributo sede",
+       "Category": "E — Elevación de privilegios",
        "Severity": "Medium",
        "Status": "⚠️ Finding",
-       "Control / Gap": "Caché local de claves y deny by default (docs/05 I-03); TTL de la caché y comportamiento ante caída: Not documented"
+       "Control / Gap": "La autorización confía en los claims del token (ADR-105); el proceso de alta y revisión de roles en Keycloak no está documentado"
       },
       "severity": "medium",
-      "tier": "TB-04 — TB-04 — Servicio de Reservas → Proveedor de Identidad Northwind (I-03)",
-      "what": "Caché local de claves y deny by default (docs/05 I-03); TTL de la caché y comportamiento ante caída: Not documented",
+      "tier": "TB-02 — TB-02 — Portal de Reservas → Proveedor de Identidad Northwind (I-01)",
+      "what": "La autorización confía en los claims del token (ADR-105); el proceso de alta y revisión de roles en Keycloak no está documentado",
+      "mitigation": {
+       "column": "Status",
+       "text": "⚠️ Finding",
+       "state": "none"
+      },
+      "nodes": [
+       "portal-de-reservas",
+       "proveedor-de-identidad-northwind"
+      ],
+      "phys": [],
+      "edges": [
+       [
+        "portal-de-reservas",
+        "proveedor-de-identidad-northwind"
+       ]
+      ],
+      "ints": [
+       "I-01"
+      ],
+      "via": "section"
+     },
+     {
+      "id": "T7-D",
+      "label": "Indisponibilidad del endpoint JWKS bloquea todas las solicitudes",
+      "fields": {
+       "Threat": "Indisponibilidad del endpoint JWKS bloquea todas las solicitudes",
+       "Category": "D — Denegación de servicio",
+       "Severity": "Low",
+       "Status": "⚠️ Finding",
+       "Control / Gap": "Caché local de claves y deny by default; TTL y refresco de la caché no documentados (docs/05 § 7, I-03)"
+      },
+      "severity": "low",
+      "tier": "TB-03 — TB-03 — Servicio de Reservas → Proveedor de Identidad Northwind (I-03)",
+      "what": "Caché local de claves y deny by default; TTL y refresco de la caché no documentados (docs/05 § 7, I-03)",
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
@@ -2371,110 +1870,41 @@
       "via": "section"
      },
      {
-      "id": "T9-T",
-      "label": "Alteración de reservas y datos personales en el almacenamiento o los respaldos",
+      "id": "T8-T",
+      "label": "Alteración de datos en reposo o en respaldos",
       "fields": {
-       "Threat": "Alteración de reservas y datos personales en el almacenamiento o los respaldos",
-       "Category": "Tampering",
+       "Threat": "Alteración de datos en reposo o en respaldos",
+       "Category": "T — Manipulación",
        "Severity": "Medium",
        "Status": "⚠️ Finding",
-       "Control / Gap": "JDBC con TLS en tránsito; cifrado en reposo de PostgreSQL 16 y respaldos: Not documented"
+       "Control / Gap": "TLS en JDBC; cifrado en reposo de la Base de Datos de Reservas y de sus respaldos no documentado (docs/07 § 9.3)"
       },
       "severity": "medium",
-      "tier": "TB-05 — TB-05 — Servicio de Reservas → Base de Datos de Reservas (I-04)",
-      "what": "JDBC con TLS en tránsito; cifrado en reposo de PostgreSQL 16 y respaldos: Not documented",
+      "tier": "TB-04 — TB-04 — Servicio de Reservas → Base de Datos de Reservas (I-04)",
+      "what": "TLS en JDBC; cifrado en reposo de la Base de Datos de Reservas y de sus respaldos no documentado (docs/07 § 9.3)",
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
        "state": "none"
       },
       "nodes": [
-       "servicio-de-reservas",
-       "base-de-datos-de-reservas"
-      ],
-      "phys": [],
-      "edges": [
-       [
-        "base-de-datos-de-reservas",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-04"
-      ],
-      "via": "section"
-     },
-     {
-      "id": "T10-R",
-      "label": "Registro de auditoría de cancelaciones modificado o borrado",
-      "fields": {
-       "Threat": "Registro de auditoría de cancelaciones modificado o borrado",
-       "Category": "Repudiation",
-       "Severity": "Medium",
-       "Status": "⚠️ Finding",
-       "Control / Gap": "El mismo usuario del Servicio de Reservas escribe la auditoría en la Base de Datos de Reservas (§ 9.4); inmutabilidad: Not documented"
-      },
-      "severity": "medium",
-      "tier": "TB-05 — TB-05 — Servicio de Reservas → Base de Datos de Reservas (I-04)",
-      "what": "El mismo usuario del Servicio de Reservas escribe la auditoría en la Base de Datos de Reservas (§ 9.4); inmutabilidad: Not documented",
-      "mitigation": {
-       "column": "Status",
-       "text": "⚠️ Finding",
-       "state": "none"
-      },
-      "nodes": [
-       "servicio-de-reservas",
        "base-de-datos-de-reservas"
       ],
       "phys": []
      },
      {
-      "id": "T11-I",
-      "label": "Exposición de nombre, correo y reservas desde discos o respaldos",
+      "id": "T9-R",
+      "label": "Cambio directo en la base sin rastro (acceso administrativo)",
       "fields": {
-       "Threat": "Exposición de nombre, correo y reservas desde discos o respaldos",
-       "Category": "Information Disclosure",
-       "Severity": "Medium",
-       "Status": "⚠️ Finding",
-       "Control / Gap": "Cifrado en reposo: Not documented; respaldos de 30 días conservan datos purgados (§ 9.4), ubicación: Not documented (docs/09 § 11.3)"
-      },
-      "severity": "medium",
-      "tier": "TB-05 — TB-05 — Servicio de Reservas → Base de Datos de Reservas (I-04)",
-      "what": "Cifrado en reposo: Not documented; respaldos de 30 días conservan datos purgados (§ 9.4), ubicación: Not documented (docs/09 § 11.3)",
-      "mitigation": {
-       "column": "Status",
-       "text": "⚠️ Finding",
-       "state": "none"
-      },
-      "nodes": [
-       "servicio-de-reservas",
-       "base-de-datos-de-reservas"
-      ],
-      "phys": [],
-      "edges": [
-       [
-        "base-de-datos-de-reservas",
-        "servicio-de-reservas"
-       ]
-      ],
-      "ints": [
-       "I-04"
-      ],
-      "via": "section"
-     },
-     {
-      "id": "T12-D",
-      "label": "Agotamiento de conexiones de PostgreSQL",
-      "fields": {
-       "Threat": "Agotamiento de conexiones de PostgreSQL",
-       "Category": "DoS",
+       "Threat": "Cambio directo en la base sin rastro (acceso administrativo)",
+       "Category": "R — Repudio",
        "Severity": "Low",
        "Status": "⚠️ Finding",
-       "Control / Gap": "Una conexión LISTEN por réplica fuera del pool (ADR-109); tamaño del pool y max_connections: Not documented"
+       "Control / Gap": "Auditoría de cancelaciones en la misma transacción (ADR-106); auditoría de acceso administrativo a PostgreSQL 16 no documentada"
       },
       "severity": "low",
-      "tier": "TB-05 — TB-05 — Servicio de Reservas → Base de Datos de Reservas (I-04)",
-      "what": "Una conexión LISTEN por réplica fuera del pool (ADR-109); tamaño del pool y max_connections: Not documented",
+      "tier": "TB-04 — TB-04 — Servicio de Reservas → Base de Datos de Reservas (I-04)",
+      "what": "Auditoría de cancelaciones en la misma transacción (ADR-106); auditoría de acceso administrativo a PostgreSQL 16 no documentada",
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
@@ -2497,18 +1927,18 @@
       "via": "section"
      },
      {
-      "id": "T13-E",
-      "label": "Pod comprometido usa privilegios amplios en la base o se mueve lateralmente",
+      "id": "T10-I",
+      "label": "Divulgación de datos personales desde almacenamiento o respaldos",
       "fields": {
-       "Threat": "Pod comprometido usa privilegios amplios en la base o se mueve lateralmente",
-       "Category": "Elevation of Privilege",
+       "Threat": "Divulgación de datos personales desde almacenamiento o respaldos",
+       "Category": "I — Divulgación de información",
        "Severity": "Medium",
        "Status": "⚠️ Finding",
-       "Control / Gap": "Privilegios del usuario PostgreSQL (DML vs DDL de migraciones), contenedor no-root y network policies: Not documented"
+       "Control / Gap": "Cifrado en reposo no documentado; respaldos conservan datos purgados 30 días en una ubicación no documentada (docs/07 § 9.4; docs/09 § 11.3)"
       },
       "severity": "medium",
-      "tier": "TB-05 — TB-05 — Servicio de Reservas → Base de Datos de Reservas (I-04)",
-      "what": "Privilegios del usuario PostgreSQL (DML vs DDL de migraciones), contenedor no-root y network policies: Not documented",
+      "tier": "TB-04 — TB-04 — Servicio de Reservas → Base de Datos de Reservas (I-04)",
+      "what": "Cifrado en reposo no documentado; respaldos conservan datos purgados 30 días en una ubicación no documentada (docs/07 § 9.4; docs/09 § 11.3)",
       "mitigation": {
        "column": "Status",
        "text": "⚠️ Finding",
@@ -2529,372 +1959,122 @@
        "I-04"
       ],
       "via": "section"
-     }
-    ]
-   },
-   {
-    "analysis": "TECH-DEBT",
-    "file": "analysis/TECH-DEBT-2026-10-31.md",
-    "date": "2026-10-31",
-    "items": [
-     {
-      "id": "T1-01",
-      "label": "Keycloak",
-      "fields": {
-       "Tier": "T1",
-       "Technology": "Keycloak",
-       "Documented Version": "25",
-       "EOL / End-of-Support Date": "2024-10-04",
-       "Runway (months)": "-25",
-       "Component(s) using it": "Proveedor de Identidad Northwind",
-       "Source": "docs/06-technology-stack.md § 8.6; ADR-002",
-       "Validation": "✅ web-validated (endoflife.date: rama 25.0 terminó 2024-10-04; el documento no declara fecha)",
-       "Version": "25",
-       "EOL Date": "2024-10-04",
-       "Runway": "-25 meses",
-       "Risk": "CRITICAL"
-      },
-      "severity": "critical",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "proveedor-de-identidad-northwind"
-      ],
-      "phys": []
      },
      {
-      "id": "T1-02",
-      "label": "Spring Boot",
+      "id": "T11-D",
+      "label": "Agotamiento de conexiones JDBC",
       "fields": {
-       "Tier": "T1",
-       "Technology": "Spring Boot",
-       "Documented Version": "3.3",
-       "EOL / End-of-Support Date": "2025-06-30",
-       "Runway (months)": "-16",
-       "Component(s) using it": "Servicio de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.2",
-       "Validation": "✅ web-validated (IsItPatched, HeroDevs: EOL de código abierto 2025-06-30; el documento no declara fecha)",
-       "Version": "3.3",
-       "EOL Date": "2025-06-30",
-       "Runway": "-16 meses",
-       "Risk": "CRITICAL"
+       "Threat": "Agotamiento de conexiones JDBC",
+       "Category": "D — Denegación de servicio",
+       "Severity": "Low",
+       "Status": "⚠️ Finding",
+       "Control / Gap": "Falla de conexión responde error de servicio; tamaño del pool y límite de conexiones no documentados (docs/05 § 7, I-04)"
       },
-      "severity": "critical",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "servicio-de-reservas"
+      "severity": "low",
+      "tier": "TB-04 — TB-04 — Servicio de Reservas → Base de Datos de Reservas (I-04)",
+      "what": "Falla de conexión responde error de servicio; tamaño del pool y límite de conexiones no documentados (docs/05 § 7, I-04)",
+      "mitigation": {
+       "column": "Status",
+       "text": "⚠️ Finding",
+       "state": "none"
+      },
+      "edges": [
+       [
+        "base-de-datos-de-reservas",
+        "servicio-de-reservas"
+       ]
       ],
-      "phys": []
-     },
-     {
-      "id": "T4-01",
-      "label": "Java (OpenJDK LTS)",
-      "fields": {
-       "Tier": "T4",
-       "Technology": "Java (OpenJDK LTS)",
-       "Documented Version": "21",
-       "EOL / End-of-Support Date": "2028-09-30",
-       "Runway (months)": "23",
-       "Component(s) using it": "Servicio de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.1",
-       "Validation": "ℹ️ doc value (vendor: 2028-09-30 en Microsoft Build of OpenJDK y Oracle premier; la fecha depende del proveedor del JDK, no documentado)"
-      },
-      "severity": "info",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "servicio-de-reservas"
+      "ints": [
+       "I-04"
       ],
-      "phys": []
-     },
-     {
-      "id": "T4-02",
-      "label": "PostgreSQL",
-      "fields": {
-       "Tier": "T4",
-       "Technology": "PostgreSQL",
-       "Documented Version": "16",
-       "EOL / End-of-Support Date": "2028-11-09",
-       "Runway (months)": "24",
-       "Component(s) using it": "Base de Datos de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.3; ADR-003",
-       "Validation": "✅ web-validated (endoflife.ai, política de soporte de PostgreSQL)"
-      },
-      "severity": "info",
-      "tier": "2. Tabla de Vigencia Tecnológica",
       "nodes": [
+       "servicio-de-reservas",
        "base-de-datos-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "T4-03",
-      "label": "React",
-      "fields": {
-       "Tier": "T4",
-       "Technology": "React",
-       "Documented Version": "18",
-       "EOL / End-of-Support Date": "Sin fecha oficial publicada",
-       "Runway (months)": "n/a",
-       "Component(s) using it": "Portal de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.2",
-       "Validation": "⏵ WebSearch inconclusive (React no publica EOL; la rama 18 no recibe versiones desde 18.3.1, 2024-04-26)"
-      },
-      "severity": "info",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "portal-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "T4-04",
-      "label": "Caffeine",
-      "fields": {
-       "Tier": "T4",
-       "Technology": "Caffeine",
-       "Documented Version": "3.2",
-       "EOL / End-of-Support Date": "Sin fecha oficial publicada",
-       "Runway (months)": "n/a",
-       "Component(s) using it": "Servicio de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.2; ADR-109",
-       "Validation": "⏵ WebSearch inconclusive (rama 3.2 activa, última 3.2.4 del 2026-05-04; sin política de EOL)"
-      },
-      "severity": "info",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "T5-01",
-      "label": "TypeScript",
-      "fields": {
-       "Tier": "T5",
-       "Technology": "TypeScript",
-       "Documented Version": "Not documented",
-       "EOL / End-of-Support Date": "Not documented",
-       "Runway (months)": "Not documented",
-       "Component(s) using it": "Portal de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.1",
-       "Validation": "⏵ WebSearch inconclusive (sin versión que validar)"
-      },
-      "severity": "low",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "portal-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "T5-02",
-      "label": "Flyway",
-      "fields": {
-       "Tier": "T5",
-       "Technology": "Flyway",
-       "Documented Version": "Not documented",
-       "EOL / End-of-Support Date": "Not documented",
-       "Runway (months)": "Not documented",
-       "Component(s) using it": "Servicio de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.2",
-       "Validation": "⏵ WebSearch inconclusive (sin versión que validar)"
-      },
-      "severity": "low",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "T5-03",
-      "label": "SDK de OpenTelemetry",
-      "fields": {
-       "Tier": "T5",
-       "Technology": "SDK de OpenTelemetry",
-       "Documented Version": "Not documented",
-       "EOL / End-of-Support Date": "Not documented",
-       "Runway (months)": "Not documented",
-       "Component(s) using it": "Portal de Reservas, Servicio de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.2; ADR-004",
-       "Validation": "⏵ WebSearch inconclusive (sin versión que validar)"
-      },
-      "severity": "low",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "portal-de-reservas",
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "T5-04",
-      "label": "Cliente OIDC del navegador",
-      "fields": {
-       "Tier": "T5",
-       "Technology": "Cliente OIDC del navegador",
-       "Documented Version": "Not documented",
-       "EOL / End-of-Support Date": "Not documented",
-       "Runway (months)": "Not documented",
-       "Component(s) using it": "Portal de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.2; ADR-002",
-       "Validation": "⏵ WebSearch inconclusive (librería sin nombre ni versión)"
-      },
-      "severity": "low",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "portal-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "T5-05",
-      "label": "Kubernetes de Plataforma Northwind",
-      "fields": {
-       "Tier": "T5",
-       "Technology": "Kubernetes de Plataforma Northwind",
-       "Documented Version": "Not documented",
-       "EOL / End-of-Support Date": "Not documented",
-       "Runway (months)": "Not documented",
-       "Component(s) using it": "Servicio de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.4; ADR-005",
-       "Validation": "⏵ WebSearch inconclusive (sin versión que validar)"
-      },
-      "severity": "low",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "T5-06",
-      "label": "Helm",
-      "fields": {
-       "Tier": "T5",
-       "Technology": "Helm",
-       "Documented Version": "Not documented",
-       "EOL / End-of-Support Date": "Not documented",
-       "Runway (months)": "Not documented",
-       "Component(s) using it": "Servicio de Reservas",
-       "Source": "docs/06-technology-stack.md § 8.4; ADR-005",
-       "Validation": "⏵ WebSearch inconclusive (sin versión que validar)"
-      },
-      "severity": "low",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [
-       "servicio-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "T5-07",
-      "label": "Herramienta de CI/CD",
-      "fields": {
-       "Tier": "T5",
-       "Technology": "Herramienta de CI/CD",
-       "Documented Version": "Not documented",
-       "EOL / End-of-Support Date": "Not documented",
-       "Runway (months)": "Not documented",
-       "Component(s) using it": "Not documented",
-       "Source": "docs/06-technology-stack.md § 8.7",
-       "Validation": "⏵ WebSearch inconclusive (herramienta sin nombre)"
-      },
-      "severity": "low",
-      "tier": "2. Tabla de Vigencia Tecnológica",
-      "nodes": [],
-      "phys": []
-     }
-    ]
-   },
-   {
-    "analysis": "VENDOR-LOCKIN",
-    "file": "analysis/VENDOR-LOCKIN-2026-10-31.md",
-    "date": "2026-10-31",
-    "items": [
-     {
-      "id": "L2-01",
-      "label": "Runtime Kubernetes, Helm, ingress y gestor de secretos de Plataforma Northwind",
-      "fields": {
-       "Component / Capability": "Runtime Kubernetes, Helm, ingress y gestor de secretos de Plataforma Northwind",
-       "Vendor": "Plataforma Northwind",
-       "Open Standard Used": "Kubernetes, Helm, imagen OCI firmada",
-       "Vendor Extension": "Versiones de Kubernetes fijadas por la plataforma, gestor de secretos del clúster, ingress propio (docs/06 § 8.4; ADR-005)",
-       "Migration Risk": "Medium",
-       "Component": "Runtime Kubernetes, Helm, ingress y gestor de secretos de Plataforma Northwind",
-       "Exit Cost": "Medium",
-       "Blocking Factor": "Reescribir chart de Helm, secretos y publicación (docs/02, Principio 8)"
-      },
-      "severity": "medium",
-      "tier": "4. Capacidades Propensas al Bloqueo (L2)",
-      "what": "Versiones de Kubernetes fijadas por la plataforma, gestor de secretos del clúster, ingress propio (docs/06 § 8.4; ADR-005)",
-      "nodes": [
-       "servicio-de-reservas"
       ],
       "phys": [],
-      "via": "adr"
+      "via": "section"
      },
      {
-      "id": "L2-02",
-      "label": "CDN de Plataforma Northwind (archivos estáticos del Portal de Reservas)",
+      "id": "T12-E",
+      "label": "Inyección que ejecuta DDL con el usuario del servicio",
       "fields": {
-       "Component / Capability": "CDN de Plataforma Northwind (archivos estáticos del Portal de Reservas)",
-       "Vendor": "Plataforma Northwind",
-       "Open Standard Used": "HTTP, archivos estáticos",
-       "Vendor Extension": "Publicación propia de la plataforma (ADR-107); mecanismo Not documented",
-       "Migration Risk": "Low",
-       "Component": "CDN de Plataforma Northwind",
-       "Exit Cost": "Low",
-       "Blocking Factor": "Solo reconfigurar la publicación de archivos estáticos"
+       "Threat": "Inyección que ejecuta DDL con el usuario del servicio",
+       "Category": "E — Elevación de privilegios",
+       "Severity": "Medium",
+       "Status": "⚠️ Finding",
+       "Control / Gap": "Privilegios del usuario PostgreSQL (DML frente a DDL de migraciones) no documentados; las migraciones viven en el repositorio del servicio (docs/09 § 11.1)"
       },
       "severity": "medium",
-      "tier": "4. Capacidades Propensas al Bloqueo (L2)",
-      "what": "Publicación propia de la plataforma (ADR-107); mecanismo Not documented",
+      "tier": "TB-04 — TB-04 — Servicio de Reservas → Base de Datos de Reservas (I-04)",
+      "what": "Privilegios del usuario PostgreSQL (DML frente a DDL de migraciones) no documentados; las migraciones viven en el repositorio del servicio (docs/09 § 11.1)",
+      "mitigation": {
+       "column": "Status",
+       "text": "⚠️ Finding",
+       "state": "none"
+      },
+      "nodes": [
+       "servicio-de-reservas",
+       "base-de-datos-de-reservas"
+      ],
+      "phys": [],
+      "edges": [
+       [
+        "base-de-datos-de-reservas",
+        "servicio-de-reservas"
+       ]
+      ],
+      "ints": [
+       "I-04"
+      ],
+      "via": "section"
+     },
+     {
+      "id": "T13-S",
+      "label": "Sitio falso que imita el portal y captura el flujo OIDC",
+      "fields": {
+       "Threat": "Sitio falso que imita el portal y captura el flujo OIDC",
+       "Category": "S — Suplantación",
+       "Severity": "Low",
+       "Status": "⚠️ Finding",
+       "Control / Gap": "PKCE mitiga el robo del código; certificado TLS del dominio del CDN y redirect URIs registradas en Keycloak no documentados (adr/ADR-107)"
+      },
+      "severity": "low",
+      "tier": "TB-05 — TB-05 — Navegador → CDN de Plataforma Northwind (Portal de Reservas)",
+      "what": "PKCE mitiga el robo del código; certificado TLS del dominio del CDN y redirect URIs registradas en Keycloak no documentados (adr/ADR-107)",
+      "mitigation": {
+       "column": "Status",
+       "text": "⚠️ Finding",
+       "state": "none"
+      },
       "nodes": [
        "portal-de-reservas"
       ],
-      "phys": []
+      "phys": [],
+      "via": "section"
      },
      {
-      "id": "L2-03",
-      "label": "Base de Datos de Reservas (PostgreSQL 16 gestionado)",
+      "id": "T14-T",
+      "label": "Bundle alterado en el CDN que lee los tokens en memoria",
       "fields": {
-       "Component / Capability": "Base de Datos de Reservas (PostgreSQL 16 gestionado)",
-       "Vendor": "Plataforma Northwind",
-       "Open Standard Used": "SQL, JDBC, PostgreSQL 16",
-       "Vendor Extension": "Restricción de exclusión (ADR-102) y LISTEN/NOTIFY con conexión fuera del pool (ADR-109); sin extensiones de proveedor documentadas",
-       "Migration Risk": "Medium",
-       "Component": "Base de Datos de Reservas",
-       "Exit Cost": "Medium",
-       "Blocking Factor": "LISTEN/NOTIFY y restricción de exclusión exigen PostgreSQL con acceso directo; método de exportación Not documented"
+       "Threat": "Bundle alterado en el CDN que lee los tokens en memoria",
+       "Category": "T — Manipulación",
+       "Severity": "Medium",
+       "Status": "⚠️ Finding",
+       "Control / Gap": "Tokens en memoria (ADR-104) no protegen frente a código inyectado; Content-Security-Policy y SRI no documentados (docs/09 § 11.1)"
       },
       "severity": "medium",
-      "tier": "4. Capacidades Propensas al Bloqueo (L2)",
-      "what": "Restricción de exclusión (ADR-102) y LISTEN/NOTIFY con conexión fuera del pool (ADR-109); sin extensiones de proveedor documentadas",
-      "nodes": [
-       "base-de-datos-de-reservas"
-      ],
-      "phys": []
-     },
-     {
-      "id": "L2-04",
-      "label": "Proveedor de Identidad Northwind (Keycloak 25)",
-      "fields": {
-       "Component / Capability": "Proveedor de Identidad Northwind (Keycloak 25)",
-       "Vendor": "Keycloak (proveedor Not documented)",
-       "Open Standard Used": "OIDC, PKCE, JWT RS256, JWKS",
-       "Vendor Extension": "Claims de rol recepcion y atributo sede configurados en Keycloak (ADR-002, ADR-105)",
-       "Migration Risk": "Low",
-       "Component": "Proveedor de Identidad Northwind",
-       "Exit Cost": "Low",
-       "Blocking Factor": "Reconfigurar claims en otro proveedor OIDC; exportación de realm Not documented"
+      "tier": "TB-05 — TB-05 — Navegador → CDN de Plataforma Northwind (Portal de Reservas)",
+      "what": "Tokens en memoria (ADR-104) no protegen frente a código inyectado; Content-Security-Policy y SRI no documentados (docs/09 § 11.1)",
+      "mitigation": {
+       "column": "Status",
+       "text": "⚠️ Finding",
+       "state": "none"
       },
-      "severity": "medium",
-      "tier": "4. Capacidades Propensas al Bloqueo (L2)",
-      "what": "Claims de rol recepcion y atributo sede configurados en Keycloak (ADR-002, ADR-105)",
       "nodes": [
-       "proveedor-de-identidad-northwind"
+       "portal-de-reservas"
       ],
-      "phys": []
+      "phys": [],
+      "via": "section"
      }
     ]
    }
