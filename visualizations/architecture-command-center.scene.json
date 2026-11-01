@@ -1200,7 +1200,8 @@
        "Trazas, métricas y logs con OpenTelemetry hacia el colector de Plataforma Northwind (ADR-004).",
        "Contexto W3C Trace Context recibido del Portal de Reservas (ADR-004).",
        "Métrica de negocio: tiempo de confirmación de reservas, meta p95 ≤ 2 s (PO Spec §8).",
-       "Métrica operativa: tasa de aciertos de la caché de disponibilidad, por sede (ADR-109)."
+       "Métrica operativa: tasa de aciertos de la caché de disponibilidad, por sede (ADR-109).",
+       "Métrica operativa: reservas rechazadas por superposición, por sede (ADR-102)."
       ]
      },
      {

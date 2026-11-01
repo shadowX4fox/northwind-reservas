@@ -2,6 +2,12 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.9.1] - 2026-10-24
+
+### Changed
+- Contenedor: Portal de Reservas — cita ADR-101 y ADR-107, que rigen el portal
+- Contenedor: Servicio de Reservas — deja de citar ADR-108 (Superseded by ADR-109)
+
 ## [1.9.0] - 2026-10-22
 
 ### Added
