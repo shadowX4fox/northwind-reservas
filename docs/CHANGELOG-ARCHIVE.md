@@ -2,6 +2,15 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.9.0] - 2026-10-22
+
+### Added
+- Servicio de Reservas: error `ROOM_NOT_FOUND` (404) cuando `createBooking` recibe un `roomId` inexistente; contrato 1.2.0.
+
+### Changed
+- Contenedor: Servicio de Reservas — contenido
+- ESC-005 rejected: Sesión del Portal de Reservas tras recargar la pestaña: tokens en sessionStorage frente a ADR-104
+
 ## [1.8.0] - 2026-10-20
 
 ### Added

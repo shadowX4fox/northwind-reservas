@@ -21,7 +21,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR
 **Description:** Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.
 
 **Component Version:** 1.4.0
-**Architecture Version:** 1.10.2
+**Architecture Version:** 1.10.3
 **Last Updated:** 2026-10-20
 
 **Bounded Context**: Reservas de salas — disponibilidad, creación y cancelación.
@@ -127,6 +127,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 - Trazas, métricas y logs con OpenTelemetry hacia el colector de Plataforma Northwind (ADR-004).
 - Contexto W3C Trace Context recibido del Portal de Reservas (ADR-004).
 - Métrica de negocio: tiempo de confirmación de reservas, meta p95 ≤ 2 s (PO Spec §8).
+- Métrica operativa: tasa de aciertos de la caché de disponibilidad, por sede ([ADR-109](../../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 
 ## Capacidad <!-- LABEL: Capacity -->
 
