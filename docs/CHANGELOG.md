@@ -6,8 +6,13 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.10.3] - 2026-10-31
+
 ### Added
 - Servicio de Reservas: métrica operativa de la tasa de aciertos de la caché de disponibilidad, por sede.
+
+### Changed
+- Contenedor: Servicio de Reservas — contenido
 
 ## [1.10.2] - 2026-10-31
 
@@ -29,14 +34,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 ### Changed
 - Contenedor: Portal de Reservas — cita ADR-101 y ADR-107, que rigen el portal
 - Contenedor: Servicio de Reservas — deja de citar ADR-108 (Superseded by ADR-109)
-
-## [1.9.0] - 2026-10-22
-
-### Added
-- Servicio de Reservas: error `ROOM_NOT_FOUND` (404) cuando `createBooking` recibe un `roomId` inexistente; contrato 1.2.0.
-
-### Changed
-- Contenedor: Servicio de Reservas — contenido
-- ESC-005 rejected: Sesión del Portal de Reservas tras recargar la pestaña: tokens en sessionStorage frente a ADR-104
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).
