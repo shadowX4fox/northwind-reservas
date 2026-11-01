@@ -6,8 +6,13 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.10.4] - 2026-10-31
+
 ### Added
 - Servicio de Reservas: métrica operativa de las reservas rechazadas por superposición, por sede.
+
+### Changed
+- Contenedor: Servicio de Reservas — contenido
 
 ## [1.10.3] - 2026-10-31
 
@@ -31,11 +36,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ### Changed
 - Servicio de Reservas: el asunto de una reserva (`BookingRequest.subject`) admite hasta 120 caracteres (antes 80); contrato 1.3.0.
-
-## [1.9.1] - 2026-10-24
-
-### Changed
-- Contenedor: Portal de Reservas — cita ADR-101 y ADR-107, que rigen el portal
-- Contenedor: Servicio de Reservas — deja de citar ADR-108 (Superseded by ADR-109)
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).
