@@ -10,7 +10,7 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.10.3 |
+| Versión de la arquitectura | 1.10.4 |
 | Versión del componente | 1.4.0 |
 | Generado | 2026-11-01 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
@@ -184,6 +184,7 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 - PostgreSQL 16 vía JDBC con TLS; esquema versionado con migraciones Flyway; integridad (no superposición) declarada en la base — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md) y [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)
 - Trazas, métricas RED y logs JSON con OpenTelemetry; contexto W3C Trace Context — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md)
 - Métrica operativa de la tasa de aciertos de la caché de disponibilidad, por sede — per [ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)
+- Métrica operativa de reservas rechazadas por superposición, por sede — per [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)
 - Contenedor Docker en el clúster Kubernetes de Plataforma Northwind, con al menos 2 réplicas en zonas distintas, solicitudes y límites de CPU y memoria, y sondas de vida y de disponibilidad — per [ADR-005](../../adr/ADR-005-kubernetes-container-runtime.md)
 
 **Prohibido:**
