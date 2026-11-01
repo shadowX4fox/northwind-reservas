@@ -33,7 +33,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SA_PLUGIN_REF: v11.1.1
+  SA_PLUGIN_REF: v11.3.0
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -99,9 +99,20 @@ jobs:
           name: handoff-transcript
           path: ${{ steps.claude.outputs.execution_file }}
           retention-days: 7
+      - name: Alia's identity — her GitHub App, when this repository has one
+        id: alia
+        if: vars.SA_ALIA_CLIENT_ID != ''
+        continue-on-error: true      # no App, or not installed here: the comments stay github-actions[bot]'s
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SA_ALIA_CLIENT_ID }}
+          private-key: ${{ secrets.SA_ALIA_APP_KEY }}
+          permission-issues: write
+          permission-pull-requests: write
       - name: Open the handoff pull request
         env:
           GH_TOKEN: ${{ github.token }}
+          ALIA_TOKEN: ${{ steps.alia.outputs.token }}
           TAG: ${{ inputs.tag }}
           AUTOMERGE: ${{ vars.SA_HANDOFF_AUTOMERGE }}
         run: |
@@ -116,6 +127,9 @@ jobs:
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           # what a person reads — commits, the pull request, its comment — in the architecture's language (DOC_LANGUAGE)
           t() { bun "$SA_SKILLS_DIR/scripts/shared/ci-text.js" "$@" --project .; }
+          # Alia's comments with her App's token when there is one (11.3.0) — only comments: a label, a push or a merge by an App
+          # would start workflows GITHUB_TOKEN's never start, and a status would leave the source the required check names
+          say() { GH_TOKEN="${ALIA_TOKEN:-$GH_TOKEN}" gh "$@"; }
           git switch -c "handoff/$TAG"
           git add handoffs && git commit -q -m "$(t handoff_commit tag="$TAG")"
           # the evidence: the command center of this version and its photo-mode pictures (no institution pack on the runner) —
@@ -142,7 +156,7 @@ jobs:
             echo "::warning::the command-center evidence was not produced"; git checkout -q -- visualizations 2>/dev/null || true; git clean -fdq visualizations
           fi
           git push -u origin "handoff/$TAG"
-          body=$(t handoff_body tag="$TAG")
+          body="$(t --codec calm)"$'\n\n'"$(t handoff_body tag="$TAG")"
           for i in "${!shots[@]}"; do
             body="$body"$'\n\n'"![${captions[$i]}](https://github.com/${GITHUB_REPOSITORY}/blob/$(git rev-parse HEAD)/${shots[$i]}?raw=true)"$'\n\n'"*${captions[$i]}*"
           done
@@ -157,5 +171,5 @@ jobs:
           else
             why=$([ "$drift" -ne 0 ] && echo "the drift gate blocks (kit-drift.js, exit $drift)" || echo 'SA_HANDOFF_AUTOMERGE is not true')
             echo "left open for a reviewer: $why"
-            [ "$drift" -ne 0 ] && gh pr comment "$url" --body "$(t handoff_drift code="$drift")" || true
+            [ "$drift" -ne 0 ] && say pr comment "$url" --body "$(t --codec worried; echo; t handoff_drift code="$drift")" || true
           fi

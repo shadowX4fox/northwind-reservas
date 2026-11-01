@@ -52,7 +52,7 @@ on:
 permissions: {}
 
 env:
-  SA_PLUGIN_REF: v11.1.1
+  SA_PLUGIN_REF: v11.3.0
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -97,9 +97,20 @@ jobs:
           # no checkout here: DOC_LANGUAGE is read from ARCHITECTURE.md through the API
           mkdir -p "$RUNNER_TEMP/arch"
           gh api "repos/$GITHUB_REPOSITORY/contents/ARCHITECTURE.md" --jq .content 2>/dev/null | base64 -d > "$RUNNER_TEMP/arch/ARCHITECTURE.md" || true
+      - name: Alia's identity — her GitHub App, when this repository has one
+        id: alia
+        if: vars.SA_ALIA_CLIENT_ID != ''
+        continue-on-error: true      # no App, or not installed here: the comments stay github-actions[bot]'s
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SA_ALIA_CLIENT_ID }}
+          private-key: ${{ secrets.SA_ALIA_APP_KEY }}
+          permission-issues: write
+          permission-pull-requests: write
       - name: The label is the key
         id: key
         env:
+          ALIA_TOKEN: ${{ steps.alia.outputs.token }}
           EVENT: ${{ github.event_name == 'issues' && github.event.action || github.event_name }}
           SENDER: ${{ github.event.sender.login }}
           SENDER_TYPE: ${{ github.event.sender.type }}
@@ -112,10 +123,13 @@ jobs:
           # A refused key says so on the issue and takes the label off — the request stands, so no tier0-refused (10.11.3);
           # -R, because this job has no checkout and gh finds no repository on disk (10.11.4)
           t() { bun "$RUNNER_TEMP/sa/scripts/shared/ci-text.js" "$@" --project "$RUNNER_TEMP/arch"; }
+          # Alia's comments with her App's token when there is one (11.3.0) — only comments: a label, a push or a merge by an App
+          # would start workflows GITHUB_TOKEN's never start, and a status would leave the source the required check names
+          say() { GH_TOKEN="${ALIA_TOKEN:-$GH_TOKEN}" gh "$@"; }
           refuse() {
             echo "::error::$1"
-            { echo "### $(t t0_not_started)"; echo; echo "$1."; echo; t t0_not_started_tail; echo; } > "$RUNNER_TEMP/k.md"
-            gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/k.md"
+            { t --codec worried t0_not_started; echo; echo "$1."; echo; t t0_not_started_tail; echo; } > "$RUNNER_TEMP/k.md"
+            say issue comment "$N" -R "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/k.md"
             gh issue edit "$N" -R "$GITHUB_REPOSITORY" --remove-label architecture-tier0 2>/dev/null || true
             exit 1
           }
@@ -150,7 +164,7 @@ jobs:
             has architecture-tier0 && quiet "#$N was opened with architecture-tier0: its labeled run takes it"
             marked || quiet "#$N carries no sa-tier0 marker"
             if ! inauto; then
-              gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body "$(t t0_key_not_auto_comment kind="${kind:-$(t no_kind)}")"
+              say issue comment "$N" -R "$GITHUB_REPOSITORY" --body "$(t --codec calm; echo; t t0_key_not_auto_comment kind="${kind:-$(t no_kind)}")"
               quiet "#$N: ${kind:-no kind} is not in tier0.auto (${auto:-none})"
             fi
             daily
@@ -209,13 +223,27 @@ jobs:
           echo "P=.cache/sa-skills/tier0/issue-$N.json" >> "$GITHUB_ENV"
           # what a person reads — comments, the pull request — in the architecture's language (DOC_LANGUAGE)
           echo "T=bun $RUNNER_TEMP/sa/scripts/shared/ci-text.js --project ." >> "$GITHUB_ENV"
+      - name: Alia's identity — her GitHub App, when this repository has one
+        id: alia
+        if: vars.SA_ALIA_CLIENT_ID != ''
+        continue-on-error: true      # no App, or not installed here: the comments stay github-actions[bot]'s
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SA_ALIA_CLIENT_ID }}
+          private-key: ${{ secrets.SA_ALIA_APP_KEY }}
+          permission-issues: write
+          permission-pull-requests: write
       - name: Prepare — the policy, read here
         id: prepare
         env:
+          ALIA_TOKEN: ${{ steps.alia.outputs.token }}
           AUTO: ${{ needs.key.outputs.auto }}
           SA_TIER0_EVIDENCE_TOKEN: ${{ secrets.SA_TIER0_EVIDENCE_TOKEN }}
           WAIT_DAYS: ${{ vars.SA_TIER0_WAIT_DAYS }}
         run: |
+          # Alia's comments with her App's token when there is one (11.3.0) — only comments: a label, a push or a merge by an App
+          # would start workflows GITHUB_TOKEN's never start, and a status would leave the source the required check names
+          say() { GH_TOKEN="${ALIA_TOKEN:-$GH_TOKEN}" gh "$@"; }
           set +e; $T0 prepare . "$N" ${AUTO:+--auto} > "$RUNNER_TEMP/prepare.txt"; code=$?; set -e
           cat "$RUNNER_TEMP/prepare.txt"
           labels=$(gh issue view "$N" --json labels --jq '[.labels[].name] | join(" ")')
@@ -225,17 +253,17 @@ jobs:
             created=$(gh issue view "$N" --json createdAt --jq .createdAt)
             if [ "$(date -u -d "$created + ${WAIT_DAYS:-7} days" +%s)" -gt "$(date -u +%s)" ]; then
               if ! printf '%s\n' $labels | grep -qxF tier0-waiting; then
-                { echo "### $($T t0_waiting)"; echo; sed 1d "$RUNNER_TEMP/prepare.txt"; echo
+                { $T --codec thinking t0_waiting; echo; sed 1d "$RUNNER_TEMP/prepare.txt"; echo
                   $T t0_waiting_tail days="${WAIT_DAYS:-7}"; echo; } > "$RUNNER_TEMP/c.md"
-                gh issue comment "$N" --body-file "$RUNNER_TEMP/c.md"; gh issue edit "$N" --add-label tier0-waiting
+                say issue comment "$N" --body-file "$RUNNER_TEMP/c.md"; gh issue edit "$N" --add-label tier0-waiting
               fi
               echo "refused=true" >> "$GITHUB_OUTPUT"; exit 0
             fi
             { $T t0_waited days="${WAIT_DAYS:-7}"; echo; } >> "$RUNNER_TEMP/prepare.txt"; code=1
           fi
           if [ "$code" -ne 0 ]; then
-            { echo "### $($T t0_refused)"; echo; sed 1d "$RUNNER_TEMP/prepare.txt"; echo; $T t0_refused_tail; echo; } > "$RUNNER_TEMP/c.md"
-            gh issue comment "$N" --body-file "$RUNNER_TEMP/c.md"
+            { $T --codec worried t0_refused; echo; sed 1d "$RUNNER_TEMP/prepare.txt"; echo; $T t0_refused_tail; echo; } > "$RUNNER_TEMP/c.md"
+            say issue comment "$N" --body-file "$RUNNER_TEMP/c.md"
             gh issue edit "$N" --add-label tier0-refused --remove-label architecture-tier0
             printf '%s\n' $labels | grep -qxF tier0-waiting && gh issue edit "$N" --remove-label tier0-waiting
             echo "refused=true" >> "$GITHUB_OUTPUT"; exit 0
@@ -291,15 +319,19 @@ jobs:
       - name: Verify, gate, open and merge the pull request
         if: steps.prepare.outputs.refused != 'true'
         env:
+          ALIA_TOKEN: ${{ steps.alia.outputs.token }}
           KIND: ${{ steps.prepare.outputs.kind }}
           ID: ${{ steps.prepare.outputs.id }}
           AUTOMERGE: ${{ vars.SA_TIER0_AUTOMERGE }}
           KEYED: ${{ needs.key.outputs.keyed }}
         run: |
+          # Alia's comments with her App's token when there is one (11.3.0) — only comments: a label, a push or a merge by an App
+          # would start workflows GITHUB_TOKEN's never start, and a status would leave the source the required check names
+          say() { GH_TOKEN="${ALIA_TOKEN:-$GH_TOKEN}" gh "$@"; }
           if ! $T0 verify . "$P" > "$RUNNER_TEMP/verify.txt"; then
             cat "$RUNNER_TEMP/verify.txt"
-            { echo "### $($T t0_write_refused)"; echo; sed 1d "$RUNNER_TEMP/verify.txt"; echo; $T t0_nothing_committed; echo; } > "$RUNNER_TEMP/c.md"
-            gh issue comment "$N" --body-file "$RUNNER_TEMP/c.md"; gh issue edit "$N" --add-label tier0-refused --remove-label architecture-tier0
+            { $T --codec stern t0_write_refused; echo; sed 1d "$RUNNER_TEMP/verify.txt"; echo; $T t0_nothing_committed; echo; } > "$RUNNER_TEMP/c.md"
+            say issue comment "$N" --body-file "$RUNNER_TEMP/c.md"; gh issue edit "$N" --add-label tier0-refused --remove-label architecture-tier0
             exit 1
           fi
           set +e; bun "$SA_SKILLS_DIR/skills/architecture-lifecycle/scripts/lifecycle.js" check . --undecided warn --no-render > "$RUNNER_TEMP/gates.txt"; gates=$?; set -e
@@ -314,7 +346,7 @@ jobs:
           git add -A -- $(for p in tdr adr docs; do [ -e "$p" ] && echo "$p"; done)
           git commit -q -m "tier0: ${ID:-$KIND} — $title (#$N)"
           git push -u origin "$branch"
-          { $T t0_pr_intro kind="$KIND" id="${ID:+ — **$ID**}" n="$N"; echo
+          { $T --codec calm; echo; $T t0_pr_intro kind="$KIND" id="${ID:+ — **$ID**}" n="$N"; echo
             [ -n "$KEYED" ] && { echo; $T t0_pr_keyed agent="$KEYED"; echo; }
             echo; echo "Closes #$N"
             # the mentions of a closed record the write left (tier0.js verify, 10.10.10): whether one still calls it debt is a person's call
@@ -332,12 +364,13 @@ jobs:
               sleep 5
             done
             # a merge by GITHUB_TOKEN does not run the PR's closing keywords: the issue is closed here
-            gh issue close "$N" --reason completed --comment "$($T t0_closed what="${ID:-$($T t0_a_kind kind="$KIND")}" url="$url")"
+            say issue comment "$N" --body "$($T --codec pleased; echo; $T t0_closed what="${ID:-$($T t0_a_kind kind="$KIND")}" url="$url")"
+            gh issue close "$N" --reason completed
             # a merge by GITHUB_TOKEN starts no push workflow: the draft index is dispatched, so the IDE sees the write now
             if [ -f .github/workflows/architecture-index.yml ]; then
               gh workflow run architecture-index.yml -R "$GITHUB_REPOSITORY" --ref "${{ github.event.repository.default_branch }}" -f draft=true \
                 || echo "::warning::the draft index was not dispatched — run Architecture index with draft=true"
             fi
           else
-            gh pr comment "$url" --body "$([ "$gates" -ne 0 ] && $T t0_not_merged_gates || $T t0_not_merged_off)"
+            say pr comment "$url" --body "$([ "$gates" -ne 0 ] && { $T --codec worried; echo; $T t0_not_merged_gates; } || { $T --codec calm; echo; $T t0_not_merged_off; })"
           fi
