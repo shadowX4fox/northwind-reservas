@@ -6,6 +6,9 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+- Servicio de Reservas: métrica operativa de la tasa de aciertos de la caché de disponibilidad, por sede.
+
 ## [1.10.2] - 2026-10-31
 
 ### Added
