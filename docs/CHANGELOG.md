@@ -6,6 +6,9 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+- Servicio de Reservas: métrica operativa de las reservas rechazadas por superposición, por sede.
+
 ## [1.10.3] - 2026-10-31
 
 ### Added
