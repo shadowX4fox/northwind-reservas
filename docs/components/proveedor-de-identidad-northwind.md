@@ -25,7 +25,7 @@ Proveedor de Identidad Northwind (Keycloak 25) es la única fuente de autenticac
 
 | Component | Type | Technology | Internal Name |
 |-----------|------|------------|---------------|
-| Proveedor de Identidad Northwind | Identity Provider | [Keycloak 25] | |
+| Servidor de Identidad Northwind | Identity Provider | [Keycloak 25] | |
 
 ## Límites del Sistema <!-- LABEL: System Boundaries -->
 

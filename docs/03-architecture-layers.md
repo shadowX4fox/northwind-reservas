@@ -133,7 +133,7 @@ flowchart TB
   end
 
   subgraph G4["GRUPO — SISTEMAS EXTERNOS"]
-    IDP["Proveedor de Identidad Northwind<br/>[Identity Provider · Keycloak 25]<br/>Autenticación y emisión de tokens"]
+    IDP["Servidor de Identidad Northwind<br/>[Identity Provider · Keycloak 25]<br/>Autenticación y emisión de tokens"]
   end
 
   G1 -->|"HTTPS/JSON (REST)"| G2
