@@ -29,7 +29,7 @@ La primera sesión (2026-10-27) mostró el caso 1 y la parte del arquitecto del 
 2. **Caso 2c, en vivo:** un release nuevo que solo toca el Servicio, para ver el desatendido de punta a punta.
 3. Casos 3 a 6 como están. El caso 6 publica `architecture-v1.10.7`.
 
-Punto de partida de la segunda sesión: arquitectura `architecture-v1.10.5` (la del renombre del contenedor del Proveedor de Identidad Northwind, posterior a los cambios de prueba del Servicio en 1.10.3 y 1.10.4 y a la del Portal en 1.10.2), el Servicio ligado a 1.10.4 (lo actualizó el build desatendido de la última prueba) y el Portal a 1.10.1 (su paquete no cambió desde entonces), los tres repositorios en su rama principal y sin PRs abiertos.
+Punto de partida de la segunda sesión: arquitectura `architecture-v1.10.5` (la del renombre del contenedor del Proveedor de Identidad Northwind a Servidor de Identidad Northwind, PR #122, con su kit en el PR #123; posterior a los cambios de prueba del Servicio en 1.10.3 y 1.10.4 y a la del Portal en 1.10.2), el Servicio ligado a 1.10.4 (lo actualizó el build desatendido de esa prueba; el build de la 1.10.5 corrió el 2026-11-02 y no abrió PR, porque el renombre no toca lo que el Servicio implementa) y el Portal a 1.10.1 (su paquete no cambió desde entonces), los tres repositorios en su rama principal y sin PRs abiertos.
 
 Todo se hace **en vivo, frente al público**: ninguna rama, commit, PR ni issue se prepara antes. Cada rama se crea en el paso del caso que la usa. Punto de partida: arquitectura `architecture-v1.9.1`, Servicio y Portal ligados a 1.9.1, los tres repositorios en su rama principal y sin PRs abiertos.
 
