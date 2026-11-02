@@ -82,3 +82,4 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 
 - Trazas, métricas y logs con OpenTelemetry hacia el colector de Plataforma Northwind ([ADR-004](../adr/ADR-004-opentelemetry-observability.md)).
 - Plan de respuesta a incidentes: Not documented. <!-- TODO: Add source reference -->
+
