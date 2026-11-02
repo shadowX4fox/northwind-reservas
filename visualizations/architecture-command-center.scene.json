@@ -1,6 +1,6 @@
 {
  "project": "Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión",
- "version": "1.10.4",
+ "version": "1.10.5",
  "status": "Released",
  "architectureType": "MICROSERVICES",
  "language": "es",
@@ -96,12 +96,20 @@
    "note": "Fuente de verdad de salas y reservas. PostgreSQL 16 gestionado por Plataforma Northwind (ADR-003)."
   },
   {
-   "id": "proveedor-de-identidad-northwind",
-   "name": "Proveedor de Identidad Northwind",
+   "id": "servidor-de-identidad-northwind",
+   "name": "Servidor de Identidad Northwind",
    "layer": 4,
    "system": "proveedor-de-identidad-northwind",
    "kind": "service",
    "tech": "Keycloak 25"
+  },
+  {
+   "id": "proveedor-de-identidad-northwind",
+   "name": "Proveedor de Identidad Northwind",
+   "layer": 2,
+   "system": "actor",
+   "kind": "actor",
+   "tech": ""
   }
  ],
  "edges": [
@@ -111,8 +119,7 @@
    "routes": [
     "control"
    ],
-   "label": "HTTPS/JSON [Auth] · I-01",
-   "jump": true
+   "label": "HTTPS/JSON [Auth] · I-01"
   },
   {
    "a": "portal-de-reservas",
@@ -128,8 +135,7 @@
    "routes": [
     "online"
    ],
-   "label": "HTTPS/JSON [Auth] · I-03",
-   "jump": true
+   "label": "HTTPS/JSON [Auth] · I-03"
   },
   {
    "a": "servicio-de-reservas",
@@ -357,7 +363,7 @@
     ]
    },
    {
-    "container": "proveedor-de-identidad-northwind",
+    "container": "servidor-de-identidad-northwind",
     "nodes": [],
     "replicas": null,
     "maxReplicas": null,
@@ -414,7 +420,7 @@
     "says": "Not documented"
    },
    {
-    "container": "proveedor-de-identidad-northwind",
+    "container": "servidor-de-identidad-northwind",
     "field": "capacity",
     "says": "no Capacity table in the descriptor"
    }
@@ -1380,78 +1386,6 @@
     "description": "Base de Datos de Reservas guarda salas y reservas e impide dos reservas confirmadas superpuestas de una sala.",
     "componentVersion": "1.0.2",
     "lastUpdated": "2026-10-20"
-   },
-   "proveedor-de-identidad-northwind": {
-    "name": "Proveedor de Identidad Northwind",
-    "file": "docs/components/proveedor-de-identidad-northwind.md",
-    "sections": [
-     {
-      "title": "Descripción",
-      "label": "Description",
-      "paragraphs": [
-       "Proveedor de Identidad Northwind (Keycloak 25) es la única fuente de autenticación de miembros, empleados y servicios (ADR-002). Ya tiene las cuentas de los 1.850 miembros y de los 6 recepcionistas (PO Spec, Supuestos)."
-      ]
-     },
-     {
-      "title": "Contenedores",
-      "label": "Containers",
-      "tables": [
-       {
-        "headers": [
-         "Component",
-         "Type",
-         "Technology",
-         "Internal Name"
-        ],
-        "rows": [
-         [
-          "Proveedor de Identidad Northwind",
-          "Identity Provider",
-          "[Keycloak 25]",
-          ""
-         ]
-        ]
-       }
-      ]
-     },
-     {
-      "title": "Límites del Sistema",
-      "label": "System Boundaries",
-      "paragraphs": [
-       "Owns: cuentas, credenciales, roles y atributos de miembros y empleados. Depends on: — Consumed by: Reservas de Salas Northwind."
-      ]
-     },
-     {
-      "title": "Comunicación",
-      "label": "Communication",
-      "tables": [
-       {
-        "headers": [
-         "From",
-         "To",
-         "Protocol",
-         "Description"
-        ],
-        "rows": [
-         [
-          "Portal de Reservas",
-          "Proveedor de Identidad Northwind",
-          "OIDC (PKCE)",
-          "Flujo de código de autorización con PKCE"
-         ],
-         [
-          "Servicio de Reservas",
-          "Proveedor de Identidad Northwind",
-          "HTTPS (JWKS)",
-          "Obtención de claves para validar tokens"
-         ]
-        ]
-       }
-      ]
-     }
-    ],
-    "type": "External System",
-    "c4": "System (L1)"
    }
   },
   "integrations": [
@@ -1462,9 +1396,7 @@
     "fromNodes": [
      "portal-de-reservas"
     ],
-    "toNodes": [
-     "proveedor-de-identidad-northwind"
-    ],
+    "toNodes": [],
     "protocol": "HTTPS/JSON [Auth]"
    },
    {
@@ -1486,9 +1418,7 @@
     "fromNodes": [
      "servicio-de-reservas"
     ],
-    "toNodes": [
-     "proveedor-de-identidad-northwind"
-    ],
+    "toNodes": [],
     "protocol": "HTTPS/JSON [Auth]"
    },
    {
@@ -1560,8 +1490,7 @@
        "I-01"
       ],
       "nodes": [
-       "portal-de-reservas",
-       "proveedor-de-identidad-northwind"
+       "portal-de-reservas"
       ],
       "phys": []
      },
@@ -1588,8 +1517,7 @@
        "I-03"
       ],
       "nodes": [
-       "servicio-de-reservas",
-       "proveedor-de-identidad-northwind"
+       "servicio-de-reservas"
       ],
       "phys": []
      },
@@ -2199,8 +2127,7 @@
     "nodes": [
      "portal-de-reservas",
      "servicio-de-reservas",
-     "base-de-datos-de-reservas",
-     "proveedor-de-identidad-northwind"
+     "base-de-datos-de-reservas"
     ],
     "summary": "Nueve reglas de decisión de Reservas de Salas Northwind, cada una con su implementación y su costo. Las decisiones vienen de los ADR institucionales y de los candidatos resueltos en las Secciones 4, 5 y 8.",
     "outline": [
@@ -2323,7 +2250,7 @@
       "summary": "`mermaid %%{ init: { 'theme': 'base', 'themeVariables': { 'primaryColor': '#d6ecff', 'primaryBorderColor': '#2a78d6', 'primaryTextColor': '#0b0b0b', 'lineColor': '#7e7d7b', 'edgeLabelBackground': '#f4f3f0', 'clusterBkg': 'transparent', 'clusterBorder': '#019f68', 'titleColor': '#7a7977', 'tertiaryTextColor': '#7a7977'…"
      }
     ],
-    "bytes": 13575
+    "bytes": 13574
    },
    {
     "id": "04-data-flow-patterns",
@@ -2367,8 +2294,7 @@
     "nodes": [
      "portal-de-reservas",
      "servicio-de-reservas",
-     "base-de-datos-de-reservas",
-     "proveedor-de-identidad-northwind"
+     "base-de-datos-de-reservas"
     ],
     "summary": "Todos los flujos son síncronos sobre REST: el Portal de Reservas llama al Servicio de Reservas, que valida el token y lee o escribe la Base de Datos de Reservas. Las metas de latencia vienen de la PO Spec §8. No hay flujos asíncronos ni event bus (ADR-101).",
     "outline": [
@@ -2440,8 +2366,7 @@
     "nodes": [
      "portal-de-reservas",
      "servicio-de-reservas",
-     "base-de-datos-de-reservas",
-     "proveedor-de-identidad-northwind"
+     "base-de-datos-de-reservas"
     ],
     "summary": "Cuatro integraciones síncronas: dos con el Proveedor de Identidad Northwind (externo), una REST entre el Portal de Reservas y el Servicio de Reservas, y una JDBC hacia la Base de Datos de Reservas. No hay integraciones asíncronas.",
     "outline": [
@@ -2497,8 +2422,7 @@
     "nodes": [
      "portal-de-reservas",
      "servicio-de-reservas",
-     "base-de-datos-de-reservas",
-     "proveedor-de-identidad-northwind"
+     "base-de-datos-de-reservas"
     ],
     "summary": "Tecnologías de Reservas de Salas Northwind por categoría, cada una con su fuente: la PO Spec §7 o un ADR institucional. No describe la configuración de cada componente; esa está en docs/components/.",
     "outline": [
@@ -2586,8 +2510,7 @@
     "nodes": [
      "portal-de-reservas",
      "servicio-de-reservas",
-     "base-de-datos-de-reservas",
-     "proveedor-de-identidad-northwind"
+     "base-de-datos-de-reservas"
     ],
     "summary": "Seguridad de Reservas de Salas Northwind: autenticación delegada al Proveedor de Identidad Northwind, tokens solo en memoria del navegador, autorización por rol y sede en el Servicio de Reservas, y retención de 24 meses con purga y auditoría de cancelaciones.",
     "outline": [
@@ -2840,8 +2763,7 @@
     "nodes": [
      "portal-de-reservas",
      "servicio-de-reservas",
-     "base-de-datos-de-reservas",
-     "proveedor-de-identidad-northwind"
+     "base-de-datos-de-reservas"
     ],
     "summary": "Enlaces a los ADR, a los documentos del proyecto y a las fuentes de Reservas de Salas Northwind, más el glosario de términos del dominio.",
     "outline": [
@@ -2871,6 +2793,6 @@
     "bytes": 2890
    }
   ],
-  "generated": "2026-11-01"
+  "generated": "2026-11-02"
  }
 }
