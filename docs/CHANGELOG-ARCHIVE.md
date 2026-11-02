@@ -2,6 +2,11 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.10.0] - 2026-10-27
+
+### Changed
+- Servicio de Reservas: el asunto de una reserva (`BookingRequest.subject`) admite hasta 120 caracteres (antes 80); contrato 1.3.0.
+
 ## [1.9.1] - 2026-10-24
 
 ### Changed

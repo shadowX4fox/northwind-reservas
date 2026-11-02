@@ -6,6 +6,12 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.10.5] - 2026-11-02
+
+### Changed
+- Proveedor de Identidad Northwind: su contenedor L2 se llama Servidor de Identidad Northwind, para distinguirlo del sistema.
+- Capas de Arquitectura: el Diagrama 3 (C4 L2) muestra el contenedor con su nuevo nombre.
+
 ## [1.10.4] - 2026-10-31
 
 ### Added
@@ -31,10 +37,5 @@ Este proyecto sigue [Versionado Semántico](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 - Portal de Reservas: en el listado, una reserva cancelada muestra la fecha y, si lo hay, el motivo de la cancelación.
-
-## [1.10.0] - 2026-10-27
-
-### Changed
-- Servicio de Reservas: el asunto de una reserva (`BookingRequest.subject`) admite hasta 120 caracteres (antes 80); contrato 1.3.0.
 
 > Versiones anteriores: [CHANGELOG-ARCHIVE.md](CHANGELOG-ARCHIVE.md).
