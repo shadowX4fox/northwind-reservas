@@ -53,7 +53,7 @@ concurrency:
   cancel-in-progress: ${{ github.event.action != 'labeled' }}
 
 env:
-  SA_PLUGIN_REF: v11.7.1
+  SA_PLUGIN_REF: v11.7.2
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -204,7 +204,8 @@ jobs:
           fi
           # every lens one report in analysis/: the older ones of a lens go to analysis/archive/ (the skill does; this tidies)
           bun "$SA_SKILLS_DIR/scripts/shared/findings.js" analysis --archive
-          for f in $(git ls-files --others --modified -- analysis | grep -E '\.(md|html)$' | grep -v '/archive/'); do bun "$A/check-report.js" "$f"; done
+          # the new and changed reports — a report the skill moved to archive/ is listed as modified, and is gone from here
+          for f in $(git ls-files --others --modified -- analysis | grep -E '\.(md|html)$' | grep -v '/archive/'); do [ -f "$f" ] || continue; bun "$A/check-report.js" "$f"; done
           set +e; bun "$A/analysis-diff.js" . --base "$MB" --lenses "$RUN"; verdict=$?; set -e
           bun "$A/analysis-diff.js" . --base "$MB" --lenses "$RUN" --md > "$RUNNER_TEMP/diff.md" || true
           # Alia's picture of the verdict (analysis-chart.js — the same one a chat shows), committed with the reports; the last
