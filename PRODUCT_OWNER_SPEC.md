@@ -1,11 +1,11 @@
-<!-- ARCHITECTURE_SYNC: 1.1.1 (2026-10-19) -->
+<!-- ARCHITECTURE_SYNC: 1.10.5 (2026-11-02) -->
 # Reservas de Salas Northwind - Product Owner Specification
 
 > Portal web donde los miembros de Northwind Cowork consultan la disponibilidad de salas de reunión, las reservan y cancelan sus reservas sin pasar por recepción.
 
 **Product Owner**: Gerencia de Producto Digital — Northwind Cowork *(empresa ficticia)*
-**Date**: 2026-10-19
-**Version**: 1.2
+**Date**: 2026-11-02
+**Version**: 1.3
 
 ---
 
@@ -160,7 +160,7 @@
   - Flujo: el portal muestra el mensaje "No hay salas libres en esta franja" y las 3 franjas de 30 minutos más cercanas con al menos una sala libre: de la misma duración, el mismo día y la misma sede, las más próximas en el tiempo a la elegida, antes o después y nunca en el pasado; ante igual distancia, primero la posterior.
 
 **Casos borde**:
-- Franja en el pasado: el portal no permite elegir una hora de inicio anterior a la hora actual.
+- Franja en el pasado: el portal no permite elegir una hora de inicio anterior a la hora actual de la sede.
 - Franja de más de 8 horas: el portal la rechaza con el mensaje "Una reserva dura como máximo 8 horas".
 
 **Postcondiciones**: el miembro ve el estado de cada sala de la sede en la franja elegida; ningún dato cambia.
@@ -184,10 +184,10 @@
 **Precondiciones**: el miembro tiene sesión iniciada y membresía vigente (cuenta de miembro activa en el Proveedor de Identidad Northwind); la sala aparece como libre en la franja elegida.
 
 **Flujo principal**:
-1. El Portal de Reservas muestra el resumen: sala, sede, fecha, franja y un campo de asunto obligatorio de hasta 80 caracteres.
+1. El Portal de Reservas muestra el resumen: sala, sede, fecha, franja y un campo de asunto obligatorio de hasta 120 caracteres.
 2. El miembro confirma.
 3. El Portal de Reservas envía la solicitud de reserva al Servicio de Reservas con una clave de idempotencia generada en el navegador.
-4. El Servicio de Reservas verifica que la sala no tenga otra reserva confirmada superpuesta y que el miembro no supere 3 reservas futuras por día, y registra la reserva con estado "Confirmada".
+4. El Servicio de Reservas verifica que la sala no tenga otra reserva confirmada superpuesta y que el miembro no tenga ya 3 reservas confirmadas con hora de inicio futura en el mismo día de la reserva (las canceladas no cuentan), y registra la reserva con estado "Confirmada".
 5. El Portal de Reservas muestra la confirmación con el código de reserva (formato `RS-` seguido de 8 caracteres alfanuméricos).
 
 **Flujos alternativos**:
@@ -223,7 +223,7 @@
 **Precondiciones**: la reserva está "Confirmada" y su hora de inicio es posterior a la hora actual; quien cancela es el miembro dueño de la reserva o un recepcionista de la sede de la sala.
 
 **Flujo principal**:
-1. El Portal de Reservas pide confirmación ("¿Cancelar la reserva RS-…?").
+1. El Portal de Reservas consulta el estado vigente de la reserva y pide confirmación ("¿Cancelar la reserva RS-…?").
 2. El usuario confirma.
 3. El Portal de Reservas envía la cancelación al Servicio de Reservas.
 4. El Servicio de Reservas cambia el estado a "Cancelada", registra quién canceló y la hora.
@@ -238,7 +238,7 @@
 - Reserva ya iniciada: el Servicio de Reservas rechaza la cancelación con el motivo "reserva en curso".
 - Un miembro intenta cancelar la reserva de otro miembro: el Servicio de Reservas responde "no autorizado" y no cambia nada.
 
-**Postcondiciones**: la reserva está "Cancelada" con autor y hora de cancelación; la sala aparece libre en esa franja en la consulta del caso de uso 1.
+**Postcondiciones**: la reserva está "Cancelada" con autor y hora de cancelación; la sala aparece libre en esa franja en la consulta del caso de uso 1. En "Mis reservas", la reserva cancelada muestra la fecha de la cancelación y, si lo hay, el motivo.
 
 **Criterios de aceptación**:
 - Dada una reserva confirmada de 15:00 a 16:00, cuando el miembro dueño la cancela a las 14:00, entonces una consulta de 15:00–16:00 muestra la sala libre.
@@ -357,7 +357,7 @@ para liberar la sala.
 - El portal es una aplicación de una página (SPA) en React 18 con TypeScript, servida como archivos estáticos (norma de Plataforma Northwind).
 - El backend es un microservicio Java 21 con Spring Boot 3.3 desplegado en el clúster Kubernetes existente de Plataforma Northwind.
 - La base de datos es PostgreSQL 16 gestionada por Plataforma Northwind.
-- Prohibido guardar tokens en `localStorage` o `sessionStorage`; la sesión vive solo en la memoria del navegador (política de Seguridad de la Información).
+- Prohibido guardar tokens en `localStorage` o `sessionStorage`; la sesión vive solo en la memoria del navegador (política de Seguridad de la Información). Al recargar la pestaña, el miembro debe volver a iniciar sesión; Seguridad de la Información acepta esta consecuencia.
 
 ### Restricciones Operativas <!-- SECTION: Operational Constraints -->
 
@@ -405,6 +405,11 @@ para liberar la sala.
 - **Meta**: 2 segundos o menos en el percentil 95.
 - **Método de medición**: métricas del Servicio de Reservas y del navegador.
 
+**Métrica 2: Tiempo de la consulta de disponibilidad**
+- **Definición**: desde que el miembro cambia la sede, la fecha o la franja hasta ver la lista de salas.
+- **Meta**: 1 segundo o menos en el percentil 95.
+- **Método de medición**: métricas del navegador.
+
 ---
 
 ## Apéndice <!-- SECTION: Appendix -->
@@ -412,9 +417,11 @@ para liberar la sala.
 ### Supuestos <!-- SECTION: Assumptions -->
 - El Proveedor de Identidad Northwind ya tiene las cuentas de los 1.850 miembros y de los 6 recepcionistas.
 - Las 42 salas, con capacidad y equipamiento, se cargan una vez desde la hoja de cálculo de recepción antes del piloto.
+- Las 3 sedes están en la misma zona horaria, la hora de Colombia; las horas de las reservas se leen siempre en la hora local de la sede.
 
 ### Riesgos <!-- SECTION: Risks -->
 - Baja adopción en la sede Puerto (miembros de mayor edad): sesión de acompañamiento en recepción la primera semana.
+- Si se pierde el aviso de un cambio, la disponibilidad que ve el miembro puede tardar hasta 5 minutos en reflejarlo; una reserva doble sigue siendo imposible, porque la confirmación vuelve a verificar la sala (CU2, Alternativa 1).
 
 ### Preguntas Abiertas <!-- SECTION: Open Questions -->
 - [ ] ¿Se permite reservar con más de 30 días de anticipación? — Dirección de Operaciones, 2026-11-15.
@@ -428,9 +435,12 @@ para liberar la sala.
 |---|---|---|---|---|
 | 2026-10-19 | 1.1 | 1.1.0 | 1, 2 · objetivos del § 3 en una frase · franjas sugeridas (CU1) · motivo de 10 a 120 caracteres (CU3) · motivo auditado solo en cancelaciones de recepción (§ 7) · membresía vigente definida (CU1, CU2) | — |
 | 2026-10-19 | 1.2 | 1.1.1 | — (los cambios de la 1.1.1 salen de la 1.1 de este documento) | — |
+| 2026-11-02 | 1.3 | 1.10.5 | 1–8 · asunto de hasta 120 caracteres (CU2) · fecha y motivo de la cancelación en "Mis reservas" (CU3) · hora actual de la sede (CU1) · zona horaria única de las sedes (Supuestos) · nuevo inicio de sesión al recargar (§ 7) · métrica del tiempo de consulta (§ 8) · estado vigente antes de cancelar (CU3) · disponibilidad hasta 5 minutos desactualizada (Riesgos) · límite diario definido (CU2) | — |
 
 ---
 
 **Document Status**: Approved
 **Approval Date**: 2026-10-17
 **Approved By**: Dirección de Operaciones, Northwind Cowork
+
+<!-- READINESS_CHECK: verified 2026-11-02 sha256:bb18111efb55 -->
