@@ -20,6 +20,8 @@
 #                 ledger moves in the record's own part only — and the release gates (lifecycle.js check)
 #   5. PR         tier0/issue-<n> with `Closes #<n>`, the issue retitled to the record's id; merged at once when
 #                 SA_TIER0_AUTOMERGE is true and the gates pass — Tier 0 needs no architect's approval. Left open otherwise.
+#                 With architecture-analysis.yml in this repository (11.7.0) the merge is that workflow's: dispatched with
+#                 automerge, it re-runs the analyses the write impacts and merges only when they keep the state.
 #   6. index      after a merge, architecture-index.yml is dispatched as a draft (10.10.11): the IDE reads the record — and
 #                 previews the next move on it — before the next release, which publishes it as released
 # Requests run one at a time, so two never take the same number.
@@ -52,7 +54,7 @@ on:
 permissions: {}
 
 env:
-  SA_PLUGIN_REF: v11.4.0
+  SA_PLUGIN_REF: v11.7.1
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -354,7 +356,14 @@ jobs:
             echo; echo "### $($T gates_heading)"; echo; echo '```'; cat "$RUNNER_TEMP/gates.txt"; echo '```'; } > "$RUNNER_TEMP/pr.md"
           url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "Tier 0: ${ID:-$KIND} — $title" --body-file "$RUNNER_TEMP/pr.md")
           [ -n "$ID" ] && gh issue edit "$N" --title "[$ID] $title"
-          if [ "$AUTOMERGE" = "true" ] && [ "$gates" -eq 0 ]; then
+          if [ "$AUTOMERGE" = "true" ] && [ "$gates" -eq 0 ] && [ -f .github/workflows/architecture-analysis.yml ]; then
+            # the analyses this write impacts run first (11.7.0): architecture-analysis.yml merges it when they keep the state,
+            # closes the issue and dispatches the draft index; a critical or high finding new or raised waits for the architect
+            num=$(gh pr view "$url" --json number --jq .number)
+            gh pr edit "$url" --add-label analysis-automerge
+            gh workflow run architecture-analysis.yml -R "$GITHUB_REPOSITORY" --ref "${{ github.event.repository.default_branch }}" -f pr="$num" -f automerge=true \
+              || echo "::warning::architecture-analysis.yml was not dispatched — run Architecture analysis with pr=$num and automerge=true"
+          elif [ "$AUTOMERGE" = "true" ] && [ "$gates" -eq 0 ]; then
             sha=$(git rev-parse HEAD)
             gh pr merge "$url" --squash --delete-branch
             # the pull_request runs GitHub held for approval end as failures with no job once the pull request is merged
