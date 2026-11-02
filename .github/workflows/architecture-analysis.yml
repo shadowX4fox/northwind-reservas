@@ -1,0 +1,251 @@
+# Architecture analysis — GitHub Actions. Copy to .github/workflows/architecture-analysis.yml in the architecture's repository.
+#
+# A pull request that changes the architecture re-runs the analyses the change impacts, and the reports merge with it:
+#   1. impact     analysis-impact.js — the facts ledger at the merge base against the branch's, each typed change mapped to the
+#                 lenses that read it (a container, an integration, a flow's phases, a technology, a section of docs/…), by
+#                 code. Only the lenses this architecture already analyses (a report under analysis/) run; a change of text alone
+#                 runs none
+#   2. analyses   Claude runs the analysis skill for those lenses, Markdown, unattended; each new report replaces its lens's in
+#                 analysis/ and the old one moves to analysis/archive/ — committed to the pull request's branch, so the final
+#                 merge carries them
+#   3. verdict    analysis-diff.js — each lens's new report against the merge base's, by the findings contract: a critical or
+#                 high finding that is new, or a finding raised to critical or high, and the state moved. Findings are paired
+#                 by what they name; a pair the names leave open (a reworded threat) is the judge's (worksheet-judge), and an
+#                 unconfirmed pair counts as new — never guessed. Alia's comment opens on her picture of it
+#                 (analysis-chart.js, the same one a chat shows), committed as analysis/evidence/pr-<n>.png; the previous pull
+#                 request's moves to analysis/archive/evidence/
+#   4. merge      the state kept: the status `architecture-analysis` succeeds, and an automatic pull request (dispatched with
+#                 automerge — architecture-tier0.yml does, label analysis-automerge) merges here. A person's pull request is
+#                 never merged here: the architect merges it. The state moved: the status stays pending, analysis-held, and
+#                 Alia's comment names what rose; the architect labels it analysis-accepted (a person with write access) to
+#                 accept the new state — an automatic one then merges
+#
+# Triggers: a pull request touching ARCHITECTURE.md, docs/, adr/ or tdr/ (a person's); workflow_dispatch with the pull request's
+# number (an automatic one: a pull request opened with GITHUB_TOKEN starts no workflow, so the workflow that opened it
+# dispatches this one); the label analysis-accepted. Make `architecture-analysis` a required status check of the default branch
+# so nothing merges past a pending verdict.
+#
+# Repository settings: secret CLAUDE_CODE_OAUTH_TOKEN; labels analysis-held, analysis-accepted, analysis-automerge
+# (escalate.js labels --create); Actions may create pull requests; the default branch accepts a merge by GITHUB_TOKEN.
+# Optional: SA_ALIA_CLIENT_ID + SA_ALIA_APP_KEY, her GitHub App, for the comments.
+name: Architecture analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths: ['ARCHITECTURE.md', 'docs/**', 'adr/**', 'tdr/**']
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: The pull request's number
+        required: true
+        type: string
+      automerge:
+        description: Merge it here when the analyses keep the state (an automatic pull request)
+        required: false
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: architecture-analysis-${{ inputs.pr || github.event.pull_request.number }}
+  cancel-in-progress: ${{ github.event.action != 'labeled' }}
+
+env:
+  SA_PLUGIN_REF: v11.7.1
+  SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
+
+jobs:
+  analysis:
+    if: github.event_name == 'workflow_dispatch' || (github.event.action != 'labeled' && !github.event.pull_request.head.repo.fork) || github.event.label.name == 'analysis-accepted'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+      pull-requests: write
+      statuses: write
+      actions: write                # after a merge: the draft index dispatched, the held runs of a GITHUB_TOKEN pull request deleted
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      N: ${{ inputs.pr || github.event.pull_request.number }}
+    steps:
+      - name: The pull request
+        id: pr
+        run: |
+          pr=$(gh pr view "$N" -R "$GITHUB_REPOSITORY" --json headRefName,baseRefName,headRefOid,isCrossRepository,state,labels,body)
+          [ "$(jq -r .state <<<"$pr")" = OPEN ] || { echo "#$N is not open"; echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; }
+          [ "$(jq -r .isCrossRepository <<<"$pr")" = false ] || { echo "#$N comes from a fork: not analysed here"; echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; }
+          auto=false
+          [ "${{ inputs.automerge }}" = true ] && auto=true
+          jq -e '.labels[] | select(.name == "analysis-automerge")' <<<"$pr" >/dev/null && auto=true
+          { echo "head=$(jq -r .headRefName <<<"$pr")"; echo "base=$(jq -r .baseRefName <<<"$pr")"; echo "sha=$(jq -r .headRefOid <<<"$pr")"; echo "auto=$auto"; } >> "$GITHUB_OUTPUT"
+          jq -r .body <<<"$pr" > "$RUNNER_TEMP/body.md"
+      - uses: actions/checkout@v4
+        if: steps.pr.outputs.skip != 'true'
+        with:
+          ref: ${{ steps.pr.outputs.head }}
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        if: steps.pr.outputs.skip != 'true'
+        with:
+          bun-version: 1.4.4
+      - name: Plugin, pinned
+        if: steps.pr.outputs.skip != 'true'
+        run: |
+          git clone --quiet --depth 1 --branch "$SA_PLUGIN_REF" "$SA_PLUGIN_REPO" "$RUNNER_TEMP/sa"
+          (cd "$RUNNER_TEMP/sa" && bun install --frozen-lockfile)
+          echo "SA_SKILLS_DIR=$RUNNER_TEMP/sa" >> "$GITHUB_ENV"
+          echo "A=$RUNNER_TEMP/sa/plugins/sa-analysis/skills/architecture-analysis/scripts" >> "$GITHUB_ENV"
+          echo "T=bun $RUNNER_TEMP/sa/scripts/shared/ci-text.js --project ." >> "$GITHUB_ENV"
+      - name: Alia's identity — her GitHub App, when this repository has one
+        id: alia
+        if: steps.pr.outputs.skip != 'true' && vars.SA_ALIA_CLIENT_ID != ''
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SA_ALIA_CLIENT_ID }}
+          private-key: ${{ secrets.SA_ALIA_APP_KEY }}
+          permission-issues: write
+          permission-pull-requests: write
+
+      # ---- the architect's answer: analysis-accepted, by a person who can write here
+      - name: Accept the new state
+        id: accept
+        if: steps.pr.outputs.skip != 'true' && github.event.action == 'labeled'
+        env:
+          ALIA_TOKEN: ${{ steps.alia.outputs.token }}
+          WHO: ${{ github.event.sender.login }}
+          KIND: ${{ github.event.sender.type }}
+          SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          say() { GH_TOKEN="${ALIA_TOKEN:-$GH_TOKEN}" gh "$@"; }
+          perm=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$WHO/permission" --jq .permission 2>/dev/null || echo none)
+          if [ "$KIND" = Bot ] || ! [[ "$perm" =~ ^(admin|maintain|write)$ ]]; then
+            gh pr edit "$N" --remove-label analysis-accepted || true
+            say pr comment "$N" --body "$($T --codec stern analysis_accept_refused who="$WHO")"; exit 0
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" -f state=success -f context=architecture-analysis -f description="accepted by $WHO" >/dev/null
+          gh pr edit "$N" --remove-label analysis-held || true
+          say pr comment "$N" --body "$($T --codec pleased analysis_accepted who="$WHO")"
+          echo "merge=${{ steps.pr.outputs.auto }}" >> "$GITHUB_OUTPUT"
+
+      # ---- the analyses: impact, run, verdict
+      - name: What the change impacts
+        id: impact
+        if: steps.pr.outputs.skip != 'true' && github.event.action != 'labeled'
+        env:
+          BASE: ${{ steps.pr.outputs.base }}
+          SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          git fetch --quiet origin "$BASE"
+          mb=$(git merge-base "origin/$BASE" HEAD)
+          bun "$A/analysis-impact.js" . --base "$mb"
+          bun "$A/analysis-impact.js" . --base "$mb" --json > "$RUNNER_TEMP/impact.json"
+          { echo "mb=$mb"; echo "run=$(jq -r '.run | join(",")' "$RUNNER_TEMP/impact.json")"; echo "skipped=$(jq -r '.skipped | join(", ")' "$RUNNER_TEMP/impact.json")"; } >> "$GITHUB_OUTPUT"
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" -f state=pending -f context=architecture-analysis -f description="analysing" >/dev/null
+      - name: Let headless Chrome start          # the reports' Mermaid exhibits are checked by mermaid-cli
+        if: steps.impact.outputs.run != ''
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Run the impacted analyses
+        id: claude
+        if: steps.impact.outputs.run != ''
+        uses: anthropics/claude-code-action@v1
+        env:
+          SA_JUDGE: agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          allowed_bots: "github-actions[bot]"
+          plugin_marketplaces: ${{ env.SA_PLUGIN_REPO }}
+          plugins: |
+            sa-skills@shadowx4fox-solution-architect-marketplace
+            sa-analysis@shadowx4fox-solution-architect-marketplace
+          prompt: |
+            run architecture analysis — only these lenses: ${{ steps.impact.outputs.run }}. Output format Markdown. Unattended: take
+            every default, ask nothing. This is a headless run: it ends when your turn ends, and any sub-agent still running dies
+            with it — dispatch every sub-agent in the foreground (never run_in_background) and have every result before you go on.
+            When the reports are written, run
+              bun "$A/analysis-diff.js" . --base ${{ steps.impact.outputs.mb }} --lenses ${{ steps.impact.outputs.run }}
+            with A=${{ env.A }}; when it names a pending judge worksheet, dispatch one worksheet-judge sub-agent for it and run the
+            command again, until none is pending. Do not commit.
+          claude_args: |
+            --allowedTools "Read,Write,Edit,Glob,Grep,Agent,Bash"
+      - name: Keep Claude's transcript
+        if: always() && steps.claude.outputs.execution_file != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-transcript
+          path: ${{ steps.claude.outputs.execution_file }}
+          retention-days: 7
+      - name: Commit the reports, decide, report
+        id: verdict
+        if: steps.pr.outputs.skip != 'true' && github.event.action != 'labeled'
+        env:
+          ALIA_TOKEN: ${{ steps.alia.outputs.token }}
+          RUN: ${{ steps.impact.outputs.run }}
+          SKIPPED: ${{ steps.impact.outputs.skipped }}
+          MB: ${{ steps.impact.outputs.mb }}
+          HEAD: ${{ steps.pr.outputs.head }}
+          AUTO: ${{ steps.pr.outputs.auto }}
+          CLAUDE: ${{ steps.claude.outcome }}
+        run: |
+          say() { GH_TOKEN="${ALIA_TOKEN:-$GH_TOKEN}" gh "$@"; }
+          status() { gh api "repos/$GITHUB_REPOSITORY/statuses/$(git rev-parse HEAD)" -f state="$1" -f context=architecture-analysis -f description="$2" >/dev/null; }
+          if [ -z "$RUN" ]; then
+            status success "no analysis reads what changed"
+            { $T --codec calm analysis_none; [ -n "$SKIPPED" ] && { echo; $T analysis_skipped lenses="$SKIPPED"; }; } > "$RUNNER_TEMP/c.md"
+            say pr comment "$N" --body-file "$RUNNER_TEMP/c.md"
+            echo "merge=$AUTO" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [ "$CLAUDE" != success ]; then
+            status failure "the analyses did not finish"
+            say pr comment "$N" --body "$($T --codec stern analysis_failed)"; exit 1
+          fi
+          # every lens one report in analysis/: the older ones of a lens go to analysis/archive/ (the skill does; this tidies)
+          bun "$SA_SKILLS_DIR/scripts/shared/findings.js" analysis --archive
+          for f in $(git ls-files --others --modified -- analysis | grep -E '\.(md|html)$' | grep -v '/archive/'); do bun "$A/check-report.js" "$f"; done
+          set +e; bun "$A/analysis-diff.js" . --base "$MB" --lenses "$RUN"; verdict=$?; set -e
+          bun "$A/analysis-diff.js" . --base "$MB" --lenses "$RUN" --md > "$RUNNER_TEMP/diff.md" || true
+          # Alia's picture of the verdict (analysis-chart.js — the same one a chat shows), committed with the reports; the last
+          # pull request's moves to analysis/archive/evidence/
+          chart="analysis/evidence/pr-$N.png"
+          if ls analysis/evidence/*.png >/dev/null 2>&1; then mkdir -p analysis/archive/evidence; for f in analysis/evidence/*.png; do [ "$f" = "$chart" ] || mv "$f" analysis/archive/evidence/; done; fi
+          mkdir -p analysis/evidence
+          bun "$A/analysis-chart.js" . --base "$MB" --lenses "$RUN" --out "$chart" || echo "::warning::the analyses' chart was not drawn"
+          rm -f "${chart%.png}.svg"
+          [ -f "$chart" ] || chart=""
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git add -A -- analysis
+          git diff --cached --quiet || { git commit -q -m "$($T analysis_commit lenses="$RUN" n="$N")"; git push -q origin "HEAD:$HEAD"; }
+          # the picture at the commit that carries it: the comment keeps showing this run's even after the next one replaces it
+          img=""; [ -n "$chart" ] && img="<img src=\"https://github.com/${GITHUB_REPOSITORY}/blob/$(git rev-parse HEAD)/${chart}?raw=true\" width=\"900\" alt=\"$($T analysis_heading)\">"
+          { if [ "$verdict" -eq 0 ]; then $T --codec pleased analysis_heading; else $T --codec worried analysis_heading; fi
+            [ -n "$img" ] && { echo; echo "$img"; }
+            echo; $T analysis_ran lenses="$RUN"; echo; echo; cat "$RUNNER_TEMP/diff.md"
+            [ -n "$SKIPPED" ] && { echo; $T analysis_skipped lenses="$SKIPPED"; }
+            if [ "$verdict" -ne 0 ]; then echo; $T analysis_held merge="$([ "$AUTO" = true ] && $T analysis_held_merge)"; fi; } > "$RUNNER_TEMP/c.md"
+          say pr comment "$N" --body-file "$RUNNER_TEMP/c.md"
+          if [ "$verdict" -eq 0 ]; then status success "the analyses keep the state"; echo "merge=$AUTO" >> "$GITHUB_OUTPUT"
+          elif [ "$verdict" -eq 3 ]; then status pending "waiting for the architect: analysis-accepted"; gh pr edit "$N" --add-label analysis-held || true
+          else status failure "analysis-diff.js exit $verdict"; exit 1; fi
+
+      # ---- an automatic pull request whose state was kept, or accepted: merged here, then what the merge would have started
+      - name: Merge
+        if: steps.verdict.outputs.merge == 'true' || steps.accept.outputs.merge == 'true'
+        env:
+          ALIA_TOKEN: ${{ steps.alia.outputs.token }}
+          DEFAULT: ${{ github.event.repository.default_branch }}
+        run: |
+          say() { GH_TOKEN="${ALIA_TOKEN:-$GH_TOKEN}" gh "$@"; }
+          sha=$(gh pr view "$N" -R "$GITHUB_REPOSITORY" --json headRefOid --jq .headRefOid)
+          gh pr merge "$N" -R "$GITHUB_REPOSITORY" --squash --delete-branch --match-head-commit "$sha"
+          say pr comment "$N" --body "$($T --codec pleased analysis_merged)" || true
+          # a merge by GITHUB_TOKEN runs no closing keywords and starts no workflow: the issues it closes, the held runs, the index
+          for i in $(grep -oiE '(close[sd]?|fixe?[sd]?|resolve[sd]?) #[0-9]+' "$RUNNER_TEMP/body.md" | grep -oE '[0-9]+' | sort -u); do gh issue close "$i" --reason completed || true; done
+          for r in $(gh run list --commit "$sha" --event pull_request --json databaseId,status --jq '.[] | select(.status == "completed") | .databaseId'); do gh run delete "$r" >/dev/null || true; done
+          if [ -f .github/workflows/architecture-index.yml ]; then
+            gh workflow run architecture-index.yml -R "$GITHUB_REPOSITORY" --ref "$DEFAULT" -f draft=true || echo "::warning::the draft index was not dispatched — run Architecture index with draft=true"
+          fi
