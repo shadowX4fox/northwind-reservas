@@ -10,9 +10,9 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.10.4 |
+| Versión de la arquitectura | 1.10.5 |
 | Versión del componente | 1.4.0 |
-| Generado | 2026-11-01 |
+| Generado | 2026-11-02 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->
@@ -47,11 +47,12 @@ Servicio de Reservas es responsable de calcular la disponibilidad de las 42 sala
 
 **Interfaces salientes** (downstream):
 
+- [servicio-de-reservas→proveedor-de-identidad-northwind](../interfaces/servicio-de-reservas→proveedor-de-identidad-northwind.md) — I-03
 - [servicio-de-reservas→base-de-datos-de-reservas](../interfaces/servicio-de-reservas→base-de-datos-de-reservas.md) — I-04
 
 **Interfaces sin Interface Contract**:
 
-- I-03 — saliente hacia Proveedor de Identidad Northwind · HTTPS/JSON [Auth] — sin Interface Contract; pendiente, falla cerrada
+Ninguna.
 
 **Panel** — este componente y sus vecinos en el diagrama de contenedores, recortado de `docs/03` (generado, nunca se edita a mano):
 
@@ -161,7 +162,7 @@ Todo se guarda en la Base de Datos de Reservas (ADR-003).
 
 **Lee (vía contrato, no es dueño):**
 
-- Claves públicas JWKS del Proveedor de Identidad Northwind, vía I-03 (sin Interface Contract, ver § 2).
+- Claves públicas JWKS del Proveedor de Identidad Northwind, vía [servicio-de-reservas→proveedor-de-identidad-northwind](../interfaces/servicio-de-reservas→proveedor-de-identidad-northwind.md) — I-03.
 - `sub`, rol `recepcion` y atributo `sede` del JWT validado, per ADR-002 y ADR-105.
 
 **No debe acceder a:**
@@ -255,5 +256,5 @@ Vacíos detectados al generar la Especificación de Componente: valores ausentes
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-11-01*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-11-02*
 *Fuente: ARCHITECTURE.md*
