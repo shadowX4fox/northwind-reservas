@@ -9,7 +9,10 @@
 #                 analysis/ and the old one moves to analysis/archive/ — committed to the pull request's branch, so the final
 #                 merge carries them
 #   3. verdict    analysis-diff.js — each lens's new report against the merge base's, by the findings contract: a critical or
-#                 high finding that is new, or a finding raised to critical or high, and the state moved. Findings are paired
+#                 high finding that is new, or a finding raised to critical or high, on an element the change touches, and the
+#                 state moved (11.9.0: one that names only elements the change left alone is reported, never held; the lens
+#                 kept them as they were — analysis-prepare.js carries them, SA_ANALYSIS_BASE; and what the architect accepted,
+#                 analysis/accepted.json, does not hold again). Findings are paired
 #                 by what they name; a pair the names leave open (a reworded threat) is the judge's (worksheet-judge), and an
 #                 unconfirmed pair counts as new — never guessed. Alia's comment opens on her picture of it
 #                 (analysis-chart.js, the same one a chat shows), committed as analysis/evidence/pr-<n>.png; the previous pull
@@ -53,7 +56,7 @@ concurrency:
   cancel-in-progress: ${{ github.event.action != 'labeled' }}
 
 env:
-  SA_PLUGIN_REF: v11.8.8
+  SA_PLUGIN_REF: v11.9.0
   SA_PLUGIN_REPO: https://github.com/shadowx4fox/solutions-architect-skills.git
 
 jobs:
@@ -119,12 +122,26 @@ jobs:
           WHO: ${{ github.event.sender.login }}
           KIND: ${{ github.event.sender.type }}
           SHA: ${{ steps.pr.outputs.sha }}
+          BASE: ${{ steps.pr.outputs.base }}
+          HEAD: ${{ steps.pr.outputs.head }}
         run: |
           say() { GH_TOKEN="${ALIA_TOKEN:-$GH_TOKEN}" gh "$@"; }
           perm=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$WHO/permission" --jq .permission 2>/dev/null || echo none)
           if [ "$KIND" = Bot ] || ! [[ "$perm" =~ ^(admin|maintain|write)$ ]]; then
             gh pr edit "$N" --remove-label analysis-accepted || true
             say pr comment "$N" --body "$($T --codec stern analysis_accept_refused who="$WHO")"; exit 0
+          fi
+          # what the architect accepted is kept (11.9.0): analysis/accepted.json, committed to the branch, so the same findings never
+          # hold again at that severity — a push by GITHUB_TOKEN starts no workflow, and the status moves to the new head
+          git fetch --quiet origin "$BASE"; mb=$(git merge-base "origin/$BASE" HEAD)
+          run=$(bun "$A/analysis-impact.js" . --base "$mb" --json | jq -r '.run | join(",")')
+          if [ -n "$run" ]; then
+            bun "$A/analysis-diff.js" . --base "$mb" --lenses "$run" --record-accepted "$WHO" --pr "$N" || echo "::warning::the accepted findings were not recorded"
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+            git add -- analysis/accepted.json 2>/dev/null || true
+            git diff --cached --quiet || { git commit -q -m "analysis: accepted by $WHO (#$N)"; git push -q origin "HEAD:$HEAD"; SHA=$(git rev-parse HEAD); }
           fi
           gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" -f state=success -f context=architecture-analysis -f description="accepted by $WHO" >/dev/null
           gh pr edit "$N" --remove-label analysis-held || true
@@ -154,6 +171,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         env:
           SA_JUDGE: agent
+          SA_ANALYSIS_BASE: ${{ steps.impact.outputs.mb }}   # analysis-prepare.js carries what the change leaves alone (11.9.0)
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_bots: "github-actions[bot]"
