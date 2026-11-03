@@ -2,6 +2,11 @@
 
 Entradas rotadas desde `CHANGELOG.md`; cada una se conserva íntegra. Las más recientes están en [CHANGELOG.md](CHANGELOG.md).
 
+## [1.10.1] - 2026-10-27
+
+### Added
+- Portal de Reservas: en el listado, una reserva cancelada muestra la fecha y, si lo hay, el motivo de la cancelación.
+
 ## [1.10.0] - 2026-10-27
 
 ### Changed
