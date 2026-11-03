@@ -39,7 +39,7 @@ Reservas de Salas Northwind reemplaza el registro manual de reservas por correo 
 
 | From | To | Protocol | Description |
 |------|----|----------|-------------|
-| Portal de Reservas | Proveedor de Identidad Northwind | OIDC (PKCE) | Autenticación del miembro o recepcionista |
+| Portal de Reservas | Servidor de Identidad Northwind | OIDC (PKCE) | Autenticación del miembro o recepcionista |
 | Portal de Reservas | Servicio de Reservas | HTTPS/JSON | Consulta, reserva y cancela |
-| Servicio de Reservas | Proveedor de Identidad Northwind | HTTPS (JWKS) | Validación de tokens |
+| Servicio de Reservas | Servidor de Identidad Northwind | HTTPS (JWKS) | Validación de tokens |
 | Servicio de Reservas | Base de Datos de Reservas | JDBC | Lee y escribe salas y reservas |

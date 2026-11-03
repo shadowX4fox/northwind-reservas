@@ -19,7 +19,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 | Deny by default | El `Servicio de Reservas` responde 401 sin token válido y no procesa nada ([ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)) |
 | Mínimo privilegio | Solo el rol `recepcion` con atributo `sede` coincidente cancela reservas ajenas |
 | Un solo dueño de datos | Solo el `Servicio de Reservas` accede a las tablas de la `Base de Datos de Reservas` ([ADR-003](../adr/ADR-003-postgresql-relational-store.md)) |
-| Cifrado en tránsito | TLS 1.2 o superior en el ingress del clúster ([ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)) |
+| Cifrado en tránsito | TLS 1.2 o superior en el ingress del clúster y, re-cifrado, del ingress a los pods del `Servicio de Reservas` ([ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)) |
 
 ### 9.2 Modelo de Amenazas <!-- SECTION: Threat Model -->
 
@@ -30,7 +30,8 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 | Robo de token desde el navegador | Tokens en memoria, nunca en `localStorage` ni `sessionStorage`; token de acceso de 5 minutos ([ADR-104](../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md)) |
 | Acceso no autorizado a una reserva ajena | Cancelación solo para el dueño o `recepcion` de la misma `sede` ([ADR-105](../adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md)) |
 | Token falsificado o expirado | Validación RS256 con las llaves JWKS del Proveedor de Identidad Northwind en cada solicitud |
-| Intercepción del tráfico | TLS 1.2 o superior en el ingress |
+| Robo o adivinación de credenciales (credential stuffing, fuerza bruta) | TOTP obligatorio para miembros y recepcionistas; bloqueo de 15 minutos tras 5 intentos fallidos en el `Proveedor de Identidad Northwind` ([ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)) |
+| Intercepción del tráfico | TLS 1.2 o superior en el ingress y del ingress a los pods |
 | Conservación de datos personales más allá del plazo | Purga a los 24 meses ([ADR-106](../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)) |
 | Cancelación sin rastro | Registro de auditoría por cancelación ([ADR-106](../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)) |
 
@@ -38,6 +39,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 
 **Autenticación**
 - Método: código de autorización OIDC con PKCE contra el `Proveedor de Identidad Northwind` ([ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)); integración [I-01](05-integration-points.md).
+- Segundo factor: TOTP obligatorio para miembros y recepcionistas. Tras 5 intentos fallidos, Keycloak 25 bloquea la cuenta durante 15 minutos.
 - Sesión: token de acceso de 5 minutos con renovación silenciosa por token de refresco.
 - Almacenamiento: tokens solo en memoria del `Portal de Reservas`. ([ADR-104](../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md)).
 - Membresía vigente: cuenta de miembro activa en el `Proveedor de Identidad Northwind`; al darse de baja, Recepción la desactiva y el miembro ya no obtiene token. El `Servicio de Reservas` no hace una verificación de membresía aparte (PO Spec CU1 y CU2).
@@ -57,7 +59,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 | [I-04](05-integration-points.md) | Usuario PostgreSQL propio del `Servicio de Reservas`, con credenciales del gestor de secretos del clúster ([ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)); JDBC con TLS |
 
 **Datos**
-- En tránsito: TLS 1.2 o superior hacia el ingress; TLS en la conexión JDBC de I-04.
+- En tránsito: TLS 1.2 o superior hacia el ingress y del ingress a los pods del `Servicio de Reservas` (I-02). TLS en la conexión JDBC de I-04.
 - En reposo: PostgreSQL 16 gestionado por Plataforma Northwind; respaldo diario con retención de 30 días ([ADR-003](../adr/ADR-003-postgresql-relational-store.md)).
 - Datos personales: nombre, correo y reservas del miembro.
 

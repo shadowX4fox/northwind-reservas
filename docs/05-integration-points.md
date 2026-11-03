@@ -14,9 +14,9 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-102, ADR-103
 
 | # | From | To | Protocol | Pattern | Boundary |
 |---|---|---|---|---|---|
-| I-01 | `Portal de Reservas` | `Proveedor de Identidad Northwind` | HTTPS/JSON [Auth] | request-response | external |
+| I-01 | `Portal de Reservas` | `Servidor de Identidad Northwind` | HTTPS/JSON [Auth] | request-response | external |
 | I-02 | `Portal de Reservas` | `Servicio de Reservas` | HTTPS/JSON [Query] | request-response | internal |
-| I-03 | `Servicio de Reservas` | `Proveedor de Identidad Northwind` | HTTPS/JSON [Auth] | request-response | external |
+| I-03 | `Servicio de Reservas` | `Servidor de Identidad Northwind` | HTTPS/JSON [Auth] | request-response | external |
 | I-04 | `Servicio de Reservas` | `Base de Datos de Reservas` | JDBC/SQL [Data] | request-response | internal |
 
 **Actores**: las aristas "Usa" del HLD (Miembro del cowork y Recepcionista de sede hacia el Portal de Reservas) son uso por personas desde el navegador, no integraciones entre sistemas; no llevan fila `I-nn`.
@@ -26,6 +26,8 @@ El Portal de Reservas autentica a miembros y recepcionistas con el flujo de cód
 
 **I-02 — Consulta, reserva y cancelación**
 El Portal de Reservas llama a la API REST del Servicio de Reservas con el token de acceso en `Authorization`. La creación de reservas envía `Idempotency-Key` ([ADR-103](../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)). El contrato OpenAPI 3.1 es la fuente de la interfaz. Sin token válido, respuesta 401. Gobierna [ADR-001](../adr/ADR-001-rest-openapi-apis.md).
+
+Cifrado: el ingress del clúster termina el TLS 1.2 o superior del navegador. Hacia los pods del Servicio de Reservas vuelve a cifrar con TLS 1.2 o superior y un certificado que emite Plataforma Northwind ([ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)).
 
 **I-03 — Validación de tokens**
 El Servicio de Reservas valida la firma y los claims de cada token con las claves públicas JWKS del Proveedor de Identidad Northwind, con caché local de las claves. Sin claves disponibles, rechaza la solicitud (deny by default). Gobierna [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md).
