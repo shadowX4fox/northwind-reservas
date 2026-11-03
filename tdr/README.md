@@ -11,3 +11,4 @@ Registros de deuda técnica (TDR), formato breve según https://www.workingsoftw
 | TDR-003 | Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos | Resolved | Architecture | Equipo del Servicio de Reservas |
 | TDR-004 | Zona horaria de las sedes leída de una variable de despliegue | Resolved | Architecture | Equipo del Servicio de Reservas |
 | TDR-005 | El almacén de cuentas del Servidor de Identidad Northwind no documenta cifrado en reposo ni retención | Open | Process | Plataforma Northwind |
+| TDR-006 | El bloqueo por cuenta del Servidor de Identidad Northwind permite bloquear cuentas ajenas | Open | Architecture | Plataforma Northwind |

@@ -15,7 +15,7 @@ related_adrs: ADR-002
 **C4 Level:** System (L1)
 **Type:** External System
 **Owner:** Not documented <!-- TODO: Add source reference -->
-**Technical Debt:** [TDR-005](../../tdr/TDR-005-almacen-de-cuentas-de-identidad-sin-cifrado-documentado.md)
+**Technical Debt:** [TDR-005](../../tdr/TDR-005-almacen-de-cuentas-de-identidad-sin-cifrado-documentado.md) · [TDR-006](../../tdr/TDR-006-bloqueo-de-cuentas-ajenas-sin-limite-por-ip.md)
 **Containers:** 1 (1 App, 0 Stores)
 
 ## Descripción <!-- LABEL: Description -->
