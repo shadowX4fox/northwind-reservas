@@ -22,7 +22,7 @@ Hay 4 hallazgos: 3 críticos (G2) y 1 alto (G3-01). Los respaldos conservan dato
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | `Base de Datos de Reservas` | relational DB (PostgreSQL 16 gestionado por Plataforma Northwind) | S1 | — | nombre y correo del miembro, reservas con cancelación y motivo, registro de auditoría de cancelaciones | Not Documented | Documented (JDBC con TLS, I-04) | 24 meses, luego purga programada (ADR-106) | docs/07 § 9.3, docs/09 § 11.4, docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md § Propiedad de datos |
 | 2 | Respaldos de la `Base de Datos de Reservas` | object store (respaldo diario y PITR) | S1 | — | copia de nombre, correo, reservas y auditoría, incluidos datos ya purgados | Not Documented | Not Documented | 30 días; PITR de 7 días | docs/09 § 11.3, docs/07 § 9.4, docs/06 § 8.3 |
-| 3 | Almacén de cuentas del `Servidor de Identidad Northwind` | relational DB (almacén de Keycloak 25; tecnología Not documented) | S1 | — | credenciales, secreto TOTP, rol `recepcion` y atributo `sede` de miembros y recepcionistas | Not Documented | Documented (HTTPS en I-01) | [NOT DOCUMENTED] | docs/10 § 13.2 (TDR-005), docs/07 § 9.3 |
+| 3 | Almacén de cuentas del `Servidor de Identidad Northwind` | relational DB (almacén de Keycloak 25; motor Not documented) | S1 | — | credenciales, secreto TOTP, rol `recepcion` y atributo `sede` de miembros y recepcionistas | Not Documented | Documented (HTTPS en I-01) | [NOT DOCUMENTED] | docs/10 § 13.2 (TDR-005), docs/07 § 9.3 |
 | 4 | `Colector OpenTelemetry de Plataforma Northwind` | log | S2 | — | `trace_id`, `span_id`, `service.name`; sin tokens ni datos personales completos | Not Documented | Not Documented | [NOT DOCUMENTED] | docs/09 § 11.2, docs/07 § 9.5 (ADR-004) |
 | 5 | Caché Caffeine del `Servicio de Reservas` | cache (en proceso) | S3 | — | disponibilidad de salas por sede y fecha | Not Documented | Not Documented | [NOT DOCUMENTED]; invalidación por `NOTIFY` (ADR-109) | docs/05 § 7 (I-04), adr/ADR-109 |
 | 6 | Canal `disponibilidad` (`LISTEN`/`NOTIFY` de PostgreSQL) | message queue | S3 | — | sede y fecha del cambio | Not Documented | Documented (conexión JDBC con TLS, I-04) | [NOT DOCUMENTED] | docs/05 § 7 (I-04), adr/ADR-109 |
@@ -82,7 +82,7 @@ sequenceDiagram
 
 ### Flujo 3 — Cancelar una reserva
 
-La cancelación y su registro de auditoría se escriben en la misma transacción por I-04, cifrada en tránsito; el destino no documenta cifrado en reposo (G2-01).
+El `Servicio de Reservas` escribe la cancelación y su registro de auditoría en la misma transacción por I-04, cifrada en tránsito; el destino no documenta cifrado en reposo (G2-01).
 
 ```mermaid
 sequenceDiagram
@@ -128,11 +128,11 @@ S4 - PUBLIC     │                                  │                        
 ## 8. Top 5 Recomendaciones de Protección del Dato <!-- SECTION: Recommendations -->
 
 **1. Documentar o activar el cifrado en reposo de la Base de Datos de Reservas (G2-01)**
-Confirmar con Plataforma Northwind el cifrado de volumen o TDE del PostgreSQL 16 gestionado, con llaves en un KMS, y registrarlo en docs/07 § 9.3 y en el descriptor del componente. Costo aceptado: dependencia del KMS de la plataforma. Reduce la exposición de nombre, correo y auditoría ante robo de discos (T9-I).
+Confirmar con Plataforma Northwind el cifrado de volumen o TDE del PostgreSQL 16 gestionado, con llaves en un KMS, y registrarlo en docs/07 § 9.3 y en el descriptor del componente. Costo aceptado: dependencia del KMS de la plataforma. Reduce la exposición de nombre, correo y auditoría ante robo de discos (T8-I).
 _Fuente: docs/07 § 9.3_
 
 **2. Cerrar TDR-005 con cifrado en reposo del almacén de Keycloak (G2-03)**
-Documentar el motor del almacén de cuentas del `Servidor de Identidad Northwind` y su cifrado de volumen; confirmar el hash de contraseñas de Keycloak 25 y el cifrado de los secretos TOTP. Reduce el riesgo de robo masivo de credenciales y segundo factor.
+Documentar el motor del almacén de cuentas del `Servidor de Identidad Northwind` y su cifrado de volumen; confirmar el hash de contraseñas de Keycloak 25 y el cifrado de los secretos TOTP. Reduce el riesgo de robo masivo de credenciales y segundo factor (T2-I).
 _Fuente: docs/10 § 13.2 (TDR-005)_
 
 **3. Cifrar los respaldos y documentar su ubicación (G2-02)**
@@ -140,7 +140,7 @@ Exigir respaldos cifrados con llave gestionada en KMS y registrar ubicación, ci
 _Fuente: docs/09 § 11.3_
 
 **4. Alinear la retención de respaldos con el límite de 24 meses (G3-01)**
-Opción A: aceptar el exceso de 30 días en un ADR que cite la ley aplicable y lo declare en el aviso de privacidad. Opción B: purgar con antelación de 30 días, a los 23 meses. Documentar el calendario de la purga en docs/09 § 11.4.
+Opción A: aceptar el exceso de 30 días en un ADR que cite la ley aplicable y lo declare en el aviso de privacidad. Opción B: purgar con 30 días de antelación, a los 23 meses. Documentar el calendario de la purga en docs/09 § 11.4.
 _Fuente: adr/ADR-106, docs/09 § 11.3_
 
 ---
@@ -161,6 +161,7 @@ La arquitectura cifra todos los saltos con datos S1: HTTPS en I-01, TLS 1.2 o su
 - [ ] `[NOT DOCUMENTED]` Canal `disponibilidad` (`LISTEN`/`NOTIFY`) — Retención o durabilidad de las notificaciones (adr/ADR-109 y docs/05-integration-points.md § 7)
 - [ ] `[NOT DOCUMENTED]` Purga de 24 meses — Calendario de la purga (docs/09-operational-considerations.md § 11.4)
 - [ ] `[NOT DOCUMENTED]` I-01 e I-03 — Versión mínima de TLS hacia el `Servidor de Identidad Northwind` (docs/07-security-architecture.md § 9.3)
+- [ ] `[NOT DOCUMENTED]` `Servidor de Identidad Northwind` — Nombre canónico: docs/07 § 9.2–9.3 y el presupuesto de latencia de docs/04 usan `Proveedor de Identidad Northwind`, nombre del sistema L1, para el componente L2 (deriva de nombre) (docs/07-security-architecture.md § 9.2–9.3 y docs/04-data-flow-patterns.md § Presupuesto de latencia)
 
 ---
 

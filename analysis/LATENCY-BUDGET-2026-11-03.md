@@ -8,13 +8,11 @@
 
 ## 1. Resumen Ejecutivo <!-- SECTION: Executive Summary -->
 
-Los tres flujos de usuario tienen SLO p95 de extremo a extremo documentado: 1 s para Consultar disponibilidad, 2 s para Reservar una sala y 2 s para Cancelar una reserva (docs/08 § 10.3, PO Spec §8).
+La documentación fija tres SLO de extremo a extremo (consulta ≤ 1 s, reserva ≤ 2 s, cancelación ≤ 2 s, p95; docs/08 § 10.3), pero ningún salto tiene p95 documentado. Los 3 flujos quedan con todos sus saltos en estado Untracked.
 
-Ningún salto tiene p95 documentado. La tabla Presupuesto de latencia de docs/04 declara `Not documented` para Portal de Reservas → Servicio de Reservas y Servicio de Reservas → Base de Datos de Reservas, y las cinco fases del Catálogo de Fases no declaran presupuesto propio. Los 5, 3 y 3 saltos de los flujos 1, 2 y 3 quedan `Untracked`.
+No se puede clasificar ningún salto como Over Budget ni sumar un p95 por flujo sin inventar valores. Hay 0 saltos fuera de presupuesto y 0 puntos calientes de cola: p99 es Not documented en todas las operaciones.
 
-No hay saltos fuera de presupuesto ni puntos calientes de cola: ningún p99 está documentado (docs/08 § 10.3). La suma de saltos y el reparto proporcional no se calculan para no inventar un presupuesto; la brecha dominante es la falta de p95 por salto y de p99.
-
-Prioridad de remediación: medir y documentar el p95 y el p99 de I-02, I-04 y del salto a la caché Caffeine, con las métricas OpenTelemetry que ADR-004 ya prevé.
+Prioridad: documentar el p95 de los saltos Portal de Reservas → Servicio de Reservas, Servicio de Reservas → Base de Datos de Reservas y la validación JWKS contra Servidor de Identidad Northwind (docs/04 § Presupuesto de latencia, con TODO abiertos).
 
 ---
 
@@ -24,67 +22,67 @@ Prioridad de remediación: medir y documentar el p95 y el p99 de I-02, I-04 y de
 
 #### Flow: Consultar disponibilidad — SLO: 1000 ms
 
-Fases 1, 2 y 3 (síncrono). Sin p95 por salto documentado; no se calcula reparto proporcional. El salto Servicio de Reservas → Servidor de Identidad Northwind (JWKS) queda fuera del camino crítico salvo carga de claves (docs/04, Presupuesto de latencia).
+Presupuesto por salto Not documented (docs/04 § Presupuesto de latencia). Sin reparto proporcional ni suma posible. Fases 1, 2 y 3 (docs/04 Flujo 1); la caché Caffeine del Servicio de Reservas (ADR-109) evita la consulta a la base con entrada vigente.
 
 Consultar disponibilidad (SLO: 1000ms)
 |──────────────────────────────────────────────────| 1000ms
 
-Portal de Reservas → Servidor de Identidad Northwind   [sin dato]  Not documented
-Portal de Reservas → Servicio de Reservas              [sin dato]  Not documented
-Servicio de Reservas → Servidor de Identidad (JWKS)    [sin dato]  Not documented
-Servicio de Reservas → caché Caffeine                  [sin dato]  Not documented
-Caché → Base de Datos de Reservas                      [sin dato]  Not documented
+Portal -> Identidad (login) [?]  Not documented
+Portal -> Servicio           [?]  Not documented
+Servicio -> Identidad (JWKS) [?]  Not documented
+Servicio -> caché Caffeine   [?]  Not documented
+Caché -> Base de Datos       [?]  Not documented
 ─────────────────────────────────────────────────
-TOTAL                                                  Not documented
+TOTAL                             Not documented
 
 | Hop # | Component | Role | p95 (ms) | % of SLO | Status |
 |---|---|---|---|---|---|
-| 1 | Servidor de Identidad Northwind (desde Portal de Reservas, I-01) | external-API | Not documented | Not documented | Untracked |
-| 2 | Servicio de Reservas (desde Portal de Reservas, I-02) | service | Not documented | Not documented | Untracked |
-| 3 | Servidor de Identidad Northwind (JWKS desde Servicio de Reservas, I-03) | external-API | Not documented | Not documented | Untracked |
-| 4 | Caché Caffeine del Servicio de Reservas | cache | Not documented | Not documented | Untracked |
-| 5 | Base de Datos de Reservas (I-04) | database | Not documented | Not documented | Untracked |
-| TOTAL | — | — | Not documented | Not documented | Not documented |
+| 1 | Portal de Reservas → Servidor de Identidad Northwind (I-01) | external-API | Not documented | Not documented | Untracked |
+| 2 | Portal de Reservas → Servicio de Reservas (I-02) | service | Not documented | Not documented | Untracked |
+| 3 | Servicio de Reservas → Servidor de Identidad Northwind (I-03, JWKS) | external-API | Not documented | Not documented | Untracked |
+| 4 | Servicio de Reservas → caché Caffeine | cache | Not documented | Not documented | Untracked |
+| 5 | Servicio de Reservas → Base de Datos de Reservas (I-04) | database | Not documented | Not documented | Untracked |
+| TOTAL | — | — | Not documented | Not documented | Not evaluable |
 
 #### Flow: Reservar una sala — SLO: 2000 ms
 
-Fases 2 y 4 (síncrono). Sin p95 por salto documentado; no se calcula reparto proporcional.
+Presupuesto por salto Not documented. Fases 2 y 4 (docs/04 Flujo 2); única escritura, con clave de idempotencia (ADR-103) y restricción de exclusión (ADR-102).
 
 Reservar una sala (SLO: 2000ms)
 |──────────────────────────────────────────────────| 2000ms
 
-Portal de Reservas → Servicio de Reservas              [sin dato]  Not documented
-Servicio de Reservas → Servidor de Identidad (JWKS)    [sin dato]  Not documented
-Servicio de Reservas → Base de Datos de Reservas       [sin dato]  Not documented
+Portal -> Servicio           [?]  Not documented
+Servicio -> Identidad (JWKS) [?]  Not documented
+Servicio -> Base de Datos    [?]  Not documented
 ─────────────────────────────────────────────────
-TOTAL                                                  Not documented
+TOTAL                             Not documented
 
 | Hop # | Component | Role | p95 (ms) | % of SLO | Status |
 |---|---|---|---|---|---|
-| 1 | Servicio de Reservas (desde Portal de Reservas, I-02) | service | Not documented | Not documented | Untracked |
-| 2 | Servidor de Identidad Northwind (JWKS desde Servicio de Reservas, I-03) | external-API | Not documented | Not documented | Untracked |
-| 3 | Base de Datos de Reservas (I-04) | database | Not documented | Not documented | Untracked |
-| TOTAL | — | — | Not documented | Not documented | Not documented |
+| 1 | Portal de Reservas → Servicio de Reservas (I-02) | service | Not documented | Not documented | Untracked |
+| 2 | Servicio de Reservas → Servidor de Identidad Northwind (I-03, JWKS) | external-API | Not documented | Not documented | Untracked |
+| 3 | Servicio de Reservas → Base de Datos de Reservas (I-04) | database | Not documented | Not documented | Untracked |
+| TOTAL | — | — | Not documented | Not documented | Not evaluable |
 
 #### Flow: Cancelar una reserva — SLO: 2000 ms
 
-Fases 2 y 5 (síncrono). Sin p95 por salto documentado; no se calcula reparto proporcional.
+Presupuesto por salto Not documented. Fases 2 y 5 (docs/04 Flujo 3); la autorización usa el rol `recepcion` y el atributo `sede` del token.
 
 Cancelar una reserva (SLO: 2000ms)
 |──────────────────────────────────────────────────| 2000ms
 
-Portal de Reservas → Servicio de Reservas              [sin dato]  Not documented
-Servicio de Reservas → Servidor de Identidad (JWKS)    [sin dato]  Not documented
-Servicio de Reservas → Base de Datos de Reservas       [sin dato]  Not documented
+Portal -> Servicio           [?]  Not documented
+Servicio -> Identidad (JWKS) [?]  Not documented
+Servicio -> Base de Datos    [?]  Not documented
 ─────────────────────────────────────────────────
-TOTAL                                                  Not documented
+TOTAL                             Not documented
 
 | Hop # | Component | Role | p95 (ms) | % of SLO | Status |
 |---|---|---|---|---|---|
-| 1 | Servicio de Reservas (desde Portal de Reservas, I-02) | service | Not documented | Not documented | Untracked |
-| 2 | Servidor de Identidad Northwind (JWKS desde Servicio de Reservas, I-03) | external-API | Not documented | Not documented | Untracked |
-| 3 | Base de Datos de Reservas (I-04) | database | Not documented | Not documented | Untracked |
-| TOTAL | — | — | Not documented | Not documented | Not documented |
+| 1 | Portal de Reservas → Servicio de Reservas (I-02) | service | Not documented | Not documented | Untracked |
+| 2 | Servicio de Reservas → Servidor de Identidad Northwind (I-03, JWKS) | external-API | Not documented | Not documented | Untracked |
+| 3 | Servicio de Reservas → Base de Datos de Reservas (I-04) | database | Not documented | Not documented | Untracked |
+| TOTAL | — | — | Not documented | Not documented | Not evaluable |
 
 ### 2.2 Saltos Fuera de Presupuesto <!-- SECTION: Hops Over Budget -->
 
@@ -96,21 +94,18 @@ _Sin hallazgos en esta corrida._
 
 ## 4. Veredicto Resumido <!-- SECTION: Summary Verdict -->
 
-Los SLO de extremo a extremo existen (1 s, 2 s, 2 s), pero el presupuesto por salto no: ningún p95 ni p99 está documentado, así que la conformidad con el SLO no se puede verificar ni refutar. No se detectan saltos fuera de presupuesto ni colas largas porque faltan los datos, no porque el diseño los excluya. El mínimo de remediación es documentar el p95 y el p99 de I-02, I-04 y la caché Caffeine, y el presupuesto de cada fase del catálogo de docs/04.
+El presupuesto de latencia no es verificable: los 3 SLO de extremo a extremo existen (1 s y 2 s p95), pero ningún salto ni percentil p99 está documentado, por lo que no hay saltos fuera de presupuesto ni puntos calientes de cola que reportar. El riesgo dominante es la falta de desglose. El conjunto mínimo de remediación es documentar el p95 de I-02, I-03 (JWKS) e I-04 y el p99 de las 3 operaciones.
 
 ---
 
 ## 5. Brechas de Documentación <!-- SECTION: Documentation Gaps -->
 
-- [ ] `[NOT DOCUMENTED]` Portal de Reservas → Servicio de Reservas (I-02) — p95 y p99 del salto (docs/04-data-flow-patterns.md, Presupuesto de latencia; docs/05-integration-points.md § 7)
-- [ ] `[NOT DOCUMENTED]` Servicio de Reservas → Base de Datos de Reservas (I-04) — p95 y p99 de la consulta y de la escritura (docs/04-data-flow-patterns.md, Presupuesto de latencia; docs/08-scalability-and-performance.md § 10.3)
-- [ ] `[NOT DOCUMENTED]` Portal de Reservas → Servidor de Identidad Northwind (I-01) — p95 del inicio de sesión (Fase 1) (docs/04-data-flow-patterns.md, Fase 1)
-- [ ] `[NOT DOCUMENTED]` Servicio de Reservas → Servidor de Identidad Northwind, JWKS (I-03) — p95 de la carga de claves JWKS (fuera del camino crítico salvo carga de claves) (docs/04-data-flow-patterns.md, Fase 2; docs/05-integration-points.md § 7)
-- [ ] `[NOT DOCUMENTED]` Caché Caffeine del Servicio de Reservas — p95 de acierto y de fallo de caché y tasa de aciertos objetivo (docs/08-scalability-and-performance.md § 10.4)
-- [ ] `[NOT DOCUMENTED]` Fases 1 a 5 del Catálogo de Fases — presupuesto de latencia p95 por fase (docs/04-data-flow-patterns.md, Catálogo de Fases)
-- [ ] `[NOT DOCUMENTED]` Operaciones de Metas de Rendimiento — p50 y p99 de consulta, reserva y cancelación (docs/08-scalability-and-performance.md § 10.3)
-- [ ] `[NOT DOCUMENTED]` Demanda por caso de uso (FLOW-1, FLOW-2, FLOW-3) — rps y factor pico; sin ellos no se modela la latencia bajo carga (docs/08-scalability-and-performance.md § 10.2)
-- [ ] `[NOT DOCUMENTED]` Sobrecarga de ingress y red — latencia del ingress del clúster y del segundo cifrado TLS hacia los pods (docs/03-architecture-layers.md o docs/09-operational-considerations.md)
+- [ ] `[NOT DOCUMENTED]` p95 Portal de Reservas → Servicio de Reservas (I-02) — Presupuesto de latencia del salto (docs/04-data-flow-patterns.md § Presupuesto de latencia)
+- [ ] `[NOT DOCUMENTED]` p95 Servicio de Reservas → Base de Datos de Reservas (I-04) — Presupuesto de latencia del salto y de las consultas (docs/04-data-flow-patterns.md § Presupuesto de latencia; docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md)
+- [ ] `[NOT DOCUMENTED]` p95 Servicio de Reservas → Servidor de Identidad Northwind (I-03, JWKS) y Portal de Reservas → Servidor de Identidad Northwind (I-01) — p95 de la validación de token y del inicio de sesión (la fila de JWKS solo dice fuera del camino crítico) (docs/04-data-flow-patterns.md § Fases 1 y 2; docs/05-integration-points.md § 7)
+- [ ] `[NOT DOCUMENTED]` p95 de la caché Caffeine del Servicio de Reservas — Latencia con acierto y sin acierto de caché; tamaño máximo de la caché (docs/08-scalability-and-performance.md § 10.4)
+- [ ] `[NOT DOCUMENTED]` p50 y p99 de consulta, reserva y cancelación — Percentiles p50 y p99; sin p99 no se calcula la razón p99/p95 (docs/08-scalability-and-performance.md § 10.3)
+- [ ] `[NOT DOCUMENTED]` Demanda por caso de uso (FLOW-1, FLOW-2, FLOW-3) — rps y factor de pico; no se puede modelar la latencia bajo carga (docs/08-scalability-and-performance.md § 10.2)
 
 ---
 

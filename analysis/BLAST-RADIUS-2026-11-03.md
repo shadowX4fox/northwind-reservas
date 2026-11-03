@@ -8,13 +8,13 @@
 
 ## 1. Resumen Ejecutivo <!-- SECTION: Executive Summary -->
 
-Ningún componente supera el umbral de alto radio de impacto: el abanico total máximo es 2 (`Servidor de Identidad Northwind` y `Base de Datos de Reservas`), sobre 4 integraciones síncronas I-01 a I-04 (docs/05 § 7). La tabla de componentes de alto radio queda vacía y no hay B-ids.
+Ningún componente supera el umbral de High-Blast: el mayor abanico total es 2, en `Servidor de Identidad Northwind` (consumidores directos `Portal de Reservas` y `Servicio de Reservas`, I-01 e I-03) y en `Base de Datos de Reservas` (`Servicio de Reservas` directo vía I-04, `Portal de Reservas` indirecto vía I-02). La topología tiene 4 componentes y 4 integraciones síncronas request-response, sin ciclos ni integraciones asíncronas (docs/05 § 7).
 
-El abanico bajo no implica contención. Los 3 contenedores del camino crítico son de nivel S1: la caída del `Servidor de Identidad Northwind`, del `Servicio de Reservas` o de la `Base de Datos de Reservas` interrumpe los 3 flujos de usuario. Las 4 integraciones son fail-closed y ninguna documenta timeout, circuit breaker ni fallback.
+El abanico bajo no implica impacto bajo. Las 4 integraciones son síncronas y fail-closed: I-03 rechaza la solicitud sin claves JWKS (deny by default) e I-04 responde error de servicio ante una falla de conexión (docs/05 § 7). La caída de `Servidor de Identidad Northwind`, `Base de Datos de Reservas` o `Servicio de Reservas` corta los 3 flujos de usuario (docs/04, Flujos 1–3), un impacto de nivel S1 por el criterio de flujos.
 
-Cruce con SPOF: los 4 hallazgos críticos C1 a C4 de `analysis/SPOF-2026-11-03.md` caen sobre componentes con abanico 2 o menor, por lo que ningún C-id coincide con un nodo de alto radio. El riesgo se concentra en la profundidad (todo el flujo es una cadena síncrona), no en la amplitud.
+La intersección con el informe SPOF (analysis/SPOF-2026-11-03.md) es vacía en la tabla de High-Blast: C1, C2, C3 y C4 son SPOF críticos, pero ninguno tiene abanico mayor a 3. El único elemento de contención documentado es la caché local de claves JWKS de I-03; ningún documento declara timeouts, circuit breakers ni RTO por componente (docs/09 § 11.3: RTO y RPO Not documented).
 
-Prioridad de remediación: documentar timeouts y el TTL de la caché JWKS en I-03 e I-04, y declarar RTO y RPO en docs/09 § 11.3, hoy `Not documented`.
+Prioridad de remediación: documentar timeouts y la política ante falla en I-02, I-03 e I-04, y fijar RTO y RPO de `Base de Datos de Reservas` y `Servidor de Identidad Northwind` en docs/09 § 11.3. Sin hallazgos B, la tabla de mamparas, el mapa de calor y el Top 5 quedan vacíos.
 
 ---
 
@@ -28,61 +28,76 @@ _Sin hallazgos en esta corrida._
 
 | # | Component | Type | Why Isolated |
 |---|---|---|---|
-| 1 | `Portal de Reservas` | Web Application | Abanico 0: ningún componente consume el portal (docs/05 § 7). Su falla no se propaga a otros componentes, pero corta los 3 flujos de usuario (SPOF C4); se publica como archivos estáticos en el CDN (ADR-107). |
+| 1 | `Portal de Reservas` | Web Application | Abanico 0: ningún componente lo consume (docs/05 § 7). Su caída no se propaga a otros componentes, pero deja sin los 3 flujos a los usuarios; se publica como archivos estáticos en el CDN de Plataforma Northwind (docs/09 § 11.1, ADR-107). |
 
 ### 2.3 Rutas de Cascada — Los 3 Peores Escenarios <!-- SECTION: Cascade Paths -->
 
-#### Escenario 1 — Falla del Servidor de Identidad Northwind (S1, abanico 2)
+#### Escenario 1 — Caída de `Servidor de Identidad Northwind`
 
-Sin el proveedor, el `Portal de Reservas` no inicia sesión por I-01 y el `Servicio de Reservas` rechaza toda solicitud por I-03 cuando no tiene claves JWKS (deny by default, docs/05 § 7 I-03). La caché local de claves contiene la falla solo mientras dura su vigencia; el TTL es `Not documented` (STRIDE T6-D). La `Base de Datos de Reservas` no se ve afectada.
+Sin el proveedor, `Portal de Reservas` no inicia sesión por I-01 y, sin sesión, no hay operación (docs/04, Fase 1). `Servicio de Reservas` valida tokens con claves JWKS en caché local por I-03; al vencer o recargar las claves rechaza toda solicitud (docs/05 § 7, I-03). La duración de la caché JWKS es Not documented. Resultado: los 3 flujos caen para sesiones nuevas.
 
 ```mermaid
 flowchart TB
-  A["Servidor de Identidad Northwind falla"]:::cascading --> B["Portal de Reservas: sin sesión (I-01)"]:::cascading
-  A --> C["Servicio de Reservas: 401 sin claves JWKS (I-03)"]:::cascading
-  B --> F["Flujos 1, 2 y 3 interrumpidos"]:::cascading
-  C --> F
-  D["Base de Datos de Reservas sin impacto"]:::contained
-  classDef cascading fill:#f8d7da,stroke:#c0392b,color:#000
-  classDef contained fill:#d4edda,stroke:#27ae60,color:#000
+  IDP["Servidor de Identidad Northwind (falla)"]:::cascading
+  POR["Portal de Reservas — I-01 sin inicio de sesión"]:::cascading
+  SVC["Servicio de Reservas — I-03 caché JWKS, luego deny"]:::contained
+  DB["Base de Datos de Reservas"]:::contained
+  F["Flujos 1, 2 y 3 sin sesión nueva"]:::cascading
+  IDP -->|I-01| POR
+  IDP -->|I-03| SVC
+  POR --> F
+  SVC -.->|claves vencidas| F
+  SVC --- DB
+  classDef cascading fill:#f8d7da,stroke:#b02a37,color:#000
+  classDef contained fill:#d1e7dd,stroke:#146c43,color:#000
 ```
 
-#### Escenario 2 — Falla de la Base de Datos de Reservas (S1, abanico 2)
+#### Escenario 2 — Caída de `Base de Datos de Reservas`
 
-El `Servicio de Reservas` responde error de servicio ante la falla de conexión JDBC por I-04 (docs/05 § 7 I-04), y el `Portal de Reservas` lo recibe por I-02. Los flujos 2 y 3 fallan; el flujo 1 falla en cada consulta sin entrada vigente en la caché Caffeine (fase 3, docs/04). Si la caché sirve entradas durante la caída es `Not documented`. RTO y RPO: `Not documented` (docs/09 § 11.3).
+`Servicio de Reservas` responde error de servicio ante la falla de conexión JDBC de I-04 (docs/05 § 7). `Portal de Reservas` recibe el error por I-02: la consulta devuelve 5xx (docs/04, Fase 3) y la creación y cancelación no se completan (Fases 4 y 5). La caché Caffeine no está documentada como respaldo ante la caída de la base. Resultado: los 3 flujos caen.
 
 ```mermaid
 flowchart TB
-  A["Base de Datos de Reservas falla"]:::cascading --> B["Servicio de Reservas: error 5xx (I-04)"]:::cascading
-  B --> C["Portal de Reservas: error al usuario (I-02)"]:::cascading
-  C --> F["Flujos 2 y 3 interrumpidos; flujo 1 sin entrada en caché"]:::cascading
-  D["Servidor de Identidad Northwind sin impacto"]:::contained
-  classDef cascading fill:#f8d7da,stroke:#c0392b,color:#000
-  classDef contained fill:#d4edda,stroke:#27ae60,color:#000
+  DB["Base de Datos de Reservas (falla)"]:::cascading
+  SVC["Servicio de Reservas — I-04 error de servicio"]:::cascading
+  POR["Portal de Reservas — I-02 5xx"]:::cascading
+  IDP["Servidor de Identidad Northwind"]:::contained
+  F["Flujos 1, 2 y 3 sin servicio"]:::cascading
+  DB -->|I-04| SVC
+  SVC -->|I-02| POR
+  POR --> F
+  IDP --- POR
+  classDef cascading fill:#f8d7da,stroke:#b02a37,color:#000
+  classDef contained fill:#d1e7dd,stroke:#146c43,color:#000
 ```
 
-#### Escenario 3 — Falla del Servicio de Reservas (S1, abanico 1)
+#### Escenario 3 — Caída de `Servicio de Reservas`
 
-El `Portal de Reservas` depende del servicio por I-02 para los 3 flujos; sin respuesta, ninguna consulta, reserva ni cancelación prospera. Las 2 réplicas en zonas distintas (docs/09 § 11.1, ADR-005) contienen la falla de un pod, no la de una versión defectuosa desplegada en ambas. El `Servidor de Identidad Northwind` y la `Base de Datos de Reservas` no se ven afectados.
+`Portal de Reservas` pierde la API REST de I-02 y no consulta, reserva ni cancela. `Base de Datos de Reservas` y `Servidor de Identidad Northwind` no dependen del servicio y quedan contenidos. El servicio corre con al menos 2 réplicas en zonas distintas (docs/09 § 11.1, ADR-005), que contienen la caída de un pod; la caída total corta los 3 flujos.
 
 ```mermaid
 flowchart TB
-  A["Servicio de Reservas falla"]:::cascading --> B["Portal de Reservas: sin API (I-02)"]:::cascading
-  B --> F["Flujos 1, 2 y 3 interrumpidos"]:::cascading
-  D["Base de Datos de Reservas sin impacto"]:::contained
-  E["Servidor de Identidad Northwind sin impacto"]:::contained
-  classDef cascading fill:#f8d7da,stroke:#c0392b,color:#000
-  classDef contained fill:#d4edda,stroke:#27ae60,color:#000
+  SVC["Servicio de Reservas (falla)"]:::cascading
+  POR["Portal de Reservas — I-02 sin API"]:::cascading
+  DB["Base de Datos de Reservas"]:::contained
+  IDP["Servidor de Identidad Northwind"]:::contained
+  F["Flujos 1, 2 y 3 sin servicio"]:::cascading
+  SVC -->|I-02| POR
+  POR --> F
+  SVC -.- DB
+  SVC -.- IDP
+  classDef cascading fill:#f8d7da,stroke:#b02a37,color:#000
+  classDef contained fill:#d1e7dd,stroke:#146c43,color:#000
 ```
 
 ### 2.4 MTTR Estimado por Componente <!-- SECTION: MTTR Estimate -->
 
 | # | Component | Failure Type | Estimated MTTR | Source |
 |---|---|---|---|---|
-| 1 | `Base de Datos de Reservas` | Pérdida de la instancia o corrupción de datos | [NOT DOCUMENTED] — respaldo diario y PITR de 7 días; RTO y RPO sin valor | docs/09 § 11.3 |
-| 2 | `Servicio de Reservas` | Caída de réplicas o despliegue defectuoso | [NOT DOCUMENTED] — método de reversión sin documentar | docs/09 § 11.1 |
-| 3 | `Servidor de Identidad Northwind` | Proveedor no disponible | [NOT DOCUMENTED] | docs/09 § 11 (sin fila para el proveedor) |
-| 4 | `Portal de Reservas` | Publicación defectuosa en el CDN | [NOT DOCUMENTED] | docs/09 § 11.1 |
+| 1 | `Base de Datos de Reservas` | Pérdida o corrupción de datos; caída del motor PostgreSQL 16 | [NOT DOCUMENTED] — respaldo diario, retención de 30 días y PITR de 7 días; RTO y RPO Not documented | docs/09 § 11.3 |
+| 2 | `Servicio de Reservas` | Caída de réplicas | [NOT DOCUMENTED] — al menos 2 réplicas en zonas distintas | docs/09 § 11.1; adr/ADR-005 |
+| 3 | `Servidor de Identidad Northwind` | Proveedor no disponible | [NOT DOCUMENTED] | docs/09 § 11.3 (sin fila); docs/components/proveedor-de-identidad-northwind.md |
+| 4 | `Portal de Reservas` | Falla de publicación en el CDN | [NOT DOCUMENTED] — método de reversión Not documented | docs/09 § 11.1; adr/ADR-107 |
 
 ### 2.5 Recomendaciones de Mampara <!-- SECTION: Bulkhead Recommendations -->
 
@@ -98,21 +113,20 @@ _Sin hallazgos en esta corrida._
 
 ## 5. Veredicto <!-- SECTION: Summary Verdict -->
 
-La arquitectura mantiene un radio de impacto estrecho: 4 componentes, 4 integraciones síncronas, abanico máximo 2 y ningún ciclo. El tema dominante es la cadena síncrona fail-closed: 3 de 4 componentes son S1 y ninguna integración documenta timeout, circuit breaker ni fallback. El mínimo de remediación es documentar timeouts en I-02, I-03 e I-04, el TTL de la caché JWKS, y RTO y RPO por componente.
+La arquitectura mantiene un grafo pequeño y acíclico: 4 componentes, 4 integraciones síncronas y abanico máximo de 2, sin componentes High-Blast. `Base de Datos de Reservas` solo la accede `Servicio de Reservas` (I-04) y las 2 réplicas en zonas distintas contienen la caída de un pod. El riesgo dominante es la falla cerrada síncrona: `Servidor de Identidad Northwind`, `Base de Datos de Reservas` y `Servicio de Reservas` cortan cada uno los 3 flujos. El conjunto mínimo de remediación es documentar timeouts y política ante falla en I-02, I-03 e I-04, la duración de la caché JWKS, y RTO y RPO por componente en docs/09 § 11.3.
 
 ---
 
 ## 6. Brechas de Documentación <!-- SECTION: Documentation Gaps -->
 
-- [ ] `[NOT DOCUMENTED]` `Base de Datos de Reservas` — RTO y RPO (docs/09-operational-considerations.md § 11.3)
-- [ ] `[NOT DOCUMENTED]` `Servicio de Reservas` — Método de despliegue, reversión y frecuencia, insumo del MTTR (docs/09-operational-considerations.md § 11.1)
-- [ ] `[NOT DOCUMENTED]` `Servidor de Identidad Northwind` — MTTR o RTO del proveedor y su disponibilidad comprometida (docs/09-operational-considerations.md § 11 o docs/components/proveedor-de-identidad-northwind.md)
-- [ ] `[NOT DOCUMENTED]` `Portal de Reservas` — MTTR ante una publicación defectuosa en el CDN (docs/09-operational-considerations.md § 11.1)
-- [ ] `[NOT DOCUMENTED]` I-02, I-03, I-04 — Timeouts, reintentos y circuit breakers entre consumidor y proveedor (docs/05-integration-points.md § 7 y docs/08-scalability-and-performance.md)
-- [ ] `[NOT DOCUMENTED]` I-03 — caché JWKS del `Servicio de Reservas` — TTL de la caché de claves, que define cuánto contiene una caída del proveedor (docs/05-integration-points.md § 7 I-03)
-- [ ] `[NOT DOCUMENTED]` Caché Caffeine del `Servicio de Reservas` — Si sirve entradas vigentes durante una caída de la `Base de Datos de Reservas` (docs/04-data-flow-patterns.md, fase 3, o docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md)
-- [ ] `[NOT DOCUMENTED]` Alertas — Severidad y guardia de cada alerta, que acotan el tiempo de detección (docs/09-operational-considerations.md § 11.2)
+- [ ] `[NOT DOCUMENTED]` `Base de Datos de Reservas` — RTO, RPO y ubicación del respaldo (docs/09-operational-considerations.md § 11.3)
+- [ ] `[NOT DOCUMENTED]` `Servidor de Identidad Northwind` — MTTR o RTO del proveedor y su disponibilidad comprometida (docs/09-operational-considerations.md § 11.3; docs/components/proveedor-de-identidad-northwind.md)
+- [ ] `[NOT DOCUMENTED]` `Servicio de Reservas` — MTTR por caída total y método de reversión del despliegue (docs/09-operational-considerations.md § 11.1)
+- [ ] `[NOT DOCUMENTED]` `Portal de Reservas` — MTTR y método de reversión de la publicación en el CDN (docs/09-operational-considerations.md § 11.1)
+- [ ] `[NOT DOCUMENTED]` I-02, I-03, I-04 — Timeouts, reintentos y circuit breakers en las llamadas síncronas (docs/05-integration-points.md § 7; docs/08-scalability-and-performance.md)
+- [ ] `[NOT DOCUMENTED]` I-03 (caché JWKS de `Servicio de Reservas`) — Duración de la caché de claves y comportamiento al vencer con el proveedor caído (docs/05-integration-points.md § 7, I-03)
+- [ ] `[NOT DOCUMENTED]` Caché Caffeine de `Servicio de Reservas` — Si sirve disponibilidad desde caché cuando `Base de Datos de Reservas` no responde (docs/04-data-flow-patterns.md, Fase 3; adr/ADR-109)
 
 ---
 
-**Fuentes citadas**: `ARCHITECTURE.md`, `docs/04-data-flow-patterns.md`, `docs/05-integration-points.md`, `docs/09-operational-considerations.md`, `adr/ADR-005`, `adr/ADR-107`, `adr/ADR-109`, `analysis/SPOF-2026-11-03.md`, `analysis/STRIDE-2026-11-03.md`
+**Fuentes citadas**: `ARCHITECTURE.md`, `docs/04-data-flow-patterns.md`, `docs/05-integration-points.md`, `docs/09-operational-considerations.md`, `docs/components/proveedor-de-identidad-northwind.md`, `adr/ADR-005`, `adr/ADR-107`, `adr/ADR-109`, `analysis/SPOF-2026-11-03.md`
