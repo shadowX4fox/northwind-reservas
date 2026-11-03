@@ -8,11 +8,11 @@
 
 ## 1. Resumen Ejecutivo <!-- SECTION: Executive Summary -->
 
-El corpus no documenta ninguna cifra de capacidad: TPS, máximo de réplicas, tamaño del pool JDBC y límites de CPU y memoria figuran como Not documented en docs/08 § 10.1–10.4. El modelo de carga no calcula ρ para ningún componente, por lo que no hay holgura medible ni cuello confirmado.
+El corpus no documenta ninguna cifra de capacidad: la demanda de FLOW-1, FLOW-2 y FLOW-3 es Not documented, el máximo de réplicas del Servicio de Reservas, el tamaño del pool JDBC y la capacidad de la Base de Datos de Reservas tampoco. El modelo de carga marca los cuatro componentes como idle; ningún ρ es calculable.
 
-Hallazgo de mayor severidad: B2-02, `Base de Datos de Reservas`. Cada réplica del `Servicio de Reservas` abre su propio pool JDBC más una conexión `LISTEN` fuera del pool (ADR-109), con máximo de réplicas y tamaño de pool sin documentar. El total de conexiones no tiene techo conocido.
+Hallazgo de mayor severidad: B2-02, la Base de Datos de Reservas. Es la única ruta de persistencia de los tres flujos (I-04), sin réplicas de lectura documentadas, con pool sin tamaño y con una conexión LISTEN por réplica fuera del pool (ADR-109). Hay 2 hallazgos B2, 1 B3 y 0 B4: ningún componente recibe tráfico de 3 o más llamantes (el mayor fan-in es 2).
 
-Total: 2 B2, 1 B3, 0 B1, 0 B4. Ningún componente recibe tráfico de 3 o más llamadores (fan-in máximo 2). Prioridad: documentar máximo de réplicas, tamaño de pool y TPS pico, y fijar límites de tasa para `Servidor de Identidad Northwind`.
+Prioridad de remediación: documentar el pool JDBC, el máximo de réplicas del HPA y la capacidad de la base, y medir la demanda en TPS antes de dimensionar.
 
 ---
 
@@ -22,21 +22,21 @@ Total: 2 B2, 1 B3, 0 B1, 0 B4. Ningún componente recibe tráfico de 3 o más ll
 
 | # | Tier | Component | Max RPS / Limit | Current HPA | Fan-in Count | Bottleneck Reason | ADR Reference |
 |---|---|---|---|---|---|---|---|
-| B2-01 | B2 | Servidor de Identidad Northwind | [NOT DOCUMENTED] | [NOT DOCUMENTED] | 2 (I-01, I-03) | Dependencia externa (Keycloak 25) de inicio de sesión y validación JWKS sin límite de tasa ni capacidad documentados; sin Capacity table. T5-D ya registra la inundación del login. | ADR-002 · docs/05 § 7 (I-01, I-03) |
-| B2-02 | B2 | Base de Datos de Reservas | [NOT DOCUMENTED]; pool JDBC por réplica sin tamaño documentado | No aplica (PostgreSQL 16 gestionado); réplicas Not documented | 1 (I-04) | Conexiones totales = réplicas × pool + una conexión `LISTEN` por réplica fuera del pool; máximo de réplicas y tamaño de pool sin documentar, por lo que el agotamiento no se puede descartar. Réplicas de lectura Not documented. | ADR-003 · ADR-109 · docs/08 § 10.4 |
+| B2-01 | B2 | Servidor de Identidad Northwind | [NOT DOCUMENTED] | [NOT DOCUMENTED] | 2 (Portal de Reservas I-01, Servicio de Reservas I-03) | Sistema externo (Keycloak 25) sin capacidad ni límite de tasa documentados; el Servicio de Reservas rechaza todo ante falta de claves JWKS (I-03, deny by default). Fuente: docs/05 § 7, I-03. | ADR-002 |
+| B2-02 | B2 | Base de Datos de Reservas | [NOT DOCUMENTED]; pool JDBC: Not documented | No aplica (PostgreSQL 16; réplicas Not documented) | 1 (Servicio de Reservas, I-04) | Ruta única de persistencia de los 3 flujos; sin réplicas de lectura documentadas, pool sin tamaño y cada réplica del Servicio de Reservas abre además una conexión LISTEN fuera del pool. Fuente: docs/08 § 10.4, docs/05 § 7 I-04. | ADR-003, ADR-109 |
 
 ### 2.2 Componentes con Riesgo de Escalado <!-- SECTION: Scaling Risk Components -->
 
 | # | Tier | Component | Scale Blocker | Fan-in Count | Recommendation |
 |---|---|---|---|---|---|
-| B3-01 | B3 | Servicio de Reservas | Escala por HPA de CPU (mínimo 2, máximo Not documented), pero cada réplica nueva suma conexiones a `Base de Datos de Reservas`, cuya capacidad no está documentada; la caché Caffeine es por réplica y arranca vacía. | 1 (I-02) | Documentar el máximo de réplicas y acotarlo según las conexiones que admite la base; fijar el tamaño del pool por réplica. |
+| B3-01 | B3 | Servicio de Reservas | Escala por HPA de CPU desde 2 réplicas, pero el máximo es Not documented y cada réplica suma conexiones JDBC y una LISTEN hacia una sola Base de Datos de Reservas. Sin límite de tasa documentado en la API pública. Fuente: docs/08 § 10.1. | 1 | Fijar el máximo de réplicas del HPA según el límite de conexiones de la base y documentar un límite de tasa en el ingress. |
 
 ### 2.3 Resumen de Holgura de Capacidad <!-- SECTION: Capacity Headroom Summary -->
 
 | # | Component | Current Load (est.) | Max Capacity | Headroom % | Risk Level |
 |---|---|---|---|---|---|
-| 1 | Portal de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] (estático en CDN) | [NOT DOCUMENTED] | Adequate |
-| 2 | Servicio de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] (HPA mínimo 2, máximo Not documented) | [NOT DOCUMENTED] | B3 |
+| 1 | Portal de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] (archivos estáticos en CDN) | [NOT DOCUMENTED] | Sin evaluar |
+| 2 | Servicio de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] (mínimo 2 réplicas, máximo Not documented) | [NOT DOCUMENTED] | B3 |
 | 3 | Base de Datos de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] | [NOT DOCUMENTED] | B2 |
 | 4 | Servidor de Identidad Northwind | [NOT DOCUMENTED] | [NOT DOCUMENTED] | [NOT DOCUMENTED] | B2 |
 
@@ -55,47 +55,44 @@ Servidor de Identidad Northwind  [NOT DOCUMENTED]
 
 | # | ADR | Decision | Bottleneck Introduced | Current Risk |
 |---|---|---|---|---|
-| 1 | ADR-109 (reemplaza a ADR-108) | Caché en proceso Caffeine con invalidación por `LISTEN/NOTIFY`, sin caché distribuida | Una conexión `LISTEN` por réplica fuera del pool consume conexiones de `Base de Datos de Reservas`; cada réplica nueva arranca con caché vacía y lee de la base. | Medio: el número de réplicas y el límite de conexiones de la base no están documentados (ver B2-02). |
+| 1 | ADR-109 | Invalidar la caché Caffeine con LISTEN/NOTIFY; caché en proceso por réplica, sin caché distribuida | Cada réplica mantiene una conexión LISTEN fuera del pool y recarga desde la base tras cada invalidación o a los 5 minutos; el conteo de conexiones crece con las réplicas. | Medio; tamaño máximo de la caché y del pool Not documented (docs/08 § 10.4) |
+| 2 | ADR-101 | SPA y un microservicio dueño de su base; todos los flujos síncronos, sin procesamiento asíncrono | Sin cola que amortigüe picos: toda escritura (CU2, CU3) llega síncrona a la Base de Datos de Reservas. | Medio; demanda Not documented |
 
 ## 3. Top 5 Recomendaciones de Escalado <!-- SECTION: Top 5 Scaling Recommendations -->
 
-**1. Documentar y acotar el presupuesto de conexiones a la base (B2-02)**
-Fijar el tamaño del pool JDBC por réplica y el máximo de réplicas del HPA, y verificar que réplicas × pool + conexiones `LISTEN` queden bajo el límite de conexiones de PostgreSQL 16. Se acepta un techo de escalado a cambio de evitar el agotamiento de la base.
-_Fuente: docs/08-scalability-and-performance.md § 10.4; docs/05-integration-points.md § 7 (I-04)_
+**1. Documentar y acotar el pool de conexiones y la capacidad de la base (B2-02)**
+Registrar el tamaño del pool JDBC, el máximo de conexiones de PostgreSQL 16 y la existencia de réplicas de lectura. Reservar cupo para las conexiones LISTEN de cada réplica. Reduce el riesgo de agotamiento (T11-D) al escalar el HPA.
+_Fuente: docs/08-scalability-and-performance.md § 10.4_
 
-**2. Declarar el máximo de réplicas del Servicio de Reservas (B3-01)**
-Documentar el máximo del HPA por CPU y las solicitudes y límites de CPU y memoria. Alinear el máximo con la capacidad de conexiones de la base para que el escalado no traslade el cuello a `Base de Datos de Reservas`.
+**2. Fijar el máximo de réplicas del HPA (B3-01)**
+Definir el máximo de réplicas del Servicio de Reservas como (conexiones disponibles) / (pool + 1 LISTEN por réplica). Evita que el escalado por CPU agote la base; se acepta un techo de throughput explícito.
 _Fuente: docs/08-scalability-and-performance.md § 10.1_
 
-**3. Documentar capacidad y límite de tasa del proveedor de identidad (B2-01)**
-Obtener de Plataforma Northwind la capacidad de Keycloak 25 y su límite de tasa, y confirmar el TTL de la caché JWKS en el `Servicio de Reservas` para que I-03 no dependa del proveedor en cada solicitud.
-_Fuente: docs/05-integration-points.md § 7 (I-01, I-03); adr/ADR-002_
+**3. Documentar capacidad y límite de tasa del Servidor de Identidad Northwind (B2-01)**
+Pedir a Plataforma Northwind la capacidad de Keycloak 25 y el límite de tasa de los endpoints de inicio de sesión y JWKS. Confirmar la caché local de claves del Servicio de Reservas como mitigación (I-03).
+_Fuente: docs/05-integration-points.md § 7, I-03_
 
-**4. Medir la demanda por caso de uso (B2-02)**
-Registrar TPS promedio y pico de FLOW-1, FLOW-2 y FLOW-3 en docs/08 § 10.2 para que el modelo de carga calcule ρ y puntos de ruptura. Sin demanda, el análisis de holgura no produce cifras.
+**4. Medir la demanda por caso de uso (B3-01)**
+Registrar TPS promedio y pico de FLOW-1, FLOW-2 y FLOW-3 con su factor de pico, para que el modelo de carga calcule ρ y puntos de saturación. Hoy los tres valores son Not documented.
 _Fuente: docs/08-scalability-and-performance.md § 10.2_
-
-**5. Fijar el tamaño máximo de la caché Caffeine (B3-01)**
-Documentar el tamaño máximo de la caché por réplica (hoy Not documented) para acotar la memoria y la carga sobre la base cuando la caché arranca vacía tras un escalado.
-_Fuente: docs/08-scalability-and-performance.md § 10.4; adr/ADR-109_
 
 ---
 
 ## 4. Veredicto Resumen <!-- SECTION: Summary Verdict -->
 
-La arquitectura es sencilla y sin estado en el servicio, con CDN para el portal y mínimo de 2 réplicas, y ningún componente tiene fan-in de 3 o más. El riesgo dominante es la ausencia de cifras de capacidad: sin máximo de réplicas, pool JDBC, límites del proveedor de identidad ni TPS, no se puede descartar el agotamiento de conexiones de la base (B2-02) ni el límite del proveedor de identidad (B2-01). El mínimo de remediación es documentar esos cuatro valores y medir la demanda.
+La arquitectura es simple y sin estado en el servicio, con 2 réplicas mínimas, caché Caffeine invalidada por LISTEN/NOTIFY y portal en CDN. El riesgo dominante es la ausencia de cifras: sin demanda, pool, máximo de HPA ni capacidad de la base no se puede descartar saturación. El mínimo de remediación es documentar el pool JDBC, el máximo de réplicas, la capacidad de la Base de Datos de Reservas y la demanda en TPS.
 
 ---
 
 ## 5. Brechas de Documentación <!-- SECTION: Documentation Gaps -->
 
-- [ ] `[NOT DOCUMENTED]` Servicio de Reservas — Máximo de réplicas del HPA, solicitudes y límites de CPU y memoria (docs/08-scalability-and-performance.md § 10.1)
-- [ ] `[NOT DOCUMENTED]` Base de Datos de Reservas — Capacidad, límite de conexiones, réplicas de lectura y tamaño del pool JDBC (docs/08-scalability-and-performance.md § 10.1 y § 10.4; docs/06-technology-stack.md)
-- [ ] `[NOT DOCUMENTED]` Servidor de Identidad Northwind — Capacidad, límite de tasa y tabla Capacity (docs/components/proveedor-de-identidad-northwind.md)
+- [ ] `[NOT DOCUMENTED]` Demanda FLOW-1, FLOW-2, FLOW-3 — TPS promedio, pico y factor de pico (docs/08-scalability-and-performance.md § 10.2 y docs/01-system-overview.md § 1)
+- [ ] `[NOT DOCUMENTED]` Servicio de Reservas — Máximo de réplicas del HPA, solicitudes y límites de CPU y memoria, RPS por réplica (docs/08-scalability-and-performance.md § 10.1)
+- [ ] `[NOT DOCUMENTED]` Base de Datos de Reservas — Capacidad, máximo de conexiones, tamaño del pool JDBC, réplicas de lectura (docs/08-scalability-and-performance.md § 10.1 y § 10.4; docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md)
+- [ ] `[NOT DOCUMENTED]` Servidor de Identidad Northwind — Tabla de capacidad, límite de tasa, réplicas (docs/components/proveedor-de-identidad-northwind.md)
 - [ ] `[NOT DOCUMENTED]` Portal de Reservas — Límites del CDN (docs/08-scalability-and-performance.md § 10.1)
-- [ ] `[NOT DOCUMENTED]` FLOW-1, FLOW-2, FLOW-3 — TPS promedio y pico, factor de pico (docs/08-scalability-and-performance.md § 10.2 y docs/01-system-overview.md)
-- [ ] `[NOT DOCUMENTED]` Caché Caffeine del Servicio de Reservas — Tamaño máximo de la caché (docs/08-scalability-and-performance.md § 10.4)
+- [ ] `[NOT DOCUMENTED]` Caché Caffeine — Tamaño máximo de la caché (docs/08-scalability-and-performance.md § 10.4)
 
 ---
 
-**Fuentes citadas**: `ARCHITECTURE.md`, `docs/08-scalability-and-performance.md`, `docs/05-integration-points.md`, `docs/04-data-flow-patterns.md`, `adr/ADR-002`, `adr/ADR-003`, `adr/ADR-109`
+**Fuentes citadas**: `ARCHITECTURE.md`, `docs/08-scalability-and-performance.md`, `docs/05-integration-points.md`
