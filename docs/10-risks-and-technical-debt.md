@@ -29,7 +29,7 @@ Los registros de deuda técnica (TDR) completos están en [`/tdr/`](../tdr/); es
 
 | ID | Title | Status | Owner |
 |----|-------|--------|-------|
-| [TDR-005](../tdr/TDR-005-almacen-de-cuentas-de-identidad-sin-cifrado-documentado.md) | El almacén de cuentas del Servidor de Identidad Northwind no documenta cifrado en reposo ni retención | Open | Plataforma Northwind |
+| [TDR-005](../tdr/TDR-005-almacen-de-cuentas-de-identidad-sin-cifrado-documentado.md) | Almacén de cuentas del Servidor de Identidad Northwind sin cifrado en reposo ni retención documentados | Open | Plataforma Northwind |
 
 ### Convenciones <!-- LABEL: Conventions -->
 
