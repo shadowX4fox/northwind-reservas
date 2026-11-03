@@ -1,0 +1,35 @@
+{
+  "about": "Findings the architect accepted (analysis-accepted). analysis-diff.js pairs each like a base finding: at this severity or below it does not hold a pull request again.",
+  "findings": [
+    {
+      "lens": "stride",
+      "id": "T3-D",
+      "name": "Bloqueo masivo de cuentas ajenas con 5 intentos fallidos por cuenta",
+      "severity": "high",
+      "detail": "Threat: Bloqueo masivo de cuentas ajenas con 5 intentos fallidos por cuenta · Category: D · Severity: High · Status: ⚠️ Finding · Control / Gap: Bloqueo de 15 minutos sin límite de tasa por IP documentado (docs/07 § 9.3) · Trust Boundary: TB-01 — Navegador → Servidor de Identidad Northwind (I-01) · STRIDE Category: D — Denegación de servicio · Threat Description: Un atacante sin cuenta envía 5 int",
+      "by": "shadowX4fox",
+      "pr": 134,
+      "at": "2026-11-03"
+    },
+    {
+      "lens": "stride",
+      "id": "T5-D",
+      "name": "Inundación de la API pública del Servicio de Reservas sin token",
+      "severity": "high",
+      "detail": "Threat: Inundación de la API pública del Servicio de Reservas sin token · Category: D · Severity: High · Status: ⚠️ Finding · Control / Gap: Límite de tasa en el ingress Not documented; 2 réplicas fijas (docs/07 § 9.3; docs/09 § 11.5) · Trust Boundary: TB-02 — Navegador → ingress → Servicio de Reservas (I-02) · STRIDE Category: D — Denegación de servicio · Threat Description: Un cliente sin token ",
+      "by": "shadowX4fox",
+      "pr": 134,
+      "at": "2026-11-03"
+    },
+    {
+      "lens": "data-sensitivity",
+      "id": "G2-03",
+      "name": "Almacén de cuentas del Servidor de Identidad Northwind",
+      "severity": "critical",
+      "detail": "Gap: G2 · Data Store / Flow: Almacén de cuentas del Servidor de Identidad Northwind · Sensitivity: S1 · Protocol / Storage: Almacén de Keycloak 25; motor Not documented · Missing Control: Cifrado en reposo de credenciales y secretos TOTP no documentado; TDR-005 lo registra · Source: docs/10 § 13.2 (TDR-005)",
+      "by": "shadowX4fox",
+      "pr": 134,
+      "at": "2026-11-03"
+    }
+  ]
+}
