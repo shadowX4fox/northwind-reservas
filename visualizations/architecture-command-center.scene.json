@@ -1,6 +1,6 @@
 {
  "project": "Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión",
- "version": "1.10.5",
+ "version": "1.11.0",
  "status": "Released",
  "architectureType": "MICROSERVICES",
  "language": "es",
@@ -102,24 +102,17 @@
    "system": "proveedor-de-identidad-northwind",
    "kind": "service",
    "tech": "Keycloak 25"
-  },
-  {
-   "id": "proveedor-de-identidad-northwind",
-   "name": "Proveedor de Identidad Northwind",
-   "layer": 2,
-   "system": "actor",
-   "kind": "actor",
-   "tech": ""
   }
  ],
  "edges": [
   {
    "a": "portal-de-reservas",
-   "b": "proveedor-de-identidad-northwind",
+   "b": "servidor-de-identidad-northwind",
    "routes": [
     "control"
    ],
-   "label": "HTTPS/JSON [Auth] · I-01"
+   "label": "HTTPS/JSON [Auth] · I-01",
+   "jump": true
   },
   {
    "a": "portal-de-reservas",
@@ -131,11 +124,12 @@
   },
   {
    "a": "servicio-de-reservas",
-   "b": "proveedor-de-identidad-northwind",
+   "b": "servidor-de-identidad-northwind",
    "routes": [
     "online"
    ],
-   "label": "HTTPS/JSON [Auth] · I-03"
+   "label": "HTTPS/JSON [Auth] · I-03",
+   "jump": true
   },
   {
    "a": "servicio-de-reservas",
@@ -168,7 +162,7 @@
    "path": [
     [
      "portal-de-reservas",
-     "proveedor-de-identidad-northwind"
+     "servidor-de-identidad-northwind"
     ]
    ],
    "extra": []
@@ -184,7 +178,7 @@
     ],
     [
      "servicio-de-reservas",
-     "proveedor-de-identidad-northwind"
+     "servidor-de-identidad-northwind"
     ]
    ],
    "extra": []
@@ -715,6 +709,56 @@
    }
   },
   "tdrs": {
+   "TDR-004": {
+    "id": "TDR-004",
+    "title": "Zona horaria de las sedes leída de una variable de despliegue",
+    "file": "tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md",
+    "status": "Resolved",
+    "date": "2026-10-20",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-105"
+    ],
+    "tags": [
+     "zona-horaria",
+     "despliegue",
+     "INV-01",
+     "INV-04"
+    ],
+    "summary": "La arquitectura 1.6.0 no documenta la zona horaria de las sedes (spec § 4, INV-01 e INV-04; escalado en #62). Mientras #62 no tenga respuesta, el Servicio de Reservas la lee de la variable de despliegue RESERVAS_ZONA_HORARIA (identificador IANA, una sola zona para las 3 sedes), sin valor por defecto: sin ella, o con un identificador inválido, el servicio no arranca. El reloj de negocio usa esa zona para INV-01, INV-04 y ADR-105.",
+    "impact": "Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan mal las franjas \"en el pasado\" (INV-01), las reservas \"futuras\" (INV-04) y las que \"ya iniciaron\" (ADR-105). Una sola zona para las 3 sedes: si las sedes tienen zonas distintas, la regla falla en alguna de ellas.",
+    "owner": "---"
+   },
+   "TDR-006": {
+    "id": "TDR-006",
+    "title": "El bloqueo por cuenta del Servidor de Identidad Northwind permite bloquear cuentas ajenas",
+    "file": "tdr/TDR-006-bloqueo-de-cuentas-ajenas-sin-limite-por-ip.md",
+    "status": "Open",
+    "date": "2026-11-03",
+    "components": [
+     {
+      "slug": "Servidor de Identidad Northwind",
+      "node": "servidor-de-identidad-northwind"
+     }
+    ],
+    "adrs": [
+     "ADR-002"
+    ],
+    "tags": [
+     "T3-D",
+     "stride",
+     "denegacion-de-servicio",
+     "fuerza-bruta"
+    ],
+    "summary": "Keycloak 25 bloquea una cuenta 15 minutos tras 5 intentos fallidos (Sección 9.3). No hay límite de peticiones por IP documentado en el inicio de sesión (I-01). Lo registra STRIDE T3-D; se aceptó en el PR #134.",
+    "impact": "Disponibilidad. Alguien sin cuenta que conozca correos puede bloquear a miembros y recepcionistas de forma repetida. Un bloqueo masivo en recepción deja a una sede sin poder cancelar reservas.",
+    "owner": "---"
+   },
    "TDR-001": {
     "id": "TDR-001",
     "title": "La consulta de disponibilidad se sirve de una caché de 5 minutos",
@@ -738,6 +782,57 @@
     ],
     "summary": "El Servicio de Reservas sirve la consulta de disponibilidad (CU1) desde una caché en proceso Caffeine 3.2 de 5 minutos por sede y fecha (ADR-108). Así cumple el p95 de 1 s sin un índice por sala y franja en la Base de Datos de Reservas. Solo la réplica que crea o cancela una reserva invalida su entrada.",
     "impact": "Una sala recién reservada en otra réplica puede verse libre hasta 5 minutos. La reserva doble la impide igualmente la verificación de solapamiento al crear, pero el miembro ve un error tras elegir la sala.",
+    "owner": "---"
+   },
+   "TDR-005": {
+    "id": "TDR-005",
+    "title": "El almacén de cuentas del Servidor de Identidad Northwind no documenta cifrado en reposo ni retención",
+    "file": "tdr/TDR-005-almacen-de-cuentas-de-identidad-sin-cifrado-documentado.md",
+    "status": "Open",
+    "date": "2026-11-03",
+    "components": [
+     {
+      "slug": "Servidor de Identidad Northwind",
+      "node": "servidor-de-identidad-northwind"
+     }
+    ],
+    "adrs": [
+     "ADR-002"
+    ],
+    "tags": [
+     "G2-03",
+     "data-sensitivity",
+     "cifrado-en-reposo",
+     "retencion",
+     "TOTP"
+    ],
+    "summary": "El Servidor de Identidad Northwind (Keycloak 25) guarda nombre, correo, credenciales y secretos TOTP de 1.850 miembros y 6 recepcionistas (S1). La arquitectura no documenta cómo se cifran en reposo ni cuánto se conservan las cuentas dadas de baja. Lo registra Data Sensitivity G2-03; se aceptó en el PR #134.",
+    "impact": "Confidencialidad. Una copia del almacén o de sus respaldos expondría credenciales y semillas TOTP, y el segundo factor dejaría de proteger. Sin plazo de retención, las cuentas dadas de baja pueden conservarse más allá de los 24 meses de ADR-106.",
+    "owner": "---"
+   },
+   "TDR-003": {
+    "id": "TDR-003",
+    "title": "Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos",
+    "file": "tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md",
+    "status": "Resolved",
+    "date": "2026-10-20",
+    "components": [
+     {
+      "slug": "Servicio de Reservas",
+      "node": "servicio-de-reservas"
+     }
+    ],
+    "adrs": [
+     "ADR-109",
+     "ADR-102"
+    ],
+    "tags": [
+     "disponibilidad",
+     "cache",
+     "listen-notify"
+    ],
+    "summary": "Cuando se pierde la conexión LISTEN al canal disponibilidad, los avisos de ese intervalo se pierden: PostgreSQL no los guarda. La réplica del Servicio de Reservas registra el aviso, espera y reconecta, pero no vacía la caché; esa réplica sirve disponibilidad desactualizada hasta 5 minutos, la expiración de ADR-109.",
+    "impact": "El Portal de Reservas puede mostrar libre una franja ya reservada. La reserva no se duplica, porque la Base de Datos de Reservas la rechaza (ADR-102), pero el usuario recibe un 409 inesperado (ROOM_OCCUPIED).",
     "owner": "---"
    },
    "TDR-002": {
@@ -768,107 +863,6 @@
     ],
     "summary": "El Servicio de Reservas guarda cada Idempotency-Key con su respuesta en la tabla clave_idempotencia de la Base de Datos de Reservas (ADR-103), pero ninguna purga elimina las claves de más de 24 horas. La búsqueda las ignora al vencer, así que la idempotencia funciona; las filas se quedan para siempre.",
     "impact": "La tabla crece sin límite, una fila por cada creación de reserva, y con ella el almacenamiento y los respaldos de la Base de Datos de Reservas. Cada fila guarda la respuesta de la creación (el sub del miembro y el asunto de la reserva), que permanece más allá de las 24 horas de ADR-103 y del plazo de 24 meses de ADR-106.",
-    "owner": "---"
-   },
-   "TDR-003": {
-    "id": "TDR-003",
-    "title": "Los avisos de disponibilidad perdidos al reconectar LISTEN dejan la caché desactualizada hasta 5 minutos",
-    "file": "tdr/TDR-003-los-avisos-de-disponibilidad-perdidos-al-reconectar-listen-d.md",
-    "status": "Resolved",
-    "date": "2026-10-20",
-    "components": [
-     {
-      "slug": "Servicio de Reservas",
-      "node": "servicio-de-reservas"
-     }
-    ],
-    "adrs": [
-     "ADR-109",
-     "ADR-102"
-    ],
-    "tags": [
-     "disponibilidad",
-     "cache",
-     "listen-notify"
-    ],
-    "summary": "Cuando se pierde la conexión LISTEN al canal disponibilidad, los avisos de ese intervalo se pierden: PostgreSQL no los guarda. La réplica del Servicio de Reservas registra el aviso, espera y reconecta, pero no vacía la caché; esa réplica sirve disponibilidad desactualizada hasta 5 minutos, la expiración de ADR-109.",
-    "impact": "El Portal de Reservas puede mostrar libre una franja ya reservada. La reserva no se duplica, porque la Base de Datos de Reservas la rechaza (ADR-102), pero el usuario recibe un 409 inesperado (ROOM_OCCUPIED).",
-    "owner": "---"
-   },
-   "TDR-004": {
-    "id": "TDR-004",
-    "title": "Zona horaria de las sedes leída de una variable de despliegue",
-    "file": "tdr/TDR-004-zona-horaria-de-las-sedes-leida-de-una-variable-de-despliegu.md",
-    "status": "Resolved",
-    "date": "2026-10-20",
-    "components": [
-     {
-      "slug": "Servicio de Reservas",
-      "node": "servicio-de-reservas"
-     }
-    ],
-    "adrs": [
-     "ADR-105"
-    ],
-    "tags": [
-     "zona-horaria",
-     "despliegue",
-     "INV-01",
-     "INV-04"
-    ],
-    "summary": "La arquitectura 1.6.0 no documenta la zona horaria de las sedes (spec § 4, INV-01 e INV-04; escalado en #62). Mientras #62 no tenga respuesta, el Servicio de Reservas la lee de la variable de despliegue RESERVAS_ZONA_HORARIA (identificador IANA, una sola zona para las 3 sedes), sin valor por defecto: sin ella, o con un identificador inválido, el servicio no arranca. El reloj de negocio usa esa zona para INV-01, INV-04 y ADR-105.",
-    "impact": "Quien despliega elige la zona; si no es la de las sedes, se aceptan o rechazan mal las franjas \"en el pasado\" (INV-01), las reservas \"futuras\" (INV-04) y las que \"ya iniciaron\" (ADR-105). Una sola zona para las 3 sedes: si las sedes tienen zonas distintas, la regla falla en alguna de ellas.",
-    "owner": "---"
-   },
-   "TDR-005": {
-    "id": "TDR-005",
-    "title": "El almacén de cuentas del Servidor de Identidad Northwind no documenta cifrado en reposo ni retención",
-    "file": "tdr/TDR-005-almacen-de-cuentas-de-identidad-sin-cifrado-documentado.md",
-    "status": "Open",
-    "date": "2026-11-03",
-    "components": [
-     {
-      "slug": "Servidor de Identidad Northwind",
-      "node": "servidor-de-identidad-northwind"
-     }
-    ],
-    "adrs": [
-     "ADR-002"
-    ],
-    "tags": [
-     "G2-03",
-     "data-sensitivity",
-     "cifrado-en-reposo",
-     "retencion",
-     "TOTP"
-    ],
-    "summary": "El Servidor de Identidad Northwind (Keycloak 25) guarda nombre, correo, credenciales y secretos TOTP de 1.850 miembros y 6 recepcionistas (S1). La arquitectura no documenta cómo se cifran en reposo ni cuánto se conservan las cuentas dadas de baja. Lo registra Data Sensitivity G2-03; se aceptó en el PR #134.",
-    "impact": "Confidencialidad. Una copia del almacén o de sus respaldos expondría credenciales y semillas TOTP, y el segundo factor dejaría de proteger. Sin plazo de retención, las cuentas dadas de baja pueden conservarse más allá de los 24 meses de ADR-106.",
-    "owner": "---"
-   },
-   "TDR-006": {
-    "id": "TDR-006",
-    "title": "El bloqueo por cuenta del Servidor de Identidad Northwind permite bloquear cuentas ajenas",
-    "file": "tdr/TDR-006-bloqueo-de-cuentas-ajenas-sin-limite-por-ip.md",
-    "status": "Open",
-    "date": "2026-11-03",
-    "components": [
-     {
-      "slug": "Servidor de Identidad Northwind",
-      "node": "servidor-de-identidad-northwind"
-     }
-    ],
-    "adrs": [
-     "ADR-002"
-    ],
-    "tags": [
-     "T3-D",
-     "stride",
-     "denegacion-de-servicio",
-     "fuerza-bruta"
-    ],
-    "summary": "Keycloak 25 bloquea una cuenta 15 minutos tras 5 intentos fallidos (Sección 9.3). No hay límite de peticiones por IP documentado en el inicio de sesión (I-01). Lo registra STRIDE T3-D; se aceptó en el PR #134.",
-    "impact": "Disponibilidad. Alguien sin cuenta que conozca correos puede bloquear a miembros y recepcionistas de forma repetida. Un bloqueo masivo en recepción deja a una sede sin poder cancelar reservas.",
     "owner": "---"
    }
   },
@@ -1513,11 +1507,11 @@
       "edges": [
        [
         "portal-de-reservas",
-        "proveedor-de-identidad-northwind"
+        "servidor-de-identidad-northwind"
        ],
        [
-        "proveedor-de-identidad-northwind",
-        "servicio-de-reservas"
+        "servicio-de-reservas",
+        "servidor-de-identidad-northwind"
        ]
       ],
       "ints": [
@@ -1769,11 +1763,11 @@
       "edges": [
        [
         "portal-de-reservas",
-        "proveedor-de-identidad-northwind"
+        "servidor-de-identidad-northwind"
        ],
        [
-        "proveedor-de-identidad-northwind",
-        "servicio-de-reservas"
+        "servicio-de-reservas",
+        "servidor-de-identidad-northwind"
        ]
       ],
       "ints": [
@@ -1968,7 +1962,7 @@
       "edges": [
        [
         "portal-de-reservas",
-        "proveedor-de-identidad-northwind"
+        "servidor-de-identidad-northwind"
        ]
       ],
       "ints": [
@@ -2022,8 +2016,8 @@
       "tier": "2. Inventario de Fronteras de Confianza",
       "edges": [
        [
-        "proveedor-de-identidad-northwind",
-        "servicio-de-reservas"
+        "servicio-de-reservas",
+        "servidor-de-identidad-northwind"
        ]
       ],
       "ints": [
@@ -2084,7 +2078,7 @@
       "edges": [
        [
         "portal-de-reservas",
-        "proveedor-de-identidad-northwind"
+        "servidor-de-identidad-northwind"
        ]
       ],
       "ints": [
@@ -2092,8 +2086,7 @@
       ],
       "nodes": [
        "servidor-de-identidad-northwind",
-       "portal-de-reservas",
-       "proveedor-de-identidad-northwind"
+       "portal-de-reservas"
       ],
       "phys": [],
       "via": "section"
@@ -2147,7 +2140,7 @@
       "edges": [
        [
         "portal-de-reservas",
-        "proveedor-de-identidad-northwind"
+        "servidor-de-identidad-northwind"
        ]
       ],
       "ints": [
@@ -2233,8 +2226,8 @@
       },
       "edges": [
        [
-        "proveedor-de-identidad-northwind",
-        "servicio-de-reservas"
+        "servicio-de-reservas",
+        "servidor-de-identidad-northwind"
        ]
       ],
       "ints": [
@@ -2650,11 +2643,11 @@
       "edges": [
        [
         "portal-de-reservas",
-        "proveedor-de-identidad-northwind"
+        "servidor-de-identidad-northwind"
        ],
        [
-        "proveedor-de-identidad-northwind",
-        "servicio-de-reservas"
+        "servicio-de-reservas",
+        "servidor-de-identidad-northwind"
        ]
       ],
       "ints": [
