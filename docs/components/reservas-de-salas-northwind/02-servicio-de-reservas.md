@@ -20,9 +20,9 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-102, ADR-103, ADR
 **Communicates via:** HTTPS
 **Description:** Servicio de Reservas expone la API REST de disponibilidad, reserva y cancelación de salas y aplica sus reglas.
 
-**Component Version:** 1.4.0
+**Component Version:** 1.4.1
 **Architecture Version:** 1.10.5
-**Last Updated:** 2026-10-20
+**Last Updated:** 2026-11-02
 
 **Bounded Context**: Reservas de salas — disponibilidad, creación y cancelación.
 **Team Owner**: Not documented <!-- TODO: Add source reference -->
@@ -109,7 +109,7 @@ Concentra las reglas de reserva de las 42 salas de las 3 sedes y es la única pu
 
 | Integración | Contraparte | Protocolo | Uso |
 |---|---|---|---|
-| I-03 | [Proveedor de Identidad Northwind](../proveedor-de-identidad-northwind.md) | HTTPS (JWKS) | Claves públicas para validar tokens |
+| I-03 | [Servidor de Identidad Northwind](../proveedor-de-identidad-northwind.md) | HTTPS (JWKS) | Claves públicas para validar tokens |
 | I-04 | [Base de Datos de Reservas](03-base-de-datos-de-reservas.md) | JDBC con TLS | Lee y escribe salas, reservas, auditoría y claves de idempotencia; `LISTEN`/`NOTIFY` de invalidación de caché |
 
 ## Propiedad de datos <!-- LABEL: Data Ownership -->

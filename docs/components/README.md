@@ -21,9 +21,9 @@
 
 ## Key Relationships
 
-- Portal de Reservas → Proveedor de Identidad Northwind · HTTPS/JSON [Auth]
+- Portal de Reservas → Servidor de Identidad Northwind · HTTPS/JSON [Auth]
 - Portal de Reservas → Servicio de Reservas · HTTPS/JSON [Query]
-- Servicio de Reservas → Proveedor de Identidad Northwind · HTTPS/JSON [Auth]
+- Servicio de Reservas → Servidor de Identidad Northwind · HTTPS/JSON [Auth]
 - Servicio de Reservas → Base de Datos de Reservas · JDBC/SQL [Data]
 
 ## Related Documentation

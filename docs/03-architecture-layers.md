@@ -232,7 +232,7 @@ flowchart TB
     BD[(Base de Datos de Reservas<br/>PostgreSQL 16)]
   end
 
-  IDP["Proveedor de Identidad Northwind<br/>Keycloak 25"]
+  IDP["Servidor de Identidad Northwind<br/>Keycloak 25"]
 
   MIEMBRO -->|"HTTPS/JSON [Data]"| PORTAL
   RECEP -->|"HTTPS/JSON [Data]"| PORTAL
@@ -292,7 +292,7 @@ flowchart TB
   end
 
   subgraph G4["GRUPO — SISTEMAS EXTERNOS"]
-    IDP["Proveedor de Identidad Northwind<br/>Keycloak 25<br/>OIDC con PKCE y claves JWKS"]
+    IDP["Servidor de Identidad Northwind<br/>Keycloak 25<br/>OIDC con PKCE y claves JWKS"]
   end
 
   MIEMBRO -->|"HTTPS/JSON [Data]"| PORTAL

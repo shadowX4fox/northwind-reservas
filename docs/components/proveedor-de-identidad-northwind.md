@@ -37,5 +37,5 @@ Proveedor de Identidad Northwind (Keycloak 25) es la única fuente de autenticac
 
 | From | To | Protocol | Description |
 |------|----|----------|-------------|
-| Portal de Reservas | Proveedor de Identidad Northwind | OIDC (PKCE) | Flujo de código de autorización con PKCE |
-| Servicio de Reservas | Proveedor de Identidad Northwind | HTTPS (JWKS) | Obtención de claves para validar tokens |
+| Portal de Reservas | Servidor de Identidad Northwind | OIDC (PKCE) | Flujo de código de autorización con PKCE |
+| Servicio de Reservas | Servidor de Identidad Northwind | HTTPS (JWKS) | Obtención de claves para validar tokens |

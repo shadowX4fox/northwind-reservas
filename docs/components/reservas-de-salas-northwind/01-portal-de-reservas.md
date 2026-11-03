@@ -20,9 +20,9 @@ related_adrs: ADR-001, ADR-002, ADR-004, ADR-101, ADR-104, ADR-107, ADR-110
 **Communicates via:** HTTPS
 **Description:** Portal de Reservas es la SPA donde miembros y recepción consultan disponibilidad, reservan y cancelan salas.
 
-**Component Version:** 1.0.2
+**Component Version:** 1.0.3
 **Architecture Version:** 1.10.5
-**Last Updated:** 2026-10-20
+**Last Updated:** 2026-11-02
 
 **Team Owner**: Not documented <!-- TODO: Add source reference -->
 
@@ -45,7 +45,7 @@ Interfaz de autoservicio de reservas, responsiva para navegador y teléfono. Sus
 | Dirección | Contraparte | Protocolo | Uso |
 |---|---|---|---|
 | Saliente | [Servicio de Reservas](02-servicio-de-reservas.md) | HTTPS/JSON (REST, ADR-001) | Consulta, reserva y cancela |
-| Saliente | [Proveedor de Identidad Northwind](../proveedor-de-identidad-northwind.md) | OIDC, código de autorización con PKCE (ADR-002) | Inicio de sesión |
+| Saliente | [Servidor de Identidad Northwind](../proveedor-de-identidad-northwind.md) | OIDC, código de autorización con PKCE (ADR-002) | Inicio de sesión |
 | Entrante | Miembro del cowork, Recepcionista de sede | HTTPS (navegador) | Uso del portal |
 
 ## Propiedad de datos <!-- LABEL: Data Ownership -->

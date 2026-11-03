@@ -14,9 +14,9 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-102, ADR-103
 
 | # | From | To | Protocol | Pattern | Boundary |
 |---|---|---|---|---|---|
-| I-01 | `Portal de Reservas` | `Proveedor de Identidad Northwind` | HTTPS/JSON [Auth] | request-response | external |
+| I-01 | `Portal de Reservas` | `Servidor de Identidad Northwind` | HTTPS/JSON [Auth] | request-response | external |
 | I-02 | `Portal de Reservas` | `Servicio de Reservas` | HTTPS/JSON [Query] | request-response | internal |
-| I-03 | `Servicio de Reservas` | `Proveedor de Identidad Northwind` | HTTPS/JSON [Auth] | request-response | external |
+| I-03 | `Servicio de Reservas` | `Servidor de Identidad Northwind` | HTTPS/JSON [Auth] | request-response | external |
 | I-04 | `Servicio de Reservas` | `Base de Datos de Reservas` | JDBC/SQL [Data] | request-response | internal |
 
 **Actores**: las aristas "Usa" del HLD (Miembro del cowork y Recepcionista de sede hacia el Portal de Reservas) son uso por personas desde el navegador, no integraciones entre sistemas; no llevan fila `I-nn`.
