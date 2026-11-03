@@ -8,11 +8,13 @@
 
 ## 1. Resumen Ejecutivo <!-- SECTION: Executive Summary -->
 
-El análisis detecta 3 hallazgos: 2 B2 (`Servidor de Identidad Northwind` y `Base de Datos de Reservas`) y 1 B3 (`Servicio de Reservas`). Ningún componente llega a B1 ni a B4: el mayor fan-in documentado es 2.
+El hallazgo de mayor severidad es B2-01: el `Servidor de Identidad Northwind` (Keycloak 25) recibe I-01 e I-03 y no documenta capacidad, límite de tasa ni réplicas. Un flood de inicio de sesión lo satura (STRIDE T7-D).
 
-El hallazgo principal es `Base de Datos de Reservas`, único camino de datos de los 3 flujos (I-04). Es con estado, el tamaño del pool JDBC no está documentado y cada réplica añade una conexión `LISTEN` fuera del pool (ADR-109).
+La documentación no declara ninguna cifra de capacidad: TPS, máximo de réplicas del HPA, tamaño del pool JDBC y capacidad de PostgreSQL son `Not documented` (docs/08 §10.1–10.3). El modelo de carga queda en `idle` y no calcula ρ ni holgura.
 
-La holgura no es calculable: docs/08 §10.2 y §10.3 declaran TPS, máximo de réplicas y capacidad de la base como Not documented. El modelo de carga marca los 4 componentes como idle por falta de demanda. La prioridad es medir la demanda por caso de uso y fijar pool y máximo de réplicas.
+Hay 2 hallazgos B2, 1 B3 y ningún B1 ni B4. La `Base de Datos de Reservas` (B2-02) es la única ruta de escritura y su pool no está dimensionado. Ningún componente tiene 3 o más llamantes: no hay fan-in B4.
+
+Prioridad de remediación: medir la demanda (TPS por flujo) y documentar pool, máximo del HPA y límite de tasa del IdP antes de la próxima revisión.
 
 ---
 
@@ -22,21 +24,21 @@ La holgura no es calculable: docs/08 §10.2 y §10.3 declaran TPS, máximo de r�
 
 | # | Tier | Component | Max RPS / Limit | Current HPA | Fan-in Count | Bottleneck Reason | ADR Reference |
 |---|---|---|---|---|---|---|---|
-| B2-01 | B2 | Servidor de Identidad Northwind | [NOT DOCUMENTED] | [NOT DOCUMENTED] | 2 (I-01, I-03) | Keycloak 25 recibe el inicio de sesión del Portal de Reservas (I-01) y el JWKS del Servicio de Reservas (I-03); sin capacidad ni límite de tasa documentados. Sin claves en caché se rechaza toda solicitud (docs/05 § I-03). | ADR-002 |
-| B2-02 | B2 | Base de Datos de Reservas | [NOT DOCUMENTED] | No aplica (con estado); réplicas [NOT DOCUMENTED] | 1 (I-04) | Único camino de datos de los 3 flujos (I-04). Pool JDBC no documentado (docs/08 § 10.4) y cada réplica del Servicio de Reservas abre una conexión LISTEN fuera del pool; sin réplicas de lectura documentadas. | ADR-003, ADR-109 |
+| B2-01 | B2 | Servidor de Identidad Northwind | [NOT DOCUMENTED] | [NOT DOCUMENTED] | 2 (I-01, I-03) | Dependencia externa sin límite de tasa ni capacidad documentados; un flood de inicio de sesión agota Keycloak (STRIDE T7-D). Con claves JWKS vencidas el servicio rechaza toda solicitud (T12-D). Fuente: docs/05 § 7, SPOF C2. | ADR-002 |
+| B2-02 | B2 | Base de Datos de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] | 1 (I-04) | Única ruta de escritura (I-04); cada réplica abre su pool JDBC de tamaño no documentado y una conexión LISTEN fuera del pool. Consultas costosas agotan las conexiones de la instancia única (STRIDE T16-D). Fuente: docs/08 § 10.4, docs/05 § 7. | ADR-003, ADR-109 |
 
 ### 2.2 Componentes con Riesgo de Escalado <!-- SECTION: Scaling Risk Components -->
 
 | # | Tier | Component | Scale Blocker | Fan-in Count | Recommendation |
 |---|---|---|---|---|---|
-| B3-01 | B3 | Servicio de Reservas | Escala por HPA de CPU desde 2 réplicas, pero el máximo de réplicas es Not documented y la base de datos aguas abajo limita el caudal efectivo (docs/08 § 10.1). | 1 (I-02) | Documentar máximo de réplicas y tamaño del pool JDBC por réplica, de modo que réplicas × pool no supere las conexiones de la base. |
+| B3-01 | B3 | Servicio de Reservas | Escala con HPA por CPU (mínimo 2 réplicas, máximo no documentado), pero cada réplica abre conexiones propias a una única Base de Datos de Reservas: más réplicas multiplican conexiones sobre un destino de capacidad no documentada. La caché Caffeine no tiene tamaño máximo documentado (docs/08 § 10.1, § 10.4). | 1 (I-02) | Fijar el máximo de réplicas del HPA según el pool JDBC por réplica y el límite de conexiones de PostgreSQL; documentar ambos y el tamaño máximo de Caffeine. |
 
 ### 2.3 Resumen de Holgura de Capacidad <!-- SECTION: Capacity Headroom Summary -->
 
 | # | Component | Current Load (est.) | Max Capacity | Headroom % | Risk Level |
 |---|---|---|---|---|---|
-| 1 | Portal de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] (estáticos en CDN, ADR-107) | [NOT DOCUMENTED] | Adequate |
-| 2 | Servicio de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] (mínimo 2 réplicas, máximo no documentado) | [NOT DOCUMENTED] | B3 |
+| 1 | Portal de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] | [NOT DOCUMENTED] | Sin evaluar; archivos estáticos en CDN (ADR-107) |
+| 2 | Servicio de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] | [NOT DOCUMENTED] | B3 |
 | 3 | Base de Datos de Reservas | [NOT DOCUMENTED] | [NOT DOCUMENTED] | [NOT DOCUMENTED] | B2 |
 | 4 | Servidor de Identidad Northwind | [NOT DOCUMENTED] | [NOT DOCUMENTED] | [NOT DOCUMENTED] | B2 |
 
@@ -55,38 +57,48 @@ Servidor de Identidad Northwind  [NOT DOCUMENTED]
 
 | # | ADR | Decision | Bottleneck Introduced | Current Risk |
 |---|---|---|---|---|
-| 1 | ADR-109 | Invalidar la caché Caffeine con LISTEN/NOTIFY (reemplaza ADR-108) | Cada réplica mantiene una conexión LISTEN fuera del pool; el consumo de conexiones crece con las réplicas. Caché por proceso con tamaño máximo Not documented. | Medio: sin máximo de réplicas ni límite de conexiones documentados no se puede acotar (docs/05 § I-04, docs/08 § 10.4). |
+| 1 | ADR-109 | Invalidar la caché Caffeine con LISTEN/NOTIFY; una conexión LISTEN por réplica fuera del pool | Cada réplica añadida consume una conexión permanente de PostgreSQL adicional al pool JDBC; no hay caché distribuida (docs/08 § 10.4) | Medio: el límite de conexiones de la base no está documentado |
+| 2 | ADR-005 | Mínimo de 2 réplicas en zonas distintas, HPA por CPU | Máximo de réplicas no documentado; el tope efectivo lo fija la Base de Datos de Reservas | Medio: sin máximo ni solicitudes y límites de CPU documentados |
 
 ## 3. Top 5 Recomendaciones de Escalado <!-- SECTION: Top 5 Scaling Recommendations -->
 
-**1. Dimensionar y documentar el pool JDBC y las conexiones LISTEN (B2-02)**
-Fijar maxConnections por réplica en el pool y reservar conexiones para LISTEN (1 por réplica). Verificar réplicas máximas × (pool + 1) contra el límite de conexiones de PostgreSQL 16. Riesgo reducido: agotamiento de conexiones (T12-D); costo: tope explícito al escalado.
-_Fuente: docs/08-scalability-and-performance.md § 10.4; docs/05-integration-points.md § I-04_
+**1. Dimensionar el pool JDBC y las conexiones de PostgreSQL (B2-02)**
+Definir `maximumPoolSize` por réplica y verificar que réplicas máximas × pool + conexiones LISTEN quede bajo `max_connections` de PostgreSQL 16, con margen. Costo: más conexiones reservadas. Reduce el riesgo de saturación (T16-D).
+_Fuente: docs/08-scalability-and-performance.md § 10.4_
 
-**2. Fijar el máximo de réplicas del HPA (B3-01)**
-Declarar el máximo de réplicas del Servicio de Reservas y las solicitudes/límites de CPU y memoria, coherentes con la capacidad de la base. Compromiso: un tope protege la base pero limita el pico.
+**2. Documentar el máximo de réplicas del HPA (B3-01)**
+Fijar el máximo del HPA del `Servicio de Reservas` y los umbrales de CPU, solicitudes y límites. Se acepta un tope de escalado a cambio de proteger la base única de más conexiones.
 _Fuente: docs/08-scalability-and-performance.md § 10.1_
 
-**3. Documentar capacidad y límite de tasa de Keycloak 25 (B2-01)**
-Obtener de Plataforma Northwind el caudal de inicio de sesión soportado y el límite de tasa, y confirmar la vigencia de la caché JWKS del Servicio de Reservas para que una caída no rechace todo.
-_Fuente: docs/05-integration-points.md § I-03; adr/ADR-002_
+**3. Documentar capacidad y límite de tasa de Keycloak (B2-01)**
+Declarar réplicas, capacidad de inicio de sesión y límite de tasa de Keycloak 25 con Plataforma Northwind. Añadir protección por tasa en el endpoint de login (T7-D) y fijar el TTL de la caché JWKS (I-03).
+_Fuente: docs/05-integration-points.md § 7_
+
+**4. Medir la demanda por flujo y habilitar el modelo de carga (B2-02)**
+Registrar rps promedio y pico de FLOW-1, FLOW-2 y FLOW-3 en docs/08 § 10.2 con factor pico, para que el modelo calcule ρ y holgura sobre la base de datos y el servicio.
+_Fuente: docs/08-scalability-and-performance.md § 10.2_
+
+**5. Fijar el tamaño máximo de Caffeine (B3-01)**
+Documentar el máximo de entradas de la caché por réplica, ya que absorbe las lecturas de CU1 y protege a la base. Riesgo reducido: más lecturas a PostgreSQL ante evicción no medida.
+_Fuente: docs/08-scalability-and-performance.md § 10.4_
 
 ---
 
 ## 4. Veredicto Resumen <!-- SECTION: Summary Verdict -->
 
-La arquitectura escala el Servicio de Reservas sin estado con HPA desde 2 réplicas y absorbe lecturas con Caffeine invalidada por LISTEN/NOTIFY. El riesgo dominante es la falta de cifras: TPS, pool, máximo de réplicas y capacidad de la base y de Keycloak son Not documented, de modo que la holgura no se puede calcular. El conjunto mínimo es medir la demanda por caso de uso, fijar el pool y el máximo de réplicas, y documentar la capacidad del proveedor de identidad.
+La arquitectura escala el Servicio de Reservas sin estado y descarga lecturas con CDN y Caffeine, y todo flujo es síncrono con una sola escritura. El riesgo dominante es la ausencia de cifras de capacidad: pool JDBC, máximo del HPA, capacidad de PostgreSQL y de Keycloak, y TPS. El mínimo de remediación es documentar esos cuatro valores y medir la demanda por flujo.
 
 ---
 
 ## 5. Brechas de Documentación <!-- SECTION: Documentation Gaps -->
 
-- [ ] `[NOT DOCUMENTED]` Demanda por caso de uso (FLOW-1, FLOW-2, FLOW-3) — RPS promedio y pico, factor de pico (docs/08-scalability-and-performance.md § 10.2; docs/01-system-overview.md (TPS))
-- [ ] `[NOT DOCUMENTED]` Servicio de Reservas — Máximo de réplicas del HPA, solicitudes y límites de CPU/memoria, capacidad por réplica (docs/08-scalability-and-performance.md § 10.1; docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md)
-- [ ] `[NOT DOCUMENTED]` Base de Datos de Reservas — Tamaño del pool JDBC, máximo de conexiones, réplicas de lectura, capacidad dimensionada (docs/08-scalability-and-performance.md § 10.1 y § 10.4; docs/06-technology-stack.md)
-- [ ] `[NOT DOCUMENTED]` Servidor de Identidad Northwind — Capacidad, límite de tasa y réplicas de Keycloak 25 (docs/components/proveedor-de-identidad-northwind.md)
-- [ ] `[NOT DOCUMENTED]` Caché Caffeine del Servicio de Reservas — Tamaño máximo de la caché (docs/08-scalability-and-performance.md § 10.4)
+- [ ] `[NOT DOCUMENTED]` Demanda por flujo (FLOW-1, FLOW-2, FLOW-3) — rps promedio, pico y factor pico (docs/08-scalability-and-performance.md § 10.2 y docs/01-system-overview.md)
+- [ ] `[NOT DOCUMENTED]` Servicio de Reservas — Máximo de réplicas del HPA, solicitudes y límites de CPU y memoria, tamaño de Caffeine (docs/08-scalability-and-performance.md § 10.1, § 10.4)
+- [ ] `[NOT DOCUMENTED]` Base de Datos de Reservas — Capacidad, max_connections, tamaño del pool JDBC y réplicas de lectura (docs/08-scalability-and-performance.md § 10.1, § 10.4 y docs/components/reservas-de-salas-northwind/03-base-de-datos-de-reservas.md)
+- [ ] `[NOT DOCUMENTED]` Servidor de Identidad Northwind — Tabla de capacidad, réplicas y límite de tasa (docs/components/proveedor-de-identidad-northwind.md)
+- [ ] `[NOT DOCUMENTED]` Portal de Reservas — Límites del CDN (docs/08-scalability-and-performance.md § 10.1)
+- [ ] `[NOT DOCUMENTED]` Presupuesto de latencia por salto (I-02, I-04) — Budget p95 por salto (docs/04-data-flow-patterns.md, Latency budget breakdown)
 
 ---
 
-**Fuentes citadas**: `ARCHITECTURE.md`, `docs/08-scalability-and-performance.md`, `docs/05-integration-points.md`, `docs/04-data-flow-patterns.md`
+**Fuentes citadas**: `ARCHITECTURE.md`, `docs/08-scalability-and-performance.md`, `docs/05-integration-points.md`, `docs/04-data-flow-patterns.md`, `analysis/SPOF-2026-11-03.md`, `analysis/STRIDE-2026-11-03.md`
