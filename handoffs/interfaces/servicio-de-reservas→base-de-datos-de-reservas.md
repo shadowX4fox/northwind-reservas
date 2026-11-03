@@ -8,7 +8,7 @@
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
 | Decisión | [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md) |
-| Generado | 2026-10-20 |
+| Generado | 2026-11-03 |
 
 ### Índice Rápido por Rol <!-- SECTION: Role Quick Index -->
 
@@ -90,9 +90,7 @@ Lo que la Base de Datos de Reservas puede asumir como cierto cuando recibe una l
 Lo que la Base de Datos de Reservas garantiza al responder:
 
 - Rechaza toda reserva confirmada superpuesta para la misma sala mediante la restricción de exclusión ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
-- Guarda salas, reservas, registro de auditoría de cancelaciones y claves de idempotencia con su respuesta durante 24 horas ([ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)).
-- Conserva las reservas y la auditoría 24 meses; una purga programada las elimina ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)).
-- Persiste la auditoría en la misma transacción de la cancelación ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)).
+- Guarda salas, reservas, registro de auditoría de cancelaciones y claves de idempotencia; su dueño es el Servicio de Reservas ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)).
 - Ofrece el canal `disponibilidad` de `NOTIFY` de PostgreSQL para avisar a todas las réplicas, que borran su entrada de caché ([ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 
 ---
@@ -104,7 +102,7 @@ Los supuestos de esta sección son vinculantes. Cambiar uno es un cambio de inte
 **Upstream asume:**
 
 - La Base de Datos de Reservas garantiza la integridad de no superposición con la restricción de exclusión; el Servicio de Reservas no la coordina ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)).
-- La Base de Datos de Reservas guarda la clave de idempotencia y su respuesta durante 24 horas ([ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)).
+- La Base de Datos de Reservas guarda las claves de idempotencia con su respuesta, cuyo dueño es el Servicio de Reservas ([ADR-103](../../adr/ADR-103-idempotencia-de-la-creacion-de-reservas-con-clave.md)).
 - La Base de Datos de Reservas entrega cada `NOTIFY` del canal `disponibilidad` a todas las réplicas con `LISTEN`, para que invaliden su caché Caffeine ([ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)).
 
 **Downstream asume:**
@@ -128,7 +126,7 @@ Responsabilidades fila por fila ante cada condición de fallo. Las celdas de ups
 | fallo parcial | La auditoría de cancelación se escribe en la misma transacción que la cancelación ([ADR-106](../../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)) | [NOT DOCUMENTED] |
 | versiones incompatibles | [NOT DOCUMENTED] | El esquema se versiona con migraciones Flyway en el repositorio del servicio ([ADR-003](../../adr/ADR-003-postgresql-relational-store.md)) |
 
-Clasificación de cascada (de `analysis/BLAST_RADIUS-*.md`): [NOT DOCUMENTED — run /sa-analysis:architecture-analysis blast-radius]
+Clasificación de cascada (de `analysis/BLAST_RADIUS-*.md`): [NOT DOCUMENTED — la fila de `analysis/BLAST_RADIUS-*.md` no clasifica la cascada]. MTTR de la Base de Datos de Reservas: [NOT DOCUMENTED]; respaldo diario, retención de 30 días y PITR de 7 días; RTO y RPO Not documented (docs/09 § 11.3). MTTR del Servicio de Reservas: [NOT DOCUMENTED]; al menos 2 réplicas en zonas distintas (docs/09 § 11.1; ADR-005).
 
 ---
 
@@ -139,7 +137,7 @@ Datos que pertenecen a un solo lado y que el otro accede solo a través del cont
 | Direction | Fields / entities |
 |-----------|-------------------|
 | Propiedad del upstream | Salas, reservas (con su cancelación y motivo), registro de auditoría de cancelaciones y claves de idempotencia con su respuesta durante 24 horas; todo se guarda en la Base de Datos de Reservas |
-| Propiedad del downstream | Restricción de exclusión que rechaza dos reservas confirmadas superpuestas de una sala; almacena salas, reservas, auditoría y claves de idempotencia cuyo dueño es el Servicio de Reservas |
+| Propiedad del downstream | [NOT DOCUMENTED] — la Base de Datos de Reservas guarda los datos del upstream sin ser su dueña y garantiza la restricción de exclusión ([ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)) |
 | Solo lectura (vía esta interfaz) | [NOT DOCUMENTED] |
 
 ---
@@ -165,8 +163,10 @@ Los cambios de interfaz requieren un nuevo ADR — ver [Return Path](../SYSTEM_R
 | 2026-10-19 | Contrato de interfaz inicial | [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md) |
 | 2026-10-20 | ADR-102, ADR-103, ADR-105 y ADR-106 pasan a Accepted; ADR-108 (caché Caffeine en el Servicio de Reservas) no modifica los supuestos de esta interfaz | [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md) |
 | 2026-10-20 | ADR-109: `NOTIFY`/`LISTEN` en el canal `disponibilidad` para invalidar la caché en todas las réplicas; se agregan al estado de entrada, estado de salida y supuestos mutuos | [ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md) |
+| 2026-11-03 | El análisis de radio de impacto aporta filas de MTTR de ambos componentes; la clasificación de cascada sigue sin documentar | [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md) |
+| 2026-11-03 | Propiedad y estado de salida alineados con el § 6 de ambas especificaciones: el Servicio de Reservas es dueño de los datos; la propiedad del downstream queda sin documentar | [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md) |
 
 ---
 
-*Generated by `sa-skills:architecture-dev-handoff` on 2026-10-20*
+*Generated by `sa-skills:architecture-dev-handoff` on 2026-11-03*
 *Sources: `docs/05-integration-points.md`, `analysis/BLAST_RADIUS-*.md`, `adr/`*

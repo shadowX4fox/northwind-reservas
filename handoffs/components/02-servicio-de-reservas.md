@@ -10,9 +10,9 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.10.5 |
+| Versión de la arquitectura | 1.11.0 |
 | Versión del componente | 1.4.0 |
-| Generado | 2026-11-02 |
+| Generado | 2026-11-03 |
 | Documento fuente del componente | [docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md](../../docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md) |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->
@@ -47,7 +47,7 @@ Servicio de Reservas es responsable de calcular la disponibilidad de las 42 sala
 
 **Interfaces salientes** (downstream):
 
-- [servicio-de-reservas→proveedor-de-identidad-northwind](../interfaces/servicio-de-reservas→proveedor-de-identidad-northwind.md) — I-03
+- [servicio-de-reservas→servidor-de-identidad-northwind](../interfaces/servicio-de-reservas→servidor-de-identidad-northwind.md) — I-03
 - [servicio-de-reservas→base-de-datos-de-reservas](../interfaces/servicio-de-reservas→base-de-datos-de-reservas.md) — I-04
 
 **Interfaces sin Interface Contract**:
@@ -88,7 +88,7 @@ flowchart TB
     SERVICIO["Servicio de Reservas<br/>Java 21, Spring Boot 3.3"]
     BD[(Base de Datos de Reservas<br/>PostgreSQL 16)]
   end
-  IDP["Proveedor de Identidad Northwind<br/>Keycloak 25"]
+  IDP["Servidor de Identidad Northwind<br/>Keycloak 25"]
   PORTAL -->|"HTTPS/JSON [Auth]"| IDP
   PORTAL -->|"HTTPS/JSON [Query]"| SERVICIO
   SERVICIO -->|"HTTPS/JSON [Auth]"| IDP
@@ -143,7 +143,7 @@ Tomados de [`../SYSTEM_RUNTIME_VIEW.md § Budget Decomposition`](../SYSTEM_RUNTI
 | Throughput (sostenido) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [SYSTEM_RUNTIME_VIEW.md § Budget Decomposition](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
 | Techo de costo | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [SYSTEM_RUNTIME_VIEW.md § Budget Decomposition](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
 
-Los presupuestos por salto Portal de Reservas → Servicio de Reservas y Servicio de Reservas → Base de Datos de Reservas no están documentados. El salto hacia el Proveedor de Identidad Northwind (JWKS) queda fuera del camino crítico salvo en la carga de claves.
+El análisis `analysis/LATENCY-BUDGET-2026-11-03.md` cubre 3 flujos con SLO de 1000 ms (Consultar disponibilidad), 2000 ms (Reservar una sala) y 2000 ms (Cancelar una reserva). Los saltos de este componente (I-02, I-03 JWKS, I-04 y, en la consulta, la caché Caffeine) figuran sin p95 documentado y con estado `Untracked`.
 
 ---
 
@@ -162,7 +162,7 @@ Todo se guarda en la Base de Datos de Reservas (ADR-003).
 
 **Lee (vía contrato, no es dueño):**
 
-- Claves públicas JWKS del Proveedor de Identidad Northwind, vía [servicio-de-reservas→proveedor-de-identidad-northwind](../interfaces/servicio-de-reservas→proveedor-de-identidad-northwind.md) — I-03.
+- Claves públicas JWKS del Proveedor de Identidad Northwind, vía [servicio-de-reservas→servidor-de-identidad-northwind](../interfaces/servicio-de-reservas→servidor-de-identidad-northwind.md) — I-03.
 - `sub`, rol `recepcion` y atributo `sede` del JWT validado, per ADR-002 y ADR-105.
 
 **No debe acceder a:**
@@ -181,6 +181,7 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 - Caché de disponibilidad por sede y fecha en Caffeine dentro de cada réplica, con expiración de 5 minutos e invalidación en todas las réplicas con `LISTEN`/`NOTIFY` de PostgreSQL al crear o cancelar una reserva — per [ADR-109](../../adr/ADR-109-invalidacion-de-la-cache-con-listen-notify.md)
 - Franjas en hora local de la sede, sin desfase; reloj de negocio en la zona `America/Bogota` para las 3 sedes — per [ADR-110](../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md)
 - API REST sobre HTTPS con cuerpos JSON y contrato OpenAPI 3.1 escrito antes que el código; versión mayor en la ruta (`/v1`) — per [ADR-001](../../adr/ADR-001-rest-openapi-apis.md)
+- TLS 1.2 o superior hasta los pods: el ingress del clúster termina el TLS del navegador y vuelve a cifrar hacia el Servicio de Reservas con un certificado que emite Plataforma Northwind — per [ADR-005](../../adr/ADR-005-kubernetes-container-runtime.md)
 - Autenticación con JWT del Proveedor de Identidad Northwind, validado en cada solicitud con JWKS — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)
 - PostgreSQL 16 vía JDBC con TLS; esquema versionado con migraciones Flyway; integridad (no superposición) declarada en la base — per [ADR-003](../../adr/ADR-003-postgresql-relational-store.md) y [ADR-102](../../adr/ADR-102-impedir-reservas-dobles-con-restriccion-de-exclusion-en.md)
 - Trazas, métricas RED y logs JSON con OpenTelemetry; contexto W3C Trace Context — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md)
@@ -248,7 +249,6 @@ Vacíos detectados al generar la Especificación de Componente: valores ausentes
 | Budgets | Techo de costo | `/sa-analysis:architecture-analysis latency-budget` | Validar el costo del servicio |
 | Assets — c4-descriptor.md | Responsable | agregar `**Owner:**` a docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md | escalamiento y propiedad en la CMDB |
 | Assets — c4-descriptor.md | Host · IP · SO · Dominio | docs/09-operational-considerations.md | registro en la CMDB y reglas de red |
-| Assets — security.md | Data Sensitivity | analysis/DATA-SENSITIVITY-*.md — run /sa-analysis:architecture-analysis data-sensitivity | se desconoce la clasificación de los datos que maneja el componente |
 | Assets — openapi.yaml | Host del servidor (URL base) | docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md | Solo se documenta la ruta base `/v1`. `servers` queda vacío y las rutas llevan `/v1`. El equipo no puede configurar los clientes sin el host. |
 | Assets — openapi.yaml | Obligatoriedad de los parámetros de consulta site, date, start y end (getAvailability) | docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md | El contrato no marca esos parámetros como requeridos. El equipo debe confirmar si lo son. |
 | Assets — openapi.yaml | Estructura de `equipment` en RoomAvailability | docs/components/reservas-de-salas-northwind/02-servicio-de-reservas.md | El contrato lo modela como lista de valores del enum (`screen`, `videoconference`, `whiteboard`). La documentación no dice si es lista o valor único. |
@@ -256,5 +256,5 @@ Vacíos detectados al generar la Especificación de Componente: valores ausentes
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-11-02*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-11-03*
 *Fuente: ARCHITECTURE.md*
