@@ -30,6 +30,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 | Robo de token desde el navegador | Tokens en memoria, nunca en `localStorage` ni `sessionStorage`; token de acceso de 5 minutos ([ADR-104](../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md)) |
 | Acceso no autorizado a una reserva ajena | Cancelación solo para el dueño o `recepcion` de la misma `sede` ([ADR-105](../adr/ADR-105-autorizacion-por-rol-recepcion-y-atributo-sede-del.md)) |
 | Token falsificado o expirado | Validación RS256 con las llaves JWKS del Proveedor de Identidad Northwind en cada solicitud |
+| Robo o adivinación de credenciales (credential stuffing, fuerza bruta) | TOTP obligatorio para miembros y recepcionistas; bloqueo de 15 minutos tras 5 intentos fallidos en el `Proveedor de Identidad Northwind` ([ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)) |
 | Intercepción del tráfico | TLS 1.2 o superior en el ingress y del ingress a los pods |
 | Conservación de datos personales más allá del plazo | Purga a los 24 meses ([ADR-106](../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)) |
 | Cancelación sin rastro | Registro de auditoría por cancelación ([ADR-106](../adr/ADR-106-retencion-de-24-meses-purga-de-datos-y.md)) |
@@ -38,6 +39,7 @@ related_adrs: ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, ADR-104, ADR-105, ADR
 
 **Autenticación**
 - Método: código de autorización OIDC con PKCE contra el `Proveedor de Identidad Northwind` ([ADR-002](../adr/ADR-002-oidc-keycloak-identity.md)); integración [I-01](05-integration-points.md).
+- Segundo factor: TOTP obligatorio para miembros y recepcionistas. Tras 5 intentos fallidos, Keycloak 25 bloquea la cuenta durante 15 minutos.
 - Sesión: token de acceso de 5 minutos con renovación silenciosa por token de refresco.
 - Almacenamiento: tokens solo en memoria del `Portal de Reservas`. ([ADR-104](../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md)).
 - Membresía vigente: cuenta de miembro activa en el `Proveedor de Identidad Northwind`; al darse de baja, Recepción la desactiva y el miembro ya no obtiene token. El `Servicio de Reservas` no hace una verificación de membresía aparte (PO Spec CU1 y CU2).
