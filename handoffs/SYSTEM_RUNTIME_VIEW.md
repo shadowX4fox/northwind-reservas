@@ -7,8 +7,8 @@
 | Versión | 4.3.1 |
 | Responsable | Equipo de Arquitectura Northwind |
 | Estado | draft |
-| Versión de la arquitectura | 1.10.5 |
-| Generado | 2026-10-20 |
+| Versión de la arquitectura | 1.11.0 |
+| Generado | 2026-11-03 |
 | Proyecto | Reservas de Salas Northwind - Autoservicio de reservas de salas de reunión |
 
 ### Índice por Rol <!-- SECTION: Role Quick Index -->
@@ -264,25 +264,36 @@ sequenceDiagram
 
 Todo número global se asigna a números por salto. Las asignaciones deben sumar dentro de la restricción global de cada flujo. El margen sin asignar se declara explícitamente.
 
-El `docs/04-data-flow-patterns.md` § Presupuesto de latencia declara una tabla de saltos sin nombrar casos de uso por flujo. No hay análisis de presupuesto de latencia; ningún flujo queda cubierto por esa tabla.
+Fuente: `analysis/LATENCY-BUDGET-2026-11-03.md`. El análisis no documenta ninguna asignación por salto; todos los saltos quedan sin seguimiento.
 
 ### F-01 — Consultar disponibilidad
 
 | Hop | Component | p99 allocation | Error budget | Notes |
 |----:|-----------|---------------:|-------------:|-------|
-| 1 | Portal de Reservas → Servicio de Reservas → Base de Datos de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | Global documentado: ≤ 1 s p95 |
+| 1 | Portal de Reservas → Servidor de Identidad Northwind (I-01) | Not documented | — | external-API · Untracked |
+| 2 | Portal de Reservas → Servicio de Reservas (I-02) | Not documented | — | service · Untracked |
+| 3 | Servicio de Reservas → Servidor de Identidad Northwind (I-03, JWKS) | Not documented | — | external-API · Untracked |
+| 4 | Servicio de Reservas → caché Caffeine | Not documented | — | cache · Untracked |
+| 5 | Servicio de Reservas → Base de Datos de Reservas (I-04) | Not documented | — | database · Untracked |
+|   | **Sum** | **Not documented** | **—** | vs global 1000 ms — Not evaluable |
 
 ### F-02 — Reservar una sala
 
 | Hop | Component | p99 allocation | Error budget | Notes |
 |----:|-----------|---------------:|-------------:|-------|
-| 1 | Portal de Reservas → Servicio de Reservas → Base de Datos de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | Global documentado: ≤ 2 s p95 |
+| 1 | Portal de Reservas → Servicio de Reservas (I-02) | Not documented | — | service · Untracked |
+| 2 | Servicio de Reservas → Servidor de Identidad Northwind (I-03, JWKS) | Not documented | — | external-API · Untracked |
+| 3 | Servicio de Reservas → Base de Datos de Reservas (I-04) | Not documented | — | database · Untracked |
+|   | **Sum** | **Not documented** | **—** | vs global 2000 ms — Not evaluable |
 
 ### F-03 — Cancelar una reserva
 
 | Hop | Component | p99 allocation | Error budget | Notes |
 |----:|-----------|---------------:|-------------:|-------|
-| 1 | Portal de Reservas → Servicio de Reservas → Base de Datos de Reservas | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | Global documentado: ≤ 2 s p95 |
+| 1 | Portal de Reservas → Servicio de Reservas (I-02) | Not documented | — | service · Untracked |
+| 2 | Servicio de Reservas → Servidor de Identidad Northwind (I-03, JWKS) | Not documented | — | external-API · Untracked |
+| 3 | Servicio de Reservas → Base de Datos de Reservas (I-04) | Not documented | — | database · Untracked |
+|   | **Sum** | **Not documented** | **—** | vs global 2000 ms — Not evaluable |
 
 ---
 
@@ -292,9 +303,9 @@ Cada conexión del diagrama lleva una línea y un enlace a su ADR. Sin conexione
 
 | Edge | Style | Rationale (one line) | Decision |
 |------|-------|----------------------|---------:|
-| Portal de Reservas → Proveedor de Identidad Northwind | sync | Autenticación del usuario (I-01) | [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md) |
-| Portal de Reservas → Servicio de Reservas | sync | Consulta, reserva y cancelación (I-02) | ADR-103, [ADR-001](../adr/ADR-001-rest-openapi-apis.md) |
-| Servicio de Reservas → Proveedor de Identidad Northwind | sync | Validación de tokens (I-03) | [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md) |
+| Portal de Reservas → Servidor de Identidad Northwind | sync | Autenticación del usuario (I-01) | [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md) |
+| Portal de Reservas → Servicio de Reservas | sync | Consulta, reserva y cancelación (I-02) | ADR-103, [ADR-001](../adr/ADR-001-rest-openapi-apis.md), [ADR-005](../adr/ADR-005-kubernetes-container-runtime.md) |
+| Servicio de Reservas → Servidor de Identidad Northwind | sync | Validación de tokens (I-03) | [ADR-002](../adr/ADR-002-oidc-keycloak-identity.md) |
 | Servicio de Reservas → Base de Datos de Reservas | sync | Persistencia de reservas (I-04) | ADR-102, [ADR-003](../adr/ADR-003-postgresql-relational-store.md), ADR-109 |
 
 ---
@@ -303,7 +314,13 @@ Cada conexión del diagrama lleva una línea y un enlace a su ADR. Sin conexione
 
 Resumen entre flujos del comportamiento en cascada y de los compartimentos estancos. Se alimenta de `analysis/BLAST_RADIUS-*.md`.
 
-No se encontró análisis de Blast Radius — ejecute /sa-analysis:architecture-analysis blast-radius para poblar esta sección.
+Fuente: `analysis/BLAST-RADIUS-2026-11-03.md`.
+
+- **Portal de Reservas**: abanico 0, aislado; su caída no se propaga a otros componentes, pero deja sin los 3 flujos a los usuarios. Se publica como archivos estáticos en el CDN de Plataforma Northwind (ADR-107).
+- **Base de Datos de Reservas**: pérdida o corrupción de datos o caída del motor PostgreSQL 16. Respaldo diario, retención de 30 días y PITR de 7 días; MTTR, RTO y RPO `[NOT DOCUMENTED]`.
+- **Servicio de Reservas**: caída de réplicas con al menos 2 réplicas en zonas distintas ([ADR-005](../adr/ADR-005-kubernetes-container-runtime.md)); MTTR `[NOT DOCUMENTED]`.
+- **Servidor de Identidad Northwind**: proveedor no disponible; sin fila en docs/09 § 11.3; MTTR `[NOT DOCUMENTED]`.
+- **Portal de Reservas** (publicación): falla de publicación en el CDN; método de reversión y MTTR `[NOT DOCUMENTED]`.
 
 ---
 
@@ -320,5 +337,5 @@ Todo lo anterior tiene un responsable nombrado y un registro de decisión. Los h
 
 ---
 
-*Generado por `sa-skills:architecture-dev-handoff` el 2026-10-20*
+*Generado por `sa-skills:architecture-dev-handoff` el 2026-11-03*
 *Fuente: /home/runner/work/northwind-reservas/northwind-reservas/ARCHITECTURE.md*

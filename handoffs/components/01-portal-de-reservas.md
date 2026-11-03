@@ -10,9 +10,9 @@
 | Versión de la Especificación de Componente | 4.3.1 |
 | Versión de la Vista de Ejecución | 4.3.1 |
 | Versión de los Estándares | 4.3.1 |
-| Versión de la arquitectura | 1.10.5 |
+| Versión de la arquitectura | 1.11.0 |
 | Versión del componente | 1.0.2 |
-| Generado | 2026-11-02 |
+| Generado | 2026-11-03 |
 | Documento fuente del componente | [../../docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md](../../docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md) |
 
 ### Índice rápido por rol <!-- SECTION: Role Quick Index -->
@@ -33,7 +33,7 @@ Se lee junto con [`../SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md) (histo
 
 ## 1. Responsabilidad <!-- SECTION: Responsibility -->
 
-Portal de Reservas es la SPA (React 18, TypeScript) donde miembros y recepcionistas consultan la disponibilidad de salas por sede, fecha y franja, reservan una sala libre con su código de reserva, listan y cancelan reservas futuras, y se autentican con el Proveedor de Identidad Northwind. El recepcionista cancela cualquier reserva de su sede. NO es responsable de persistir datos: no es dueño de ningún dato persistente, y la disponibilidad y las reservas pertenecen al Servicio de Reservas. [NOT DOCUMENTED — add a not-accountable clause to docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md]
+Portal de Reservas es la SPA (React 18, TypeScript) donde miembros y recepcionistas consultan la disponibilidad de salas por sede, fecha y franja, reservan una sala libre con su código de reserva, listan y cancelan reservas futuras, y se autentican con el Servidor de Identidad Northwind. El recepcionista cancela cualquier reserva de su sede. NO es responsable de persistir datos: no es dueño de ningún dato persistente, y la disponibilidad y las reservas pertenecen al Servicio de Reservas. [NOT DOCUMENTED — add a not-accountable clause to docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md]
 
 ---
 
@@ -47,7 +47,7 @@ No hay interfaces entrantes documentadas.
 
 **Interfaces descendentes** (salientes):
 
-- [portal-de-reservas→proveedor-de-identidad-northwind](../interfaces/portal-de-reservas→proveedor-de-identidad-northwind.md) — I-01
+- [portal-de-reservas→servidor-de-identidad-northwind](../interfaces/portal-de-reservas→servidor-de-identidad-northwind.md) — I-01
 - [portal-de-reservas→servicio-de-reservas](../interfaces/portal-de-reservas→servicio-de-reservas.md) — I-02
 
 **Interfaces sin Interface Contract**:
@@ -97,7 +97,7 @@ flowchart TB
     PORTAL["Portal de Reservas<br/>React 18, TypeScript"]
     SERVICIO["Servicio de Reservas<br/>Java 21, Spring Boot 3.3"]
   end
-  IDP["Proveedor de Identidad Northwind<br/>Keycloak 25"]
+  IDP["Servidor de Identidad Northwind<br/>Keycloak 25"]
   MIEMBRO -->|"HTTPS/JSON [Data]"| PORTAL
   RECEP -->|"HTTPS/JSON [Data]"| PORTAL
   PORTAL -->|"HTTPS/JSON [Auth]"| IDP
@@ -127,7 +127,7 @@ Condiciones que se cumplen siempre, sin importar la implementación. Cada invari
 - **INV-02** El portal envía la reserva de una sala libre y muestra la confirmación con el código de reserva.
 - **INV-03** El portal lista las reservas futuras del miembro y permite cancelarlas.
 - **INV-04** El portal permite al recepcionista cancelar cualquier reserva de su sede.
-- **INV-05** El portal autentica al usuario con el Proveedor de Identidad Northwind mediante el flujo de código de autorización con PKCE — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md).
+- **INV-05** El portal autentica al usuario con el Servidor de Identidad Northwind mediante el flujo de código de autorización con PKCE — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md).
 - **INV-06** Los tokens OIDC viven solo en la memoria del navegador; el portal nunca los guarda en `localStorage` ni en `sessionStorage` — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md), [ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md).
 - **INV-07** Cada llamada al Servicio de Reservas propaga W3C Trace Context (`traceparent`) — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
 - **INV-08** El portal emite trazas, métricas y logs con OpenTelemetry hacia el colector de Plataforma Northwind; los logs nunca incluyen tokens — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md).
@@ -148,6 +148,15 @@ Tomados textualmente de [`../SYSTEM_RUNTIME_VIEW.md § Budget Decomposition`](..
 | Throughput (pico) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [`SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
 | Throughput (sostenido) | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [`SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
 | Techo de costo | [NOT DOCUMENTED — run /sa-analysis:architecture-analysis latency-budget] | [`SYSTEM_RUNTIME_VIEW.md`](../SYSTEM_RUNTIME_VIEW.md#budget-decomposition) |
+
+Saltos del portal en `analysis/LATENCY-BUDGET-2026-11-03.md`:
+
+| Flow | Hop # | Component | p95 (ms) | Status |
+|------|------:|-----------|---------:|--------|
+| Consultar disponibilidad (SLO 1000 ms) | 1 | Portal de Reservas → Servidor de Identidad Northwind (I-01) | Not documented | Untracked |
+| Consultar disponibilidad (SLO 1000 ms) | 2 | Portal de Reservas → Servicio de Reservas (I-02) | Not documented | Untracked |
+| Reservar una sala (SLO 2000 ms) | 1 | Portal de Reservas → Servicio de Reservas (I-02) | Not documented | Untracked |
+| Cancelar una reserva (SLO 2000 ms) | 1 | Portal de Reservas → Servicio de Reservas (I-02) | Not documented | Untracked |
 
 Metas de experiencia documentadas:
 
@@ -184,7 +193,7 @@ Cada restricción tiene una razón (regla de Cross-Cutting Standards, ADR o inva
 - Publicación como archivos estáticos desde el CDN de Plataforma Northwind, fuera del clúster Kubernetes y sin réplicas propias — per [ADR-107](../../adr/ADR-107-publicacion-del-portal-de-reservas-como-archivos-estaticos.md) (estado: Accepted)
 - Arquitectura de SPA más un único microservicio (Servicio de Reservas); el portal no pasa por API Gateway, service mesh ni event bus — per [ADR-101](../../adr/ADR-101-patron-de-arquitectura-spa-un-microservicio-dueno-de.md) (estado: Accepted)
 - APIs síncronas REST sobre HTTPS con cuerpos JSON y contrato OpenAPI 3.1 hacia el Servicio de Reservas — per [ADR-001](../../adr/ADR-001-rest-openapi-apis.md)
-- Autenticación OIDC con código de autorización y PKCE contra el Proveedor de Identidad Northwind — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)
+- Autenticación OIDC con código de autorización y PKCE contra el Servidor de Identidad Northwind — per [ADR-002](../../adr/ADR-002-oidc-keycloak-identity.md)
 - Observabilidad con OpenTelemetry y propagación `traceparent` — per [ADR-004](../../adr/ADR-004-opentelemetry-observability.md)
 - Tokens solo en memoria; el token de acceso dura 5 minutos y se renueva en silencio — per [ADR-104](../../adr/ADR-104-manejo-de-tokens-oidc-en-la-spa-sin.md) (estado: Accepted)
 - Franjas de reserva en hora local de la sede, con la zona única `America/Bogota` para las sedes Centro, Norte y Puerto; "ahora" se calcula en esa zona — per [ADR-110](../../adr/ADR-110-hora-local-de-sede-con-zona-unica-america-bogota.md) (estado: Accepted)
@@ -247,9 +256,8 @@ Brechas detectadas al generar la Especificación de Componente: valores ausentes
 | Assets — c4-descriptor.md | Responsable | agregar `**Owner:**` a docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md | escalamiento y propiedad en la CMDB |
 | Assets — c4-descriptor.md | Capacidad | docs/components/reservas-de-salas-northwind/01-portal-de-reservas.md § Capacity <!-- LABEL: Capacity --> | dimensionamiento y planificación de capacidad |
 | Assets — c4-descriptor.md | Host · IP · SO · Dominio | docs/09-operational-considerations.md | registro en la CMDB y reglas de red |
-| Assets — security.md | Data Sensitivity | analysis/DATA-SENSITIVITY-*.md — run /sa-analysis:architecture-analysis data-sensitivity | se desconoce la clasificación de los datos que maneja el componente |
 
 ---
 
-*Generated by `sa-skills:architecture-dev-handoff` on 2026-11-02*
+*Generated by `sa-skills:architecture-dev-handoff` on 2026-11-03*
 *Source: /home/runner/work/northwind-reservas/northwind-reservas/ARCHITECTURE.md*

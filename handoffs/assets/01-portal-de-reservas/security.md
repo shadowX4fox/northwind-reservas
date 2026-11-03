@@ -12,8 +12,8 @@ Ningún llamador documentado: toda llamada entrante se rechaza.
 
 | Integration | Target | Protocol | Authentication | Source |
 |---|---|---|---|---|
-| I-01 | Proveedor de Identidad Northwind | HTTPS/JSON [Auth] | Código de autorización OIDC con PKCE | STRIDE TB-02 |
-| I-02 | Servicio de Reservas | HTTPS/JSON [Query] | JWT RS256 en Authorization: Bearer, validado con JWKS en cada solicitud | STRIDE TB-01 |
+| I-01 | Servidor de Identidad Northwind | HTTPS/JSON [Auth] | Código de autorización OIDC con PKCE, TOTP obligatorio, bloqueo de 15 minutos tras 5 intentos (ADR-002) | STRIDE TB-01 |
+| I-02 | Servicio de Reservas | HTTPS/JSON [Query] | JWT RS256 en Authorization: Bearer, validado con JWKS en cada solicitud; 401 sin token válido (ADR-002) | STRIDE TB-02 |
 
 ## Decisiones vigentes <!-- SECTION: Decisions in Force -->
 
@@ -48,18 +48,23 @@ _docs/02-architecture-principles.md:64_
 
 | # | Boundary | Threat | Category | Severity | Status | Mitigation |
 |---|---|---|---|---|---|---|
-| T4-R | TB-02 | Inicio de sesión sin rastro verificable | R — Repudio | Low | ⚠️ Finding | Registro de eventos de inicio de sesión en Keycloak 25 no documentado (docs/07 § 9.5) |
-| T5-D | TB-02 | Fuerza bruta o inundación del endpoint de inicio de sesión | D — Denegación de servicio | Medium | ⚠️ Finding | Protección contra fuerza bruta y límite de tasa de Keycloak no documentados; sin sesión no hay operación (docs/07 § 9.3; docs/04 Catálogo de Fases) |
-| T6-E | TB-02 | Asignación indebida del rol recepcion o del atributo sede | E — Elevación de privilegios | Medium | ⚠️ Finding | La autorización confía en los claims del token (ADR-105); el proceso de alta y revisión de roles en Keycloak no está documentado |
+| T4-D | TB-02 | Saturación del Servicio de Reservas por volumen de solicitudes públicas en I-02 | DoS | Medium | ⚠️ Finding | Límite de tasa en el ingress o en el servicio: Not documented; solo HPA de Kubernetes (docs/07 § 9.3, docs/02 § 3) |
+| T5-E | TB-02 | Escalada desde un pod comprometido del Servicio de Reservas por ejecución como root | Elevation of Privilege | Low | ⚠️ Finding | Imagen firmada (ADR-005); usuario no root y network policies: Not documented |
 
-_analysis/STRIDE-2026-10-18.md_
+_analysis/STRIDE-2026-11-03.md_
 
 ## Datos que maneja <!-- SECTION: Data -->
 
-[NOT DOCUMENTED — analysis/DATA-SENSITIVITY-*.md — run /sa-analysis:architecture-analysis data-sensitivity]
+| Flow | Step | From | To | Carries Sensitive Data? | Encryption in Transit | Gap |
+|---|---|---|---|---|---|---|
+| Flujo 1 — Consultar disponibilidad | 1 | Portal de Reservas | Servidor de Identidad Northwind | Sí: credenciales, TOTP, token de acceso | Documented (HTTPS; versión TLS Not documented) | None |
+| Flujo 1 — Consultar disponibilidad | 2 | Portal de Reservas | Servicio de Reservas | Sí: token de acceso con rol y sede | Documented | None |
+| Flujo 2 — Reservar una sala | 1 | Portal de Reservas | Servicio de Reservas | Sí: token de acceso y datos de la reserva | Documented | None |
+| Flujo 3 — Cancelar una reserva | 1 | Portal de Reservas | Servicio de Reservas | Sí: token con rol recepcion y sede, motivo de cancelación | Documented | None |
+
+_analysis/DATA-SENSITIVITY-2026-11-03.md_
 
 ## Pruebas que la construcción debe pasar <!-- SECTION: Security Tests -->
 
-- [ ] T4-R — Inicio de sesión sin rastro verificable: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
-- [ ] T5-D — Fuerza bruta o inundación del endpoint de inicio de sesión: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
-- [ ] T6-E — Asignación indebida del rol recepcion o del atributo sede: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
+- [ ] T4-D — Saturación del Servicio de Reservas por volumen de solicitudes públicas en I-02: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
+- [ ] T5-E — Escalada desde un pod comprometido del Servicio de Reservas por ejecución como root: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.

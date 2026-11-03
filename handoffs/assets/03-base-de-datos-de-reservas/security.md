@@ -8,7 +8,7 @@
 
 | Integration | Caller | Protocol | Authentication | Source |
 |---|---|---|---|---|
-| I-04 | Servicio de Reservas | JDBC/SQL [Data] | Usuario PostgreSQL propio con credenciales del gestor de secretos del clúster; JDBC con TLS | STRIDE TB-04 |
+| I-04 | Servicio de Reservas | JDBC/SQL [Data] | Usuario PostgreSQL propio del Servicio de Reservas, credenciales del gestor de secretos del clúster; JDBC con TLS (ADR-005) | STRIDE TB-04 |
 
 Cualquier otro llamador se rechaza.
 
@@ -49,24 +49,24 @@ _docs/02-architecture-principles.md:64_
 
 | # | Boundary | Threat | Category | Severity | Status | Mitigation |
 |---|---|---|---|---|---|---|
-| T8-T | TB-04 | Alteración de datos en reposo o en respaldos | T — Manipulación | Medium | ⚠️ Finding | TLS en JDBC; cifrado en reposo de la Base de Datos de Reservas y de sus respaldos no documentado (docs/07 § 9.3) |
-| T9-R | TB-04 | Cambio directo en la base sin rastro (acceso administrativo) | R — Repudio | Low | ⚠️ Finding | Auditoría de cancelaciones en la misma transacción (ADR-106); auditoría de acceso administrativo a PostgreSQL 16 no documentada |
-| T10-I | TB-04 | Divulgación de datos personales desde almacenamiento o respaldos | I — Divulgación de información | Medium | ⚠️ Finding | Cifrado en reposo no documentado; respaldos conservan datos purgados 30 días en una ubicación no documentada (docs/07 § 9.4; docs/09 § 11.3) |
-| T11-D | TB-04 | Agotamiento de conexiones JDBC | D — Denegación de servicio | Low | ⚠️ Finding | Falla de conexión responde error de servicio; tamaño del pool y límite de conexiones no documentados (docs/05 § 7, I-04) |
-| T12-E | TB-04 | Inyección que ejecuta DDL con el usuario del servicio | E — Elevación de privilegios | Medium | ⚠️ Finding | Privilegios del usuario PostgreSQL (DML frente a DDL de migraciones) no documentados; las migraciones viven en el repositorio del servicio (docs/09 § 11.1) |
+| T7-T | TB-04 | Alteración de datos en reposo o en respaldos de la Base de Datos de Reservas | Tampering | Medium | ⚠️ Finding | TLS en JDBC (I-04); cifrado en reposo y ubicación de respaldos: Not documented (docs/07 § 9.3, docs/09 § 11.3) |
+| T8-I | TB-04 | Divulgación de datos personales desde el almacenamiento o los respaldos de la Base de Datos de Reservas | Information Disclosure | Medium | ⚠️ Finding | Cifrado en reposo: Not documented; respaldos conservan datos purgados hasta 30 días (docs/07 § 9.4, docs/09 § 11.3) |
 
-_analysis/STRIDE-2026-10-18.md_
+_analysis/STRIDE-2026-11-03.md_
 
 ## Datos que maneja <!-- SECTION: Data -->
 
-[NOT DOCUMENTED — analysis/DATA-SENSITIVITY-*.md — run /sa-analysis:architecture-analysis data-sensitivity]
+| Flow | Step | From | To | Carries Sensitive Data? | Encryption in Transit | Gap |
+|---|---|---|---|---|---|---|
+| Flujo 1 — Consultar disponibilidad | 4 | Servicio de Reservas | Base de Datos de Reservas | Sí: lectura de reservas por sede y fecha | Documented | None |
+| Flujo 2 — Reservar una sala | 3 | Servicio de Reservas | Base de Datos de Reservas | Sí: reserva ligada al miembro | Documented | G2 (destino sin cifrado en reposo documentado, G2-01) |
+| Flujo 3 — Cancelar una reserva | 3 | Servicio de Reservas | Base de Datos de Reservas | Sí: cancelación y registro de auditoría (quién, cuándo, motivo) | Documented | G2 (destino sin cifrado en reposo documentado, G2-01) |
+
+_analysis/DATA-SENSITIVITY-2026-11-03.md_
 
 ## Pruebas que la construcción debe pasar <!-- SECTION: Security Tests -->
 
 - [ ] Una llamada a I-04 sin credenciales se rechaza.
 - [ ] Una llamada a I-04 desde un llamador que no figura en Entrada se rechaza.
-- [ ] T8-T — Alteración de datos en reposo o en respaldos: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
-- [ ] T9-R — Cambio directo en la base sin rastro (acceso administrativo): la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
-- [ ] T10-I — Divulgación de datos personales desde almacenamiento o respaldos: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
-- [ ] T11-D — Agotamiento de conexiones JDBC: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
-- [ ] T12-E — Inyección que ejecuta DDL con el usuario del servicio: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
+- [ ] T7-T — Alteración de datos en reposo o en respaldos de la Base de Datos de Reservas: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
+- [ ] T8-I — Divulgación de datos personales desde el almacenamiento o los respaldos de la Base de Datos de Reservas: la mitigación se cumple, o un `TODO(architecture)` cita este hallazgo.
